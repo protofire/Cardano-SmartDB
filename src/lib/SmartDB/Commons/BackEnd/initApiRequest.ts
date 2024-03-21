@@ -1,4 +1,3 @@
-import { showData } from '@/src/utils/commons/utils';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { v4 } from 'uuid';
 import { NextApiRequestAuthenticated } from '../../lib';
@@ -9,6 +8,7 @@ import { console_error, console_log, console_logLv1, console_logLv2, enhanceResW
 import { getGlobalLucid } from './globalLucid';
 import { getGlobalSettings } from './globalSettings';
 import { getGlobalTransactionStatusUpdater } from './globalTransactionStatusUpdater';
+import { showData } from '../utils';
 
 export const initGlobals = async (
     req: NextApiRequest,

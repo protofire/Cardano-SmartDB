@@ -3,7 +3,6 @@ export * from './Base/Base.SmartDB.Entity.Mongo';
 export * from './AddressToFollow.Entity.Mongo';
 export * from './Emulator.Entity.Mongo';
 export * from './Price.Entity.Mongo';
-export * from './Price.Historic.Entity.Mongo';
 export * from './SiteSettings.Entity.Mongo';
 export * from './SmartUTxO.Entity.Mongo';
 export * from './Transaction.Entity.Mongo';

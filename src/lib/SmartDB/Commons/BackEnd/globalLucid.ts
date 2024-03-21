@@ -1,7 +1,7 @@
-import { isEmulator } from '@/src/utils/specific/constants';
 import { Blockfrost, Lucid } from 'lucid-cardano';
 import { globalEmulator } from './globalEmulator';
 import { console_log } from './globalLogs';
+import { isEmulator } from '../constants';
 
 export interface GlobalLucid {
     lucid: Lucid | undefined;

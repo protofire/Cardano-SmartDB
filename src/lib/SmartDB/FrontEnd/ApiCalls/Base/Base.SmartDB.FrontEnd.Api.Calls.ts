@@ -1,5 +1,4 @@
-import { isEqual, isNullOrBlank, toJson } from '@/src/utils/commons/utils';
-import { OptionsGet, optionsGetDefault } from '../../../Commons';
+import { OptionsGet, isEqual, isNullOrBlank, optionsGetDefault, toJson } from '../../../Commons';
 import { AddressToFollowEntity } from '../../../Entities/AddressToFollow.Entity';
 import { BaseSmartDBEntity } from '../../../Entities/Base/Base.SmartDB.Entity';
 import { AddressToFollowFrontEndApiCalls } from '../AddressToFollow.FrontEnd.Api.Calls';
@@ -90,7 +89,7 @@ export class BaseSmartDBFrontEndApiCalls extends BaseFrontEndApiCalls {
             if (isNullOrBlank(address)) {
                 throw `address not defined`;
             }
-            const body = toJson({ event: 'sync', force, tryCountAgain: false}); 
+            const body = toJson({ event: 'sync', force, tryCountAgain: false });
             const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/sync/${address}`, {
                 method: 'POST',
                 headers: {

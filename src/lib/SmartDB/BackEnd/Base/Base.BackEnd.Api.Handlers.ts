@@ -1,5 +1,3 @@
-import { sanitizeForDatabase, showData } from '@/src/utils/commons/utils';
-import yup from '@/src/utils/commons/yupLocale';
 import { NextApiResponse } from 'next';
 import { User } from 'next-auth';
 import {
@@ -10,6 +8,8 @@ import {
     OptionsGetOne,
     SmartDBEntitiesRegistry,
     getCombinedConversionFunctions,
+    sanitizeForDatabase,
+    showData,
     yupValidateOptionsCreate,
     yupValidateOptionsDelete,
     yupValidateOptionsGet,
@@ -20,6 +20,7 @@ import { console_errorLv2, console_logLv2, initApiRequestWithContext } from '../
 import { BaseEntity } from '../../Entities/Base/Base.Entity';
 import { NextApiRequestAuthenticated } from '../../lib/Auth/types';
 import { BaseBackEndApplied } from './Base.BackEnd.Applied';
+import yup from '../../Commons/yupLocale';
 
 // Api Handlers siempre llevan una Entity y el backend methods, es especifico para cada entidad
 // Se tiene entonces que crear uno por cada Entidad SI o SI
@@ -568,24 +569,29 @@ export class BaseBackEndApiHandlers {
                 const instances = await this._BackEndApplied.getByParams_<T>(paramsFilter, optionsGet, restricFilter);
                 //-------------------------
                 console_logLv2(-1, this._Entity.className(), `getByParamsApiHandlers - POST - OK`);
-                return res.status(200).json(instances.map((instance) => {
-                    //-----------------------
-                    const instancePlain = instance.toPlainObject()
-                    //-----------------------
-                    if (optionsGet !== undefined && optionsGet.lookUpFields !== undefined && optionsGet.lookUpFields.length > 0) {
-                        for (let lookUpField of optionsGet.lookUpFields) {
-                            const EntityClass = SmartDBEntitiesRegistry.get(lookUpField.from) !== undefined ? SmartDBEntitiesRegistry.get(lookUpField.from) : EntitiesRegistry.get(lookUpField.from);
-                            if (EntityClass !== undefined) {
-                                const instancePlain_ =( instance[lookUpField.as as keyof typeof instance] as any).toPlainObject()
-                                if (instancePlain_ !== undefined) {
-                                    (instancePlain as any)[lookUpField.as] = instancePlain_;
+                return res.status(200).json(
+                    instances.map((instance) => {
+                        //-----------------------
+                        const instancePlain = instance.toPlainObject();
+                        //-----------------------
+                        if (optionsGet !== undefined && optionsGet.lookUpFields !== undefined && optionsGet.lookUpFields.length > 0) {
+                            for (let lookUpField of optionsGet.lookUpFields) {
+                                const EntityClass =
+                                    SmartDBEntitiesRegistry.get(lookUpField.from) !== undefined
+                                        ? SmartDBEntitiesRegistry.get(lookUpField.from)
+                                        : EntitiesRegistry.get(lookUpField.from);
+                                if (EntityClass !== undefined) {
+                                    const instancePlain_ = (instance[lookUpField.as as keyof typeof instance] as any).toPlainObject();
+                                    if (instancePlain_ !== undefined) {
+                                        (instancePlain as any)[lookUpField.as] = instancePlain_;
+                                    }
                                 }
                             }
                         }
-                    }
-                    return instancePlain
-                    //-----------------------
-                }));
+                        return instancePlain;
+                        //-----------------------
+                    })
+                );
             } catch (error) {
                 console_errorLv2(-1, this._Entity.className(), `getByParamsApiHandlers - Error: ${error}`);
                 return res.status(500).json({ error: `An error occurred while fetching the ${this._Entity.className()}: ${error}` });

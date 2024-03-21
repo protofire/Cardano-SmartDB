@@ -1,16 +1,14 @@
+import { Assets, Emulator, PrivateKey, addAssets } from 'lucid-cardano';
 import { NextApiResponse } from 'next';
-import { NextApiRequestAuthenticated } from '../lib/Auth/backEnd';
+import { getAddressFromPrivateKey, isFrontEndEnvironment, sanitizeForDatabase, showData, strToHex } from '../Commons';
 import { BackEndAppliedFor } from '../Commons/Decorator.BackEndAppliedFor';
+import yup from '../Commons/yupLocale';
 import { EmulatorEntity } from '../Entities/Emulator.Entity';
+import { console_error, console_log } from '../backEnd';
+import { NextApiRequestAuthenticated } from '../lib/Auth/backEnd';
 import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers';
 import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied';
 import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods';
-import { console_error, console_log, getAddressFromPrivateKey, tabs } from '../../MayzSmartDB/Commons/index.BackEnd';
-import { isFrontEndEnvironment, showData, sanitizeForDatabase, strToHex, toJson } from '@/src/utils/commons/utils';
-import { Assets, Emulator, PrivateKey, addAssets } from 'lucid-cardano';
-import { TOKEN_MAYZ_CS, TOKEN_MAYZ_TN } from '@/src/utils/specific/constants';
-import { SiteSettingsEntity } from '../Entities';
-import yup from '@/src/utils/commons/yupLocale';
 
 @BackEndAppliedFor(EmulatorEntity)
 export class EmulatorBackEndApplied extends BaseBackEndApplied {
@@ -28,17 +26,15 @@ export class EmulatorBackEndApplied extends BaseBackEndApplied {
         let emulatorDB = await EmulatorBackEndApplied.getOneByParams_<EmulatorEntity>({ name, current });
         //----------------------------
         if (emulatorDB !== undefined) {
-            console_error(0, this._Entity.className(),`already exists`);
+            console_error(0, this._Entity.className(), `already exists`);
             return emulatorDB;
         }
         //----------------------------
-        const privateKeysWithMAYZ: PrivateKey[] = [];
-        privateKeysWithMAYZ.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey1!);
-        privateKeysWithMAYZ.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey2!);
-
-        const privateKeysWithoutMAYZ: PrivateKey[] = [];
-        privateKeysWithoutMAYZ.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey3!);
-        privateKeysWithoutMAYZ.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey4!);
+        const privateKeys: PrivateKey[] = [];
+        privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey1!);
+        privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey2!);
+        privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey3!);
+        privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey4!);
 
         // privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey5!)
         // privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey6!)
@@ -47,21 +43,11 @@ export class EmulatorBackEndApplied extends BaseBackEndApplied {
         // privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey9!)
         // privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey10!)
 
-        const privateKeys = privateKeysWithMAYZ.concat(privateKeysWithoutMAYZ);
-
         const emulator_InitAssets: Assets = { lovelace: 1_000_000_000n };
-        const tokenMAYZ_AC_Lucid = TOKEN_MAYZ_CS + strToHex(TOKEN_MAYZ_TN);
-        const emulator_InitAssetsWithMAYZ: Assets = addAssets(emulator_InitAssets, { [tokenMAYZ_AC_Lucid]: 1_000_000_000n });
 
         const accounts: any = [];
 
-        for (const key of privateKeysWithMAYZ) {
-            const address = await getAddressFromPrivateKey(key);
-            const account = { address, assets: { ...emulator_InitAssetsWithMAYZ } };
-            accounts.push(account);
-        }
-
-        for (const key of privateKeysWithoutMAYZ) {
+        for (const key of privateKeys) {
             const address = await getAddressFromPrivateKey(key);
             const account = { address, assets: { ...emulator_InitAssets } };
             accounts.push(account);
@@ -73,7 +59,6 @@ export class EmulatorBackEndApplied extends BaseBackEndApplied {
 
         return emulatorDB_;
         //----------------------------
-        
     }
 }
 

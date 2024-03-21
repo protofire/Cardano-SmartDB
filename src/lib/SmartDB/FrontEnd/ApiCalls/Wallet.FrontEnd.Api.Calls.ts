@@ -1,6 +1,6 @@
 import { PaymentKeyHash } from "lucid-cardano";
 import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls';
-import { isNullOrBlank } from '@/src/utils/commons/utils';
+import { isNullOrBlank } from '../../Commons';
 import { WalletEntity } from '../../Entities/Wallet.Entity';
 
 export class WalletFrontEndApiCalls extends BaseFrontEndApiCalls {

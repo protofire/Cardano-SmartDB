@@ -1,4 +1,4 @@
-import { convertMillisToTime } from '@/src/utils/commons/utils';
+import { convertMillisToTime } from '../../Commons';
 
 export class TimeApi {
     public static async getServerTimeApi(): Promise<number>{

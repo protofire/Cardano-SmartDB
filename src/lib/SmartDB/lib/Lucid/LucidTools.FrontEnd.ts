@@ -1,6 +1,6 @@
 import { IUseWalletStore } from '@/src/store/types';
 import { ConnectedWalletInfo } from '@/src/types';
-import { isObject, toJson } from '@/src/utils/commons/utils';
+import { isObject, toJson } from '../../Commons';
 import { TX_CHECK_INTERVAL, isEmulator } from '@/src/utils/specific/constants';
 import { Blockfrost, ExternalWallet, Lucid, PrivateKey, TxSigned, WalletApi } from 'lucid-cardano';
 import { TRANSACTION_STATUS_CONFIRMED, TRANSACTION_STATUS_FAILED, TRANSACTION_STATUS_TIMEOUT, WalletTxParams } from '../../Commons';

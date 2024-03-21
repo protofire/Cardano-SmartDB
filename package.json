@@ -15,6 +15,7 @@
         "standalone": "TS_NODE_PROJECT='tsconfig-for-standalone.json' ts-node ./src/__standalone__/minADA.ts"
     },
     "dependencies": {
+        "bignumber.js": "^9.1.1",
         "cls-hooked": "^4.2.2",
         "cors": "^2.8.5",
         "cross-env": "^7.0.3",
@@ -43,6 +44,7 @@
     },
     "devDependencies": {
         "@next/eslint-plugin-next": "^13.4.12",
+        "@types/cls-hooked": "^4.3.8",
         "@types/cors": "^2.8.13",
         "@types/formidable": "^3.4.5",
         "@types/jest": "^29.5.3",

@@ -1,4 +1,4 @@
-import { strToHex, toJson } from '@/src/utils/commons/utils';
+import { strToHex, toJson } from '../../Commons';
 import yup from '@/src/utils/commons/yupLocale';
 import { Lucid, SignedMessage } from "lucid-cardano";
 import { Credentials, CredentialsAuthenticated } from './types';

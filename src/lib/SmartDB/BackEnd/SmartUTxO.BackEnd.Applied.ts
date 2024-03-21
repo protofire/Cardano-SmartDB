@@ -1,10 +1,9 @@
-import { OptionsGet, OptionsGetOne } from '../Commons';
-import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods';
-import { isNullOrBlank, isFrontEndEnvironment } from '@/src/utils/commons/utils';
-import { console_log, tabs } from '../Commons/BackEnd/globalLogs';
+import { OptionsGet, OptionsGetOne, isFrontEndEnvironment, isNullOrBlank } from '../Commons';
+import { console_log } from '../Commons/BackEnd/globalLogs';
+import { BackEndAppliedFor } from '../Commons/Decorator.BackEndAppliedFor';
 import { SmartUTxOEntity } from '../Entities/SmartUTxO.Entity';
 import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied';
-import { BackEndAppliedFor } from '../Commons/Decorator.BackEndAppliedFor';
+import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods';
 
 @BackEndAppliedFor(SmartUTxOEntity)
 export class SmartUTxOBackEndApplied extends BaseBackEndApplied {
@@ -50,5 +49,3 @@ export class SmartUTxOBackEndApplied extends BaseBackEndApplied {
 
     // #endregion class methods
 }
-
-

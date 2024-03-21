@@ -1,7 +1,6 @@
 import { Datum, DatumHash, Script, UTxO, type Address, type Assets, type TxHash } from "lucid-cardano";
 import 'reflect-metadata';
-import { toJson } from '@/src/utils/commons/utils';
-import { Convertible, TxOutRef, asEntity } from '../Commons';
+import { Convertible, TxOutRef, asEntity, toJson } from '../Commons';
 import { deserealizeAssets } from '../Commons/conversions';
 import { BaseEntity } from './Base/Base.Entity';
 

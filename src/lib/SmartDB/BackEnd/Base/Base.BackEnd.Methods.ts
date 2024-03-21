@@ -1,4 +1,3 @@
-import { isEmptyObject, isEqual, isFrontEndEnvironment, isNullOrBlank, isObject, isString, isSubclassOf, showData, toJson } from '@/src/utils/commons/utils';
 import { BackEndAppliedRegistry } from '../../Commons/Decorator.BackEndAppliedFor';
 import {
     CascadeUpdate,
@@ -13,9 +12,18 @@ import {
     console_errorLv2,
     console_logLv2,
     getCombinedConversionFunctions,
+    isEmptyObject,
+    isEqual,
+    isFrontEndEnvironment,
+    isNullOrBlank,
+    isObject,
+    isString,
+    isSubclassOf,
     optionsCreateOrUpdateDefault,
     optionsDeleteDefault,
     optionsGetDefault,
+    showData,
+    toJson,
 } from '../../Commons/index.BackEnd';
 import { BaseEntity } from '../../Entities/Base/Base.Entity';
 import { MongoDatabaseService } from '../DatabaseService/Mongo.Database.Service';
@@ -718,7 +726,10 @@ export class BaseBackEndMethods {
                     //-----------------------
                     if (useOptionGet.lookUpFields !== undefined && useOptionGet.lookUpFields.length > 0) {
                         for (let lookUpField of useOptionGet.lookUpFields) {
-                            const EntityClass = SmartDBEntitiesRegistry.get(lookUpField.from) !== undefined ? SmartDBEntitiesRegistry.get(lookUpField.from) : EntitiesRegistry.get(lookUpField.from);
+                            const EntityClass =
+                                SmartDBEntitiesRegistry.get(lookUpField.from) !== undefined
+                                    ? SmartDBEntitiesRegistry.get(lookUpField.from)
+                                    : EntitiesRegistry.get(lookUpField.from);
                             if (EntityClass !== undefined) {
                                 console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - LookUpField: ${lookUpField.from} - Loading...`);
                                 const instance_ = await EntityClass.getMongo().fromMongoInterface(doc[lookUpField.as]);

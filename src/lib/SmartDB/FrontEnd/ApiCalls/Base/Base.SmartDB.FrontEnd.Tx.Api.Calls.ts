@@ -1,4 +1,3 @@
-import { toJson } from '@/src/utils/commons/utils';
 import { WalletTxParams } from '../../../Commons';
 import { BaseSmartDBEntity } from '../../../Entities/Base/Base.SmartDB.Entity';
 import { BaseSmartDBFrontEndApiCalls } from './Base.SmartDB.FrontEnd.Api.Calls';

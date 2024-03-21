@@ -2,7 +2,7 @@
 
 import { NextApiResponse } from 'next';
 import { requestContext } from './globalContext';
-import { isNullOrBlank } from '@/src/utils/commons/utils';
+import { isNullOrBlank } from '../utils';
 
 export const swShowAlwaysError = process.env.LOGS_SHOW_ALWAYS_ERROR !== undefined ? (process.env.LOGS_SHOW_ALWAYS_ERROR === 'true' ? true : false) : true;
 export const swUseFilter = process.env.LOGS_USE_FILTER !== undefined ? (process.env.LOGS_USE_FILTER === 'true' ? true : false) : false;

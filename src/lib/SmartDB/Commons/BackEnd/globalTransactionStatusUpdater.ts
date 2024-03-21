@@ -1,21 +1,10 @@
-import { Blockfrost, Lucid } from 'lucid-cardano';
-import { console_error, console_log, tabs } from './globalLogs';
-import { TX_CHECK_INTERVAL, TX_CONSUMING_TIME, TX_PREPARING_TIME, TX_TIMEOUT, isEmulator } from '@/src/utils/specific/constants';
-import { EmulatorEntity } from '../../Entities/Emulator.Entity';
-import { delay, showData, sleep, toJson } from '@/src/utils/commons/utils';
-import { TransactionEntity } from '../../Entities/Transaction.Entity';
-import {
-    TRANSACTION_STATUS_CANCELED,
-    TRANSACTION_STATUS_CONFIRMED,
-    TRANSACTION_STATUS_FAILED,
-    TRANSACTION_STATUS_PENDING,
-    TRANSACTION_STATUS_SUBMITTED,
-    TRANSACTION_STATUS_TIMEOUT,
-} from '../types';
-import { SmartDBEntitiesRegistry } from '../Decorator.asSmartDBEntity';
-import { globalEmulator } from './globalEmulator';
 import { SmartUTxOEntity } from '../../Entities/SmartUTxO.Entity';
-import { th } from 'date-fns/locale';
+import { TransactionEntity } from '../../Entities/Transaction.Entity';
+import { SmartDBEntitiesRegistry } from '../Decorator.asSmartDBEntity';
+import { TRANSACTION_STATUS_FAILED, TRANSACTION_STATUS_TIMEOUT, TRANSACTION_STATUS_CANCELED, TRANSACTION_STATUS_SUBMITTED, TRANSACTION_STATUS_PENDING, TX_CHECK_INTERVAL, TX_PREPARING_TIME, isEmulator, TRANSACTION_STATUS_CONFIRMED, TX_TIMEOUT, TX_CONSUMING_TIME } from '../constants';
+import { toJson, sleep, showData } from '../utils';
+import { globalEmulator } from './globalEmulator';
+import { console_error, console_log } from './globalLogs';
 
 export class TransactionStatusUpdater {
     private isRunning = false;
@@ -85,7 +74,7 @@ export class TransactionStatusUpdater {
 
     protected async releaseUTxOs(transaction: TransactionEntity) {
         //-------------------------
-        const SmartUTxOBackEndApplied = (await import('@/src/lib/SmartDB/BackEnd/SmartUTxO.BackEnd.Applied')).SmartUTxOBackEndApplied;
+        const SmartUTxOBackEndApplied = (await import('../../BackEnd/SmartUTxO.BackEnd.Applied')).SmartUTxOBackEndApplied;
         //-------------------------
         const consuming_UTxOs = transaction.consuming_UTxOs;
         for (let consuming_UTxO of consuming_UTxOs) {

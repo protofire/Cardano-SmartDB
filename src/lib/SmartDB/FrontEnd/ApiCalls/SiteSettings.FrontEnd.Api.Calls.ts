@@ -1,6 +1,5 @@
-import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls';
 import { SiteSettingsEntity } from '../../Entities/SiteSettings.Entity';
-import crypto from 'crypto';
+import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls';
 
 export class SiteSettingsFrontEndApiCalls extends BaseFrontEndApiCalls {
     protected static _Entity = SiteSettingsEntity;
@@ -52,7 +51,6 @@ export class SiteSettingsFrontEndApiCalls extends BaseFrontEndApiCalls {
             throw `${error}`;
         }
     }
-
 
     // #endregion api
 }

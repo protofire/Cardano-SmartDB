@@ -1,14 +1,12 @@
 import { Address, Lucid, UTxO } from 'lucid-cardano';
-import { isFrontEndEnvironment, isNullOrBlank, showData, toJson } from '@/src/utils/commons/utils';
-import { TimeApi } from '@/src/lib/MayzSmartDB';
-import { OptionsGet, OptionsGetOne, console_errorLv1, console_logLv1, tabs } from '../../Commons/index.BackEnd';
+import { OptionsGet, OptionsGetOne, console_errorLv1, console_logLv1, isEmulator, isFrontEndEnvironment, isNullOrBlank, showData, tabs, toJson } from '../../Commons/index.BackEnd';
 import { isNFT_With_AC_Lucid_InValue } from '../../Commons/helpers';
 import { AddressToFollowEntity } from '../../Entities/AddressToFollow.Entity';
 import { BaseSmartDBEntity } from '../../Entities/Base/Base.SmartDB.Entity';
 import { EmulatorEntity } from '../../Entities/Emulator.Entity';
 import { SmartUTxOEntity } from '../../Entities/SmartUTxO.Entity';
 import { BaseBackEndMethods } from './Base.BackEnd.Methods';
-import { isEmulator } from '@/src/utils/specific/constants';
+import { TimeApi } from '../../lib';
 
 // BaseSmartDBBackEndMethods es generico
 // Todos los metodos reciven o instancia o entidad

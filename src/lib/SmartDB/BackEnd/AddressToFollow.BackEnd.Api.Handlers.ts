@@ -1,20 +1,14 @@
 import { NextApiResponse } from 'next';
 import { User } from 'next-auth';
-import { showData, sanitizeForDatabase } from '@/src/utils/commons/utils';
-import yup from '@/src/utils/commons/yupLocale';
-import { NextApiRequestAuthenticated } from '../lib/Auth/types';
-import { OptionsGet, SmartDBEntitiesRegistry, yupValidateOptionsGet } from '../Commons';
-import { console_error, console_log, tabs } from '../Commons/BackEnd/globalLogs';
+import { OptionsGet, SmartDBEntitiesRegistry, isEmulator, sanitizeForDatabase, showData, yupValidateOptionsGet } from '../Commons';
+import { globalEmulator } from '../Commons/BackEnd/globalEmulator';
+import { console_error, console_log } from '../Commons/BackEnd/globalLogs';
 import { AddressToFollowEntity } from '../Entities/AddressToFollow.Entity';
-import { BaseSmartDBEntity } from '../Entities/Base/Base.SmartDB.Entity';
+import { NextApiRequestAuthenticated } from '../lib/Auth/types';
 import { AddressToFollowBackEndApplied } from './AddressToFollow.BackEnd.Applied';
 import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers';
 import { BaseSmartDBBackEndMethods } from './Base/Base.SmartDB.BackEnd.Methods';
-import { ProtocolEntity } from '../../MayzSmartDB/Entities/Protocol.Entity';
-import { FundEntity } from '../../MayzSmartDB/Entities/Fund.Entity';
-import { string } from 'yup';
-import { isEmulator } from '@/src/utils/specific/constants';
-import { globalEmulator } from '../Commons/BackEnd/globalEmulator';
+import yup from '../Commons/yupLocale';
 
 //BackEnd Api Handlers siempre llevan seteado la entidad y el backend methods
 
@@ -234,50 +228,50 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
                     // await TimeBackEnd.syncBlockChainWithServerTime()
                 }
                 //--------------------------------------
-                // TODO: estoy usandod esde la libreria generica esto que usa entidades de MAYZ... deberia hacer este metodo en una clase de mayz directamente
-                const ProtocolBackEndApplied = (await import('../../MayzSmartDB/backEnd')).ProtocolBackEndApplied;
-                const FundBackEndApplied = (await import('../../MayzSmartDB/backEnd')).FundBackEndApplied;
-                //--------------------------------------
-                const protocols: ProtocolEntity[] = await ProtocolBackEndApplied.getAll_();
-                const funds: FundEntity[] = await FundBackEndApplied.getAll_();
-                //--------------------------------------
-                // Create list of used addresses for protocols
-                interface addressAndCS {
-                    address: string;
-                    CS: string;
-                }
-                const usedProtocolAddresses: addressAndCS[] = protocols.flatMap((protocol) => [
-                    { address: protocol.getNet_Address(), CS: protocol.pdpProtocolPolicyID_CS },
-                    { address: protocol.getNet_Script_Validator_Address(), CS: protocol.pdpScriptPolicyID_CS },
-                    { address: protocol.getNet_SellOffer_Validator_Address(), CS: protocol.pdpSellOfferPolicyID_CS },
-                    { address: protocol.getNet_Delegation_Validator_Address(), CS: protocol.pdpDelegationPolicyID_CS },
-                ]);
-                // Create list of used addresses for funds
-                const usedFundAddresses: addressAndCS[] = funds.flatMap((fund) => [
-                    { address: fund.getNet_Address(), CS: fund.fdpFundPolicy_CS },
-                    { address: fund.getNet_FundHolding_Validator_Address(), CS: fund.fdpFundHoldingPolicyID_CS },
-                ]);
+                // // TODO: estoy usandod esde la libreria generica esto que usa entidades de MAYZ... deberia hacer este metodo en una clase de mayz directamente
+                // const ProtocolBackEndApplied = (await import('../../MayzSmartDB/backEnd')).ProtocolBackEndApplied;
+                // const FundBackEndApplied = (await import('../../MayzSmartDB/backEnd')).FundBackEndApplied;
+                // //--------------------------------------
+                // const protocols: ProtocolEntity[] = await ProtocolBackEndApplied.getAll_();
+                // const funds: FundEntity[] = await FundBackEndApplied.getAll_();
+                // //--------------------------------------
+                // // Create list of used addresses for protocols
+                // interface addressAndCS {
+                //     address: string;
+                //     CS: string;
+                // }
+                // const usedProtocolAddresses: addressAndCS[] = protocols.flatMap((protocol) => [
+                //     { address: protocol.getNet_Address(), CS: protocol.pdpProtocolPolicyID_CS },
+                //     { address: protocol.getNet_Script_Validator_Address(), CS: protocol.pdpScriptPolicyID_CS },
+                //     { address: protocol.getNet_SellOffer_Validator_Address(), CS: protocol.pdpSellOfferPolicyID_CS },
+                //     { address: protocol.getNet_Delegation_Validator_Address(), CS: protocol.pdpDelegationPolicyID_CS },
+                // ]);
+                // // Create list of used addresses for funds
+                // const usedFundAddresses: addressAndCS[] = funds.flatMap((fund) => [
+                //     { address: fund.getNet_Address(), CS: fund.fdpFundPolicy_CS },
+                //     { address: fund.getNet_FundHolding_Validator_Address(), CS: fund.fdpFundHoldingPolicyID_CS },
+                // ]);
 
-                const usedInvestUnitAddresses: addressAndCS[] = protocols.flatMap((protocol) => {
-                    const address = protocol.getNet_Address();
-                    const usedFundAddresses: addressAndCS[] = funds.flatMap((fund) => {
-                        return { address, CS: fund.fdpFundPolicy_CS };
-                    });
-                    return usedFundAddresses;
-                 })
+                // const usedInvestUnitAddresses: addressAndCS[] = protocols.flatMap((protocol) => {
+                //     const address = protocol.getNet_Address();
+                //     const usedFundAddresses: addressAndCS[] = funds.flatMap((fund) => {
+                //         return { address, CS: fund.fdpFundPolicy_CS };
+                //     });
+                //     return usedFundAddresses;
+                // });
 
-                // Combine all used addresses
-                const allUsedAddresses = [...usedProtocolAddresses, ...usedFundAddresses, ...usedInvestUnitAddresses];
-                //--------------------------------------
-                const addressesToFollow: T[] = await this._BackEndApplied.getAll_<T>();
-                //--------------------------------------
-                for (let addressToFollow of addressesToFollow) {
-                    //if addressToFollow.address is not in used addresses with same CS, we can delete it
-                    if (!allUsedAddresses.some((usedAddress) => usedAddress.address === addressToFollow.address && usedAddress.CS === addressToFollow.currencySymbol)) {
-                        console_log(0, this._Entity.className(), `cleanApiHandler - Deleting: ${addressToFollow.address}`);
-                        this._BackEndApplied.delete(addressToFollow);
-                    }
-                }
+                // // Combine all used addresses
+                // const allUsedAddresses = [...usedProtocolAddresses, ...usedFundAddresses, ...usedInvestUnitAddresses];
+                // //--------------------------------------
+                // const addressesToFollow: T[] = await this._BackEndApplied.getAll_<T>();
+                // //--------------------------------------
+                // for (let addressToFollow of addressesToFollow) {
+                //     //if addressToFollow.address is not in used addresses with same CS, we can delete it
+                //     if (!allUsedAddresses.some((usedAddress) => usedAddress.address === addressToFollow.address && usedAddress.CS === addressToFollow.currencySymbol)) {
+                //         console_log(0, this._Entity.className(), `cleanApiHandler - Deleting: ${addressToFollow.address}`);
+                //         this._BackEndApplied.delete(addressToFollow);
+                //     }
+                // }
                 //--------------------------------------
                 console_log(-1, this._Entity.className(), `cleanApiHandler - GET - OK`);
                 //--------------------------------------

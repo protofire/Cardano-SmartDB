@@ -1,14 +1,12 @@
 {
   "parser": "@typescript-eslint/parser",
   "plugins": [
-    "@typescript-eslint",
-    "custom-rules"
+    "@typescript-eslint"
   ],
   "extends": [
-    "plugin:@next/next/recommended",
-    "next/core-web-vitals"
-    //"eslint:recommended",
+    "next/core-web-vitals",
     //"plugin:@typescript-eslint/recommended"
+    //"eslint:recommended",
   ],
   "parserOptions": {
     "project": "./tsconfig.json"

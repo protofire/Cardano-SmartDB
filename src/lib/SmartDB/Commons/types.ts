@@ -1,9 +1,8 @@
-import { Address, Constr, PaymentKeyHash, SignedMessage, TxHash, UTxO } from 'lucid-cardano';
-import yup from '@/src/utils/commons/yupLocale';
+import { Address, Constr, Lucid, PaymentKeyHash, SignedMessage, TxHash, UTxO } from 'lucid-cardano';
 import { BaseConstructor } from '../Entities/Base/Base.Constructor';
 import { itemToLucidData } from './data';
-import { TOKEN_MAYZ_CS, TOKEN_MAYZ_TN } from '@/src/utils/specific/constants';
-import { strToHex } from '@/src/utils/commons/utils';
+import yup from './yupLocale';
+import { ISODateString } from 'next-auth';
 
 export type PaymentPubKey = string;
 export type StakeCredentialPubKeyHash = PaymentKeyHash;
@@ -443,16 +442,6 @@ export interface WalletTxParams {
 }
 
 //-------------------------------------------------------------
-// "pending" | "submitted" | "confirmed" | "failed" | "expired" | "unknown";
-
-export const TRANSACTION_STATUS_PENDING = 'pending';
-export const TRANSACTION_STATUS_CANCELED = 'canceled';
-export const TRANSACTION_STATUS_SUBMITTED = 'submitted';
-export const TRANSACTION_STATUS_CONFIRMED = 'confirmed';
-export const TRANSACTION_STATUS_FAILED = 'failed';
-export const TRANSACTION_STATUS_TIMEOUT = 'timeout';
-export const TRANSACTION_STATUS_EXPIRED = 'expired';
-export const TRANSACTION_STATUS_UNKNOWN = 'unknown';
 
 export type TransactionDatum = {
     address: string;
@@ -476,7 +465,83 @@ export type TransactionRedeemer = {
 
 //-------------------------------------------------------------
 
-export const WALLET_CREATEDBY_ADMIN = 'Admin';
-export const WALLET_CREATEDBY_LOGIN = 'Login';
+declare module 'next-auth' {
+    export interface User extends SessionWalletInfo {
+        id?: string;
+    }
+
+    export interface JWT extends SessionWalletInfo {}
+
+    export interface Session {
+        user?: User;
+        expires: ISODateString;
+    }
+}
+
+export interface ConnectedWalletInfo {
+    network: string;
+    walletName: string;
+    address: Address;
+    pkh: PaymentKeyHash;
+    stakePkh: PaymentKeyHash | undefined;
+    useBlockfrostToSubmit: boolean;
+    isWalletFromSeedOrKey: boolean;
+    isWalletValidatedWithSignedToken: boolean;
+}
+
+export interface SessionWalletInfo extends ConnectedWalletInfo {
+    isCoreTeam: boolean;
+    isProtocolAdmin: boolean;
+    isFundAdmin: boolean;
+    isMAYZHolder: boolean;
+}
+
+export interface Wallet {
+    lucid: Lucid | undefined;
+    protocolParameters: any;
+    info: ConnectedWalletInfo | undefined;
+}
 
 //-------------------------------------------------------------
+
+export interface TaskComponentProps {
+    onTaskLoading?: () => Promise<void>;
+    onTaskLoaded?: () => Promise<void>;
+    scrollToTask?: () => void;
+    // refToGoWhenFinishTask?: RefObject<HTMLDivElement>
+    onFinishTask?: (swBackToDashboard?: boolean, unsetPreviusEntityId?: boolean) => Promise<void>;
+}
+
+export interface ActionComponentProps {
+    onConfirmation?: () => Promise<void>;
+    onCancel?: () => Promise<void>;
+}
+
+export interface CreateComponentProps {
+    onCreate?: (id?: string) => Promise<void>;
+    onCancel?: () => Promise<void>;
+}
+export interface UpdateComponentProps {
+    onUpdate?: () => Promise<void>;
+    onCancel?: () => Promise<void>;
+}
+
+export interface DeleteComponentProps {
+    onCancel?: () => Promise<void>;
+}
+
+export interface TxComponentProps {
+    onTx?: () => Promise<void>;
+    onCancel?: () => Promise<void>;
+}
+
+export interface ListComponentProps {
+    onCancel?: () => Promise<void>;
+    swShowBtnAdmin?: boolean;
+    swShowBtnCreate?: boolean;
+    swShowBtnDelete?: boolean;
+    swShowBtnUpdate?: boolean;
+    swShowBtnDeployTx?: boolean;
+    swShowBtnUpdateTx?: boolean;
+    swShowBtnDeleteTx?: boolean;
+}

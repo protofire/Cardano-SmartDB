@@ -1,44 +1,13 @@
 import { Assets, C, PaymentKeyHash, Script, UTxO, fromHex, toHex } from 'lucid-cardano';
-import {
-    LUCID_NETWORK_MAINNET_INT,
-    LucidLUCID_NETWORK_MAINNET_NAME,
-    LUCID_NETWORK_TESTNET_INT,
-    ADA_UI,
-    TOKEN_MAYZ_CS,
-    TOKEN_MAYZ_TN,
-    BUYORDER_ID_TN,
-    DELEGATION_ID_TN,
-    FUNDHOLDING_ID_TN_basename,
-    FUND_ID_TN,
-    INVESTUNIT_ID_TN,
-    PROTOCOL_ID_TN,
-    SELLOFFER_ID_TN,
-    ADA_TX_FEE_MARGIN,
-} from '@/src/utils/specific/constants';
-import { hexToStr, isNullOrBlank, searchValueInArray, strToHex, toJson } from '@/src/utils/commons/utils';
-import { AC, CS, PaymentAndStakePubKeyHash, StakeCredentialPubKeyHash, Token_With_Metadata_And_Amount, TxOutRef } from './types';
+
+import { AC, CS, Decimals, PaymentAndStakePubKeyHash, StakeCredentialPubKeyHash, Token_With_Metadata_And_Amount, TxOutRef } from './types';
+import { formatAmount, hexToStr, isNullOrBlank, searchValueInArray } from './utils';
+import { ADA_DECIMALS, ADA_TX_FEE_MARGIN, ADA_UI, LUCID_NETWORK_MAINNET_INT, LUCID_NETWORK_TESTNET_INT, LucidLUCID_NETWORK_MAINNET_NAME } from './constants';
 
 //---------------------------------------------------------------
 
 export function isTokenADA(CS: string, TN: string) {
     return (CS === '' || CS === 'lovelace') && TN === '';
-}
-
-export function checkIfIsSystemToken(CS: string, TN_Hex: string) {
-    const internalTokens = [PROTOCOL_ID_TN, FUND_ID_TN, INVESTUNIT_ID_TN, SELLOFFER_ID_TN, BUYORDER_ID_TN, DELEGATION_ID_TN];
-    const TN_Str = hexToStr(TN_Hex);
-    if (internalTokens.includes(TN_Str)) {
-        return true;
-    } else if (TN_Str.startsWith(FUNDHOLDING_ID_TN_basename)) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-export function checkIfIsMAYZToken(CS: string, TN_Hex: string) {
-    const TN_Str = hexToStr(TN_Hex);
-    return CS == TOKEN_MAYZ_CS && TN_Str === TOKEN_MAYZ_TN;
 }
 
 export function isToken_CS_And_TN_Valid(CS: string | undefined, TN_Hex: string | undefined) {
@@ -89,14 +58,151 @@ export function formatUTxO(txHash: string, outputIndex: number) {
     return `${formatHash(txHash)}#${outputIndex}`;
 }
 
+
+export function formatTokenAmount(
+    amount: bigint | number | undefined,
+    CS: string,
+    TN_Hex?: string,
+    showDecimals: Decimals = 0,
+    swRoundWithLetter: boolean = false,
+    showAtLeastDecimals: Decimals = 0,
+    decimalsInBigUnit: Decimals = showDecimals
+): string {
+    if (typeof amount !== 'number' && amount !== undefined) {
+        amount = Number(amount);
+    }
+    if (CS === ADA_UI || CS === '' || CS === 'lovelace') {
+        if (amount === undefined) {
+            return `... ${ADA_UI}`;
+        }
+        return formatAmountWithUnit(amount, ADA_DECIMALS, ADA_UI, swRoundWithLetter, showAtLeastDecimals, ADA_DECIMALS);
+    } else if (TN_Hex !== undefined) {
+        if (amount === undefined) {
+            return `... ${hexToStr(TN_Hex)}`;
+        }
+        return formatAmountWithUnit(amount, showDecimals, hexToStr(TN_Hex), swRoundWithLetter, showAtLeastDecimals, decimalsInBigUnit);
+    }
+    return '';
+}
+
+export function formatAmountWithUnit(
+    amount: bigint | number,
+    showDecimals: Decimals = 0,
+    unit: string = '',
+    swRoundWithLetter: boolean = false,
+    showAtLeastDecimals: Decimals = 0,
+    decimalsInBigUnit: Decimals = showDecimals
+) {
+    //-------------
+    if (typeof amount !== 'number') {
+        amount = Number(amount);
+    }
+    //-------------
+    let roundedValueWithDecimals = amount;
+    //-------------
+    // if (showDecimals !== decimalsInBigUnit) {
+    //-------------
+    // si esta seteando estos valores diferentes, aqui calculo el valor real de la unidad grande
+    // y mas abajo, si no esta seteado rounbdWithLetter, lo vuelvo a multiplicar, esta vez por el valor de showDecimals, por que a su vez el formatAmount lo va a dividir por ese valor
+    const potDecimalsInBigUnit = Math.pow(10, decimalsInBigUnit);
+    const realValueInBiGUnit = amount / potDecimalsInBigUnit;
+    //-------------
+    roundedValueWithDecimals = realValueInBiGUnit;
+    // }
+    //-------------
+    if (swRoundWithLetter === true) {
+        //-------------
+        let decimals_: Decimals = showAtLeastDecimals;
+        //-------------
+        if (amount < Math.pow(10, decimalsInBigUnit - showAtLeastDecimals) && amount > 0) {
+            //-------------
+            if (unit !== '' && (unit === ADA_UI || decimalsInBigUnit === 6)) {
+                //-------------
+                // eso significa que el numero es menor que el menor valor que se va a mostrar con estos decimales
+                // resto dos, por que quiero igual seguir usando el otro valor, que
+                //-------------
+                if (unit === ADA_UI) {
+                    unit = 'lovelace';
+                } else {
+                    if (decimalsInBigUnit === 6) {
+                        unit = 'μ' + unit;
+                    } else {
+                        // esto por ahora no entra nunca... en el futuro si, pero no es facil para el usuario
+                        unit = `x10-${decimalsInBigUnit}` + unit;
+                    }
+                }
+                //-------------
+                roundedValueWithDecimals = amount;
+                //-------------
+            } else {
+                decimals_ = showDecimals;
+            }
+        }
+        //-------------
+        if (!unit.startsWith(' ') && unit !== '') {
+            unit = ' ' + unit;
+        }
+        //-------------
+        if (roundedValueWithDecimals >= 1e18) {
+            roundedValueWithDecimals /= 1e18;
+            unit = 'QT' + unit;
+        } else if (roundedValueWithDecimals >= 1e15) {
+            roundedValueWithDecimals /= 1e15;
+            unit = 'Q' + unit;
+        } else if (roundedValueWithDecimals >= 1e12) {
+            roundedValueWithDecimals /= 1e12;
+            unit = 'T' + unit;
+        } else if (roundedValueWithDecimals >= 1e9) {
+            roundedValueWithDecimals /= 1e9;
+            unit = 'B' + unit;
+        } else if (roundedValueWithDecimals >= 1e6) {
+            roundedValueWithDecimals /= 1e6;
+            unit = 'M' + unit;
+        } else if (roundedValueWithDecimals >= 1e3) {
+            roundedValueWithDecimals /= 1e3;
+            unit = 'K' + unit;
+        }
+        //-------------
+        if (roundedValueWithDecimals === Math.floor(roundedValueWithDecimals)) {
+            decimals_ = 0;
+        }
+        //-------------
+        const potShowDecimals = Math.pow(10, decimals_);
+        //-------------
+        return formatAmount(roundedValueWithDecimals * potShowDecimals, decimals_, 0) + unit;
+        //-------------
+    } else {
+        //-------------
+        if (!unit.startsWith(' ') && unit !== '') {
+            unit = ' ' + unit;
+        }
+        //-------------
+        // if (showDecimals !== decimalsInBigUnit) {
+        const potShowDecimals = Math.pow(10, showDecimals);
+        roundedValueWithDecimals = roundedValueWithDecimals * potShowDecimals;
+        // }
+        //-------------
+        return formatAmount(roundedValueWithDecimals, showDecimals, showAtLeastDecimals) + unit;
+        //-------------
+    }
+}
+
+//---------------------------------------------------------------
+
+export function formatPercentage(
+    amount: bigint | number,
+    showDecimals: Decimals = 0,
+    swRoundWithLetter: boolean = false,
+    showAtLeastDecimals: Decimals = 0,
+    decimalsInBigUnit: Decimals = showDecimals
+) {
+    return formatAmountWithUnit(amount, showDecimals, '', swRoundWithLetter, showAtLeastDecimals, decimalsInBigUnit) + '%';
+}
+
 //---------------------------------------------------------------
 
 export function createToken_With_Amount(CS: string, TN: string, amount: bigint): Token_With_Metadata_And_Amount {
     return { CS, TN, amount };
-}
-
-export function createToken_MAYZ_With_Amount(amount: bigint): Token_With_Metadata_And_Amount {
-    return { CS: TOKEN_MAYZ_CS, TN: strToHex(TOKEN_MAYZ_TN), amount };
 }
 
 export function createToken_ADA_With_Amount(amount: bigint): Token_With_Metadata_And_Amount {
@@ -138,29 +244,6 @@ function splitTokenKey(key: string): [string, string] {
     const CS = key.slice(0, 56);
     const TN = key.slice(56);
     return [CS, TN];
-}
-
-//---------------------------------------------------------------
-
-export function isValidUrl(url: string): boolean {
-    // Regular expression to check if the URL is absolute and starts with http://, https://, or ipfs://
-    const absoluteUrlPattern = /^(https?:\/\/|ipfs:\/\/).+/;
-    // Check if the URL is an absolute URL, starts with a leading slash, or is an IPFS URL
-    return absoluteUrlPattern.test(url) || url.startsWith('/');
-}
-
-export function getUrlForImage(url: string): string {
-    if (isValidUrl(url)) {
-        return url.startsWith('ipfs://') ? `https://ipfs.io/ipfs/${url.slice(7)}` : url;
-    } else {
-        return '';
-    }
-}
-
-export function isValidHexColor(color: string): boolean {
-    // Regular expression to validate hex color (3 or 6 digits, with or without '#')
-    const hexColorPattern = /^#?([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/;
-    return hexColorPattern.test(color);
 }
 
 //---------------------------------------------------------------
@@ -1047,4 +1130,47 @@ export function calculateMinAdaOfAssets_OLD(assets: Assets, isHash: boolean): bi
     const minADA = calculateMinAda_OLD(numAssets, sumAssetNameLengths, numPIDs, isHash);
 
     return minADA;
+}
+
+//---------------------------------------------------------------
+
+
+export function getInputValueFromSmallUnitPriceLovelace1xe6(smallUnitPriceLovelace1xe6: bigint | number | undefined, decimals: Decimals): bigint  | undefined{
+    if (smallUnitPriceLovelace1xe6 === undefined) return undefined;
+    if (typeof smallUnitPriceLovelace1xe6 !== 'number' && smallUnitPriceLovelace1xe6 !== undefined) {
+        smallUnitPriceLovelace1xe6 = Number(smallUnitPriceLovelace1xe6);
+    }
+    const extra1e6Decimales = 6
+    const inputDecimales = extra1e6Decimales + ADA_DECIMALS - decimals
+    // const reverseSmallUnitPriceLovelace = smallUnitPriceLovelace1xe6 / 10 ** extra1e6Decimales;
+    // console.log(`reverseSmallUnitPriceLovelace: ${reverseSmallUnitPriceLovelace}`);
+    // const reverseUnitPriceLovelace = reverseSmallUnitPriceLovelace * 10 ** decimals;
+    // console.log(`reverseUnitPriceLovelace: ${reverseUnitPriceLovelace}`);
+    // const reverseUnitPriceADA = reverseUnitPriceLovelace / 10 ** ADA_DECIMALS;
+    // console.log(`reverseUnitPriceADA: ${reverseUnitPriceADA}`);
+    // const reverseInputValue = reverseUnitPriceADA * 10 ** inputDecimales;
+    // console.log(`reverseInputValue: ${reverseInputValue}`);
+    const reverseInputValue1Step = BigInt(Math.floor(smallUnitPriceLovelace1xe6 * 10 ** (inputDecimales-ADA_DECIMALS+decimals-extra1e6Decimales)));
+    // console.log(`reverseInputValue1Step: ${reverseInputValue1Step}`);
+    return reverseInputValue1Step
+}
+
+export function getSmallUnitPriceLovelace1xe6FromInputValue(inputValue: bigint | number | undefined, decimals: Decimals): bigint  | undefined{
+    if (inputValue === undefined) return undefined;
+    if (typeof inputValue !== 'number' && inputValue !== undefined) {
+        inputValue = Number(inputValue);
+    }
+    const extra1e6Decimales = 6
+    const inputDecimales = extra1e6Decimales + ADA_DECIMALS - decimals
+    // const unitPriceADA = inputValue / 10 ** inputDecimales;
+    // console.log(`unitPriceADA: ${unitPriceADA}`);
+    // const unitPriceLovelace = unitPriceADA * 10 ** ADA_DECIMALS;
+    // console.log(`unitPriceLovelace: ${unitPriceLovelace}`);
+    // const smallUnitPriceLovelace = unitPriceLovelace / 10 ** decimals!;
+    // console.log(`smallUnitPriceLovelace: ${smallUnitPriceLovelace}`);
+    // const smallUnitPriceLovelace1xe6 = (Math.floor(smallUnitPriceLovelace * 10 **extra1e6Decimales));
+    // console.log(`smallUnitPriceLovelace1xe6: ${smallUnitPriceLovelace1xe6}`);
+    const smallUnitPriceLovelace1xe61Step = BigInt(Math.floor(inputValue * 10 **(-inputDecimales+ADA_DECIMALS-decimals+extra1e6Decimales)));
+    // console.log(`smallUnitPriceLovelace1xe61Step: ${smallUnitPriceLovelace1xe61Step}`);
+    return smallUnitPriceLovelace1xe61Step
 }

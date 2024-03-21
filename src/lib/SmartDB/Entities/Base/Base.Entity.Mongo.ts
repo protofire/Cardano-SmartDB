@@ -1,13 +1,10 @@
 import 'reflect-metadata';
 import { Types } from 'mongoose';
-import { executeFunction, isSubclassOf, toJson } from '@/src/utils/commons/utils';
 import { deserealizeBigInt } from '../../Commons/conversions';
 import { ConversionFunctions, getCombinedConversionFunctions } from '../../Commons/Decorator.Convertible';
 import { MongoAppliedFor } from '../../Commons/Decorator.MongoAppliedFor';
 import { BaseEntity } from './Base.Entity';
-
-
-
+import { executeFunction, toJson } from '../../Commons';
 
 @MongoAppliedFor([BaseEntity])
 export class BaseEntityMongo {

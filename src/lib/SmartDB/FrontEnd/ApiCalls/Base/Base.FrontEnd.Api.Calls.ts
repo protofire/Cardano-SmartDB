@@ -1,7 +1,5 @@
-import { toJson, isNullOrBlank, isString, isEqual, isObject, isEmptyObject, showData, createQueryURLString } from '@/src/utils/commons/utils';
-import { EntitiesRegistry, OptionsCreateOrUpdate, OptionsDelete, OptionsGet, OptionsGetOne, SmartDBEntitiesRegistry, getCombinedConversionFunctions, optionsGetDefault, optionsGetOneDefault } from '../../../Commons';
+import { EntitiesRegistry, ITEMS_PER_PAGE, OptionsCreateOrUpdate, OptionsDelete, OptionsGet, OptionsGetOne, SmartDBEntitiesRegistry, createQueryURLString, getCombinedConversionFunctions, isEmptyObject, isEqual, isNullOrBlank, isObject, isString, optionsGetDefault, optionsGetOneDefault, showData, toJson } from '../../../Commons';
 import { BaseEntity } from '../../../Entities/Base/Base.Entity';
-import { ITEMS_PER_PAGE } from '@/src/utils/specific/constants';
 
 // es generica, todos los metodos llevan instancia o entidad como parametro
 // todas las clases la pueden usar

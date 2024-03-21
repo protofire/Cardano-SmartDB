@@ -1,8 +1,7 @@
 import 'reflect-metadata';
-import { Convertible, asEntity, formatHash, type CS, type TN } from '../Commons';
+import { Convertible, asEntity, formatHash, hexToStr, type CS, type TN } from '../Commons';
 import { BaseEntity } from './Base/Base.Entity';
 import { type SignedMessage } from 'lucid-cardano';
-import { hexToStr } from '@/src/utils/commons/utils';
 
 @asEntity()
 export class PriceEntity extends BaseEntity {

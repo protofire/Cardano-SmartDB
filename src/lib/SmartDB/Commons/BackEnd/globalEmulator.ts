@@ -1,8 +1,7 @@
 import { Blockfrost, Lucid } from 'lucid-cardano';
 import { console_log, tabs } from './globalLogs';
-import { isEmulator } from '@/src/utils/specific/constants';
 import { EmulatorEntity } from '../../Entities/Emulator.Entity';
-import { delay } from '@/src/utils/commons/utils';
+import { isEmulator } from '../constants';
 
 export interface GlobalEmulator {
     emulatorDB: EmulatorEntity | undefined;
@@ -17,7 +16,7 @@ export async function getGlobalEmulator(refresh: boolean = false): Promise<Emula
     //------------------
     if (isEmulator && (globalEmulator.emulatorDB === undefined || refresh === true)) {
         //------------------
-        const EmulatorBackEndApplied = (await import('../../../MayzSmartDB/BackEnd/index.exports')).EmulatorBackEndApplied;
+        const EmulatorBackEndApplied = (await import('../../BackEnd/Emulator.BackEnd.All')).EmulatorBackEndApplied;
         let emulatorDB: EmulatorEntity | undefined = await EmulatorBackEndApplied.getOneByParams_({ current: true });
         //------------------
         if (emulatorDB === undefined) {

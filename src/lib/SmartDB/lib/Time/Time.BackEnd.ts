@@ -1,4 +1,4 @@
-import { convertMillisToTime } from '@/src/utils/commons/utils';
+import { convertMillisToTime } from '../../Commons';
 import { SYNC_SERVER_TIME_10M_MS, SYNC_SERVER_TIME_2M_MS, VALID_TX_TIME_RANGE, isEmulator } from '@/src/utils/specific/constants';
 import { TimeApi } from './Time.FrontEnd';
 import { console_log } from '../../Commons/BackEnd/globalLogs';

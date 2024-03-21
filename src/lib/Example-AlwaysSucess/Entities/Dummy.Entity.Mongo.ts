@@ -3,13 +3,13 @@ import { BaseSmartDBEntityMongo, IBaseSmartDBEntity } from '@/src/lib/SmartDB/En
 import { type PaymentKeyHash } from "lucid-cardano";
 import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
-import { Maybe, type CS } from '../Commons';
-import { DelegationEntity } from './Dummy.Entity';
+import { DummyEntity } from './Dummy.Entity';
+import { CS, Maybe } from '../../SmartDB';
 
-@MongoAppliedFor([DelegationEntity])
+@MongoAppliedFor([DummyEntity])
 export class DelegationEntityMongo extends BaseSmartDBEntityMongo {
-    protected static Entity = DelegationEntity;
-    protected static _mongoTableName: string = DelegationEntity.className();
+    protected static Entity = DummyEntity;
+    protected static _mongoTableName: string = DummyEntity.className();
 
     // #region fields
 
@@ -25,12 +25,12 @@ export class DelegationEntityMongo extends BaseSmartDBEntityMongo {
         return this as typeof DelegationEntityMongo;
     }
 
-    public getStatic(): typeof DelegationEntity {
-        return this.getMongoStatic().getStatic() as typeof DelegationEntity;
+    public getStatic(): typeof DummyEntity {
+        return this.getMongoStatic().getStatic() as typeof DummyEntity;
     }
 
-    public static getStatic(): typeof DelegationEntity {
-        return this.Entity as typeof DelegationEntity;
+    public static getStatic(): typeof DummyEntity {
+        return this.Entity as typeof DummyEntity;
     }
 
     public className(): string {
@@ -48,12 +48,8 @@ export class DelegationEntityMongo extends BaseSmartDBEntityMongo {
     public static MongoModel() {
         interface InterfaceDB extends IBaseSmartDBEntity {}
         interface InterfaceDatum {
-            ddDelegationPolicyID_CS: CS;
-            ddFundPolicy_CS: CS;
-            ddDelegatorPaymentPKH: PaymentKeyHash;
-            ddDelegatorStakePKH: Maybe<PaymentKeyHash>;
-            ddDelegated_Mayz: string;
-            ddMinADA: string;
+            ddPaymentPKH: PaymentKeyHash;
+            ddStakePKH: Maybe<PaymentKeyHash>;
         }
 
         interface Interface extends InterfaceDB, InterfaceDatum {}
@@ -63,12 +59,8 @@ export class DelegationEntityMongo extends BaseSmartDBEntityMongo {
         };
 
         const schemaDatum = {
-            ddDelegationPolicyID_CS: { type: String, required: false },
-            ddFundPolicy_CS: { type: String, required: false },
-            ddDelegatorPaymentPKH: { type: String, required: false },
-            ddDelegatorStakePKH: { type: Object, required: false },
-            ddDelegated_Mayz: { type: String, required: false },
-            ddMinADA: { type: String, required: false },
+            ddPaymentPKH: { type: String, required: false },
+            ddStakePKH: { type: Object, required: false },
         };
 
         const schema = new Schema<Interface>({
