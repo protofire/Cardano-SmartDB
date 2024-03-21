@@ -1,0 +1,28 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint",
+    "custom-rules"
+  ],
+  "extends": [
+    "plugin:@next/next/recommended",
+    "next/core-web-vitals"
+    //"eslint:recommended",
+    //"plugin:@typescript-eslint/recommended"
+  ],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "ignorePatterns": [
+    "_OLD/**/*",
+    "src/**/_OLD/**/*",
+    "next.config.js",
+    "prettier.config.js",
+  ],
+  "rules": {
+        "react-hooks/exhaustive-deps": "off",
+   }
+   
+}
+
+
