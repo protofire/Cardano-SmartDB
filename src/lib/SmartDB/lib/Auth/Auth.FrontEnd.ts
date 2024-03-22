@@ -1,7 +1,7 @@
 import { strToHex, toJson } from '../../Commons';
-import yup from '@/src/utils/commons/yupLocale';
 import { Lucid, SignedMessage } from "lucid-cardano";
 import { Credentials, CredentialsAuthenticated } from './types';
+import yup from '../../Commons/yupLocale';
 
 export class AuthApi {
     // #region generic methods

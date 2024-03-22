@@ -1,0 +1,21 @@
+
+html {
+    width: 100vw;
+    overflow-y: auto;
+    overflow-x: hidden;
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    scrollbar-width: 8px;
+    ::-webkit-scrollbar-thumb {
+        background: #786d93ff;
+        border-radius: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        box-shadow: inset 0 0 5px #241f32ff;
+        border-radius: 8px;
+    }
+
+    scroll-behavior: smooth;
+}

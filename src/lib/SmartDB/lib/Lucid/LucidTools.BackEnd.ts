@@ -1,6 +1,5 @@
 //--------------------------------------
-import { WalletTxParams, console_error, console_log, globalEmulator } from '../../Commons/index.BackEnd';
-import { isEmulator } from '@/src/utils/specific/constants';
+import { WalletTxParams, console_error, console_log, globalEmulator, isEmulator } from '../../Commons/index.BackEnd';
 import { ExternalWallet, Lucid } from 'lucid-cardano';
 import { LucidToolsFrontEnd } from './LucidTools.FrontEnd';
 //--------------------------------------

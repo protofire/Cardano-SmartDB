@@ -491,9 +491,6 @@ export interface ConnectedWalletInfo {
 
 export interface SessionWalletInfo extends ConnectedWalletInfo {
     isCoreTeam: boolean;
-    isProtocolAdmin: boolean;
-    isFundAdmin: boolean;
-    isMAYZHolder: boolean;
 }
 
 export interface Wallet {

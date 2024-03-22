@@ -1,7 +1,4 @@
-import { IUseWalletStore } from '@/src/store/types';
-import { ConnectedWalletInfo } from '@/src/types';
-import { isObject, toJson } from '../../Commons';
-import { TX_CHECK_INTERVAL, isEmulator } from '@/src/utils/specific/constants';
+import { ConnectedWalletInfo, TX_CHECK_INTERVAL, isEmulator, isObject, toJson } from '../../Commons';
 import { Blockfrost, ExternalWallet, Lucid, PrivateKey, TxSigned, WalletApi } from 'lucid-cardano';
 import { TRANSACTION_STATUS_CONFIRMED, TRANSACTION_STATUS_FAILED, TRANSACTION_STATUS_TIMEOUT, WalletTxParams } from '../../Commons';
 import { EmulatorEntity } from '../../Entities/Emulator.Entity';
@@ -172,48 +169,48 @@ export class LucidToolsFrontEnd {
         }
     }
 
-    public static async prepareLucidFrontEndForTx(walletStore: IUseWalletStore): Promise<{ lucid: Lucid; emulatorDB?: EmulatorEntity; walletTxParams: WalletTxParams }> {
-        try {
-            console.log(`[Lucid] - prepareLucidFrontEndForTx`);
-            //--------------------------------------
-            if (walletStore.isConnected === false || walletStore.info === undefined) {
-                throw `Wallet not connected`;
-            }
-            //--------------------------------------
-            let emulatorDB;
-            //--------------------------------------
-            if (isEmulator) {
-                //--------------------------------------
-                // solo en emulator. Me aseguro de setear el emulador al tiempo real del server. Va a saltear los slots necesarios.
-                await TimeApi.syncEmulatorBlockChainWithServerTimeApi();
-                //--------------------------------------
-                emulatorDB = await BaseSmartDBFrontEndApiCalls.getOneByParamsApi<EmulatorEntity>(EmulatorEntity, { current: true });
-                if (emulatorDB === undefined) {
-                    throw `emulatorDB current not found`;
-                }
-            }
-            //--------------------------------------
-            const lucid = await walletStore.getLucid({ emulatorDB });
-            if (lucid === undefined || lucid.wallet === undefined) {
-                throw `wallet not ready yet`;
-            }
-            //--------------------------------------
-            const address = await lucid.wallet.address();
-            const rewardAddress = await lucid.wallet.rewardAddress();
-            const utxos = await lucid.wallet.getUtxos();
-            const walletTxParams: WalletTxParams = {
-                pkh: walletStore.info.pkh,
-                stakePkh: walletStore.info?.stakePkh,
-                address,
-                rewardAddress: rewardAddress === null ? undefined : rewardAddress,
-                utxos,
-            };
-            return { lucid, emulatorDB, walletTxParams };
-        } catch (error) {
-            console.log(`[Lucid] - prepareLucidFrontEndForTx - Error: ${error}`);
-            throw error;
-        }
-    }
+    // public static async prepareLucidFrontEndForTx(walletStore: IUseWalletStore): Promise<{ lucid: Lucid; emulatorDB?: EmulatorEntity; walletTxParams: WalletTxParams }> {
+    //     try {
+    //         console.log(`[Lucid] - prepareLucidFrontEndForTx`);
+    //         //--------------------------------------
+    //         if (walletStore.isConnected === false || walletStore.info === undefined) {
+    //             throw `Wallet not connected`;
+    //         }
+    //         //--------------------------------------
+    //         let emulatorDB;
+    //         //--------------------------------------
+    //         if (isEmulator) {
+    //             //--------------------------------------
+    //             // solo en emulator. Me aseguro de setear el emulador al tiempo real del server. Va a saltear los slots necesarios.
+    //             await TimeApi.syncEmulatorBlockChainWithServerTimeApi();
+    //             //--------------------------------------
+    //             emulatorDB = await BaseSmartDBFrontEndApiCalls.getOneByParamsApi<EmulatorEntity>(EmulatorEntity, { current: true });
+    //             if (emulatorDB === undefined) {
+    //                 throw `emulatorDB current not found`;
+    //             }
+    //         }
+    //         //--------------------------------------
+    //         const lucid = await walletStore.getLucid({ emulatorDB });
+    //         if (lucid === undefined || lucid.wallet === undefined) {
+    //             throw `wallet not ready yet`;
+    //         }
+    //         //--------------------------------------
+    //         const address = await lucid.wallet.address();
+    //         const rewardAddress = await lucid.wallet.rewardAddress();
+    //         const utxos = await lucid.wallet.getUtxos();
+    //         const walletTxParams: WalletTxParams = {
+    //             pkh: walletStore.info.pkh,
+    //             stakePkh: walletStore.info?.stakePkh,
+    //             address,
+    //             rewardAddress: rewardAddress === null ? undefined : rewardAddress,
+    //             utxos,
+    //         };
+    //         return { lucid, emulatorDB, walletTxParams };
+    //     } catch (error) {
+    //         console.log(`[Lucid] - prepareLucidFrontEndForTx - Error: ${error}`);
+    //         throw error;
+    //     }
+    // }
 
     public static getTxMemAndStepsUse(txSize: number, txJson: string) {
         const tx = JSON.parse(txJson);

@@ -1,5 +1,4 @@
-import { convertMillisToTime } from '../../Commons';
-import { SYNC_SERVER_TIME_10M_MS, SYNC_SERVER_TIME_2M_MS, VALID_TX_TIME_RANGE, isEmulator } from '@/src/utils/specific/constants';
+import { SYNC_SERVER_TIME_10M_MS, SYNC_SERVER_TIME_2M_MS, VALID_TX_TIME_RANGE, convertMillisToTime, isEmulator } from '../../Commons';
 import { TimeApi } from './Time.FrontEnd';
 import { console_log } from '../../Commons/BackEnd/globalLogs';
 import { globalTime } from '../../Commons/BackEnd/globalBlockchainTime';
@@ -111,7 +110,7 @@ export class TimeBackEnd {
                 //--------------------------------------
                 if (globalEmulator.emulatorDB.emulator.slot !== emulatorSlot) {
                     //--------------------------------------
-                    const EmulatorBackEndApplied = (await import('../../../MayzSmartDB/BackEnd/index.exports')).EmulatorBackEndApplied;
+                    const EmulatorBackEndApplied = (await import('../../BackEnd/Emulator.BackEnd.All')).EmulatorBackEndApplied;
                     await EmulatorBackEndApplied.update(globalEmulator.emulatorDB);
                 }
             }

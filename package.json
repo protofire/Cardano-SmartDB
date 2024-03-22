@@ -1,6 +1,6 @@
 {
-    "name": "mayz-portal",
-    "version": "1.0.2",
+    "name": "smart-db",
+    "version": "1.0.0",
     "private": true,
     "engines": {
         "node": "^18"
@@ -61,7 +61,7 @@
         "jest": "^29.6.2",
         "prettier": "^2.5.1",
         "reflect-metadata": "^0.1.13",
-        "sass": "^1.66.1",
+        "sass": "^1.72.0",
         "ts-jest": "^29.1.1",
         "tsconfig-paths": "^4.2.0",
         "typescript": "5.2.2"

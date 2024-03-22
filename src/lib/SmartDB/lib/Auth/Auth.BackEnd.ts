@@ -1,4 +1,4 @@
-import { isNullOrBlank, showData, sanitizeForDatabase, strToHex } from '../../Commons';
+import { isNullOrBlank, showData, sanitizeForDatabase, strToHex, PUBLIC_ENDPOINTS_FOR_LOCAL_REFERER, PUBLIC_ENDPOINTS_FROM_INTERNET, VALID_SESSION_DURATION_MS, VALID_SESSION_DURATION_STR } from '../../Commons';
 import Cors from 'cors';
 import { sign, verify } from 'jsonwebtoken';
 import { SignedMessage } from 'lucid-cardano';
@@ -16,6 +16,7 @@ import {
     initApiRequestWithContext,
     initGlobals,
 } from '../../Commons/index.BackEnd';
+import yup from '../../Commons/yupLocale';
 
 type MiddlewareFunction = (req: NextApiRequestAuthenticated, res: NextApiResponse, next: (result: any) => void) => void;
 
@@ -214,15 +215,9 @@ export class AuthBackEnd {
                 throw `Invalid address`;
             }
             //-------------------------
-            const WalletBackEndApplied = (await import('../../../MayzSmartDB/BackEnd')).WalletBackEndApplied;
-            const ProtocolBackEndApplied = (await import('../../../MayzSmartDB/BackEnd')).ProtocolBackEndApplied;
-            const FundBackEndApplied = (await import('../../../MayzSmartDB/BackEnd')).FundBackEndApplied;
+            const WalletBackEndApplied = (await import('../../BackEnd/Wallet.BackEnd.Applied')).WalletBackEndApplied;
             //-------------------------
             const isCoreTeam = await WalletBackEndApplied.isCoreTeam(paymentPkh);
-            const isProtocolAdmin = await ProtocolBackEndApplied.isAdmin(paymentPkh);
-            const isFundAdmin = await FundBackEndApplied.isAdmin(paymentPkh);
-            // TODO: calcular si es MAYZ HOLDER
-            const isMAYZHolder = true;
             //-------------------------
             const user: User = {
                 id: paymentPkh,
@@ -234,9 +229,6 @@ export class AuthBackEnd {
                 isWalletFromSeedOrKey: credentials.isWalletFromSeedOrKey === 'true' ? true : false,
                 network: process.env.NEXT_PUBLIC_CARDANO_NET!,
                 isCoreTeam,
-                isProtocolAdmin,
-                isFundAdmin,
-                isMAYZHolder,
                 isWalletValidatedWithSignedToken: credentials.signedChallengue !== undefined ? true : false,
             };
             //-------------------------
@@ -256,20 +248,11 @@ export class AuthBackEnd {
         const user = token !== null ? (token.user as User) : undefined;
         if (user !== undefined) {
             //-------------------------
-            const WalletBackEndApplied = (await import('../../../MayzSmartDB/BackEnd')).WalletBackEndApplied;
-            const ProtocolBackEndApplied = (await import('../../../MayzSmartDB/BackEnd')).ProtocolBackEndApplied;
-            const FundBackEndApplied = (await import('../../../MayzSmartDB/BackEnd')).FundBackEndApplied;
+            const WalletBackEndApplied = (await import('../../BackEnd/Wallet.BackEnd.Applied')).WalletBackEndApplied;
             //-------------------------
             const isCoreTeam = await WalletBackEndApplied.isCoreTeam(user.pkh);
-            const isProtocolAdmin = await ProtocolBackEndApplied.isAdmin(user.pkh);
-            const isFundAdmin = await FundBackEndApplied.isAdmin(user.pkh);
-            // TODO: calcular si es MAYZ HOLDER
-            const isMAYZHolder = true;
             //-------------------------
             user.isCoreTeam = isCoreTeam;
-            user.isProtocolAdmin = isProtocolAdmin;
-            user.isFundAdmin = isFundAdmin;
-            user.isMAYZHolder = isMAYZHolder;
         }
         return user;
     }
