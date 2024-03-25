@@ -15,6 +15,7 @@
         "standalone": "TS_NODE_PROJECT='tsconfig-for-standalone.json' ts-node ./src/__standalone__/minADA.ts"
     },
     "dependencies": {
+        "@hyperionbt/helios": "^0.16.7",
         "bignumber.js": "^9.1.1",
         "cls-hooked": "^4.2.2",
         "cors": "^2.8.5",

@@ -93,8 +93,13 @@ export const PUBLIC_ENDPOINTS_FOR_LOCAL_REFERER: RegExp[] = [
     /^\/api\/[a-zA-Z-_]+\/deployed/,
     /^\/api\/[a-zA-Z-_]+\/loadRelationMany/,
     /^\/api\/[a-zA-Z-_]+\/loadRelationOne/,
-    // /^\/api\/[a-zA-Z-_]+\/sync/,
+   
     /^\/api\/[a-zA-Z-_]+\/tx/,
+
+
+    /^\/api\/[a-zA-Z-_]+/,
+    /^\/api\/[a-zA-Z-_]+\/create/,
+    /^\/api\/[a-zA-Z-_]+\/sync/,
 
     /^\/api\/addressestofollow\/by-address/,
     /^\/api\/auth/,

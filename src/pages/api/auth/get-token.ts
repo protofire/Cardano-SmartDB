@@ -1,4 +1,4 @@
-import { initAllDecorators } from '@/src/lib/SmartDB/backEnd';
 import { AuthBackEnd } from '@/src/lib/SmartDB/lib/Auth/backEnd';
-initAllDecorators();
+import { initAllDecoratorsExample } from '@/src/lib/Example-AlwaysSucess/backEnd';
+initAllDecoratorsExample();
 export default AuthBackEnd.getJWTTokenApiHandler.bind(AuthBackEnd)

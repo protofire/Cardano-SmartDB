@@ -1,8 +1,9 @@
-import { NextApiRequestAuthenticated, console_error, initAllDecorators, initApiRequestWithContext, initGlobals, isEmulator } from '@/src/lib/SmartDB/backEnd';
+import { initAllDecoratorsExample } from '@/src/lib/Example-AlwaysSucess/backEnd';
+import { NextApiRequestAuthenticated, console_error,  initApiRequestWithContext, initGlobals, isEmulator } from '@/src/lib/SmartDB/backEnd';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { v4 } from 'uuid';
 // necestary to init all decorators because all the rest of the Apis call the BackeEnd index and thet is where others do the init
-initAllDecorators();
+initAllDecoratorsExample();
 
 export default async function handler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
     return await initApiRequestWithContext(0, `APP`, req, res, handlerWithContext, false, false, false, false);

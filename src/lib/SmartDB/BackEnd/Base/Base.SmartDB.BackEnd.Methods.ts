@@ -1,6 +1,6 @@
 import { Address, Lucid, UTxO } from 'lucid-cardano';
 import { OptionsGet, OptionsGetOne, console_errorLv1, console_logLv1, isEmulator, isFrontEndEnvironment, isNullOrBlank, showData, tabs, toJson } from '../../Commons/index.BackEnd';
-import { isNFT_With_AC_Lucid_InValue } from '../../Commons/helpers';
+import { addAssetsList, isNFT_With_AC_Lucid_InValue, sumTokensAmt_From_CS } from '../../Commons/helpers';
 import { AddressToFollowEntity } from '../../Entities/AddressToFollow.Entity';
 import { BaseSmartDBEntity } from '../../Entities/Base/Base.SmartDB.Entity';
 import { EmulatorEntity } from '../../Entities/Emulator.Entity';
@@ -89,8 +89,7 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
                     if (tx_count_blockchain === tx_count_DB && force !== true && tryCountAgain === true) {
                         // a veces el api de query tx dice que la transaccion existe, pero el api de tx count no lo refleja
                         // agrego esto por las dudas, para dar tiempo a blockfrost actualize sus registros
-                        console_logLv1(0, Entity.className(), `syncWithAddress - waiting extra time (${i}/3) because counts (${tx_count_blockchain}) are still the same...`
-                        );
+                        console_logLv1(0, Entity.className(), `syncWithAddress - waiting extra time (${i}/3) because counts (${tx_count_blockchain}) are still the same...`);
                         await new Promise((resolve) => setTimeout(resolve, times[i])); // Wait for 5 seconds
                     } else {
                         break; // Exit the loop if condition is not met
@@ -109,7 +108,10 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             //--------------------------------------
             console_logLv1(0, Entity.className(), `syncWithAddress - triggering a sync because tx counts are different or was forced...`);
             //--------------------------------------
-            const realUTxOs: UTxO[] = await lucid.utxosAt(address);
+            let realUTxOs: UTxO[] = await lucid.utxosAt(address);
+            // filter real utxo with currency symbol and with datums
+            realUTxOs = realUTxOs.filter((utxo) => sumTokensAmt_From_CS(utxo.assets, addressToFollow.currencySymbol) > 0n && utxo.datum !== undefined);
+            //--------------------------------------
             const smartUTxOs = await this.getByParams<SmartUTxOEntity>(SmartUTxOEntity, { address }, { loadRelations: {} });
             //--------------------------------------
             console_logLv1(0, Entity.className(), `syncWithAddress - UTxOs Blockchain: ` + realUTxOs.length);
@@ -360,16 +362,18 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
         instanceToLink?: T
     ): Promise<T | undefined> {
         //--------------------------------------
-        if (!newSmartUTxO.datum) {
-            //TODO get datum from datum hash
-            throw 'datum not found';
-        }
-        //--------------------------------------
         let datum;
         try {
+            if (!newSmartUTxO.datum) {
+                //TODO get datum from datum hash
+                throw 'datum not found';
+            }
             datum = Entity.mkDatumFromDatumCborHex<T>(newSmartUTxO.datum);
         } catch (error) {
-            console_errorLv1(0, Entity.className(), `createOrUpdate_Instance_From_SmartUTxO - this UTxO DB has a datum of another format - this sync process will not add it - try other syncs methods`
+            console_errorLv1(
+                0,
+                Entity.className(),
+                `createOrUpdate_Instance_From_SmartUTxO - this UTxO DB has a datum of another format - this sync process will not add it - try other syncs methods`
             );
             return;
         }

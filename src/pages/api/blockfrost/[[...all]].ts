@@ -1,8 +1,9 @@
-import { LucidLUCID_NETWORK_MAINNET_NAME, LucidLUCID_NETWORK_PREPROD_NAME, LucidLUCID_NETWORK_PREVIEW_NAME, NextApiRequestAuthenticated, console_error, console_log, globalSettings, initAllDecorators, initApiRequestWithContext, isEmulator, showData } from '@/src/lib/SmartDB/backEnd';
+import { LucidLUCID_NETWORK_MAINNET_NAME, LucidLUCID_NETWORK_PREPROD_NAME, LucidLUCID_NETWORK_PREVIEW_NAME, NextApiRequestAuthenticated, console_error, console_log, globalSettings, initApiRequestWithContext, isEmulator, showData } from '@/src/lib/SmartDB/backEnd';
 import { NextApiResponse } from 'next';
 import httpProxyMiddleware from 'next-http-proxy-middleware';
+import { initAllDecoratorsExample } from '@/src/lib/Example-AlwaysSucess/backEnd';
 // necestary to init all decorators because all the rest of the Apis call the BackeEnd index and thet is where others do the init
-initAllDecorators();
+initAllDecoratorsExample();
 
 /**
  * @swagger
