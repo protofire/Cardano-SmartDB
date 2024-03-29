@@ -50,6 +50,7 @@ export class DelegationEntityMongo extends BaseSmartDBEntityMongo {
         interface InterfaceDatum {
             ddPaymentPKH: PaymentKeyHash;
             ddStakePKH: Maybe<PaymentKeyHash>;
+            ddValue: string;
         }
 
         interface Interface extends InterfaceDB, InterfaceDatum {}
@@ -61,6 +62,7 @@ export class DelegationEntityMongo extends BaseSmartDBEntityMongo {
         const schemaDatum = {
             ddPaymentPKH: { type: String, required: false },
             ddStakePKH: { type: Object, required: false },
+            ddValue: { type: String, required: false },
         };
 
         const schema = new Schema<Interface>({

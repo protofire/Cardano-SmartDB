@@ -3,7 +3,6 @@ import 'reflect-metadata';
 import { BaseSmartDBEntity, CS, Convertible, Maybe, StakeCredentialPubKeyHash, asSmartDBEntity } from '../../SmartDB';
 import { DUMMY_ID_CS, DUMMY_ID_TN } from '@/src/constants/constants';
 
-
 @asSmartDBEntity()
 export class DummyEntity extends BaseSmartDBEntity {
     protected static _apiRoute: string = 'dummy';
@@ -11,11 +10,13 @@ export class DummyEntity extends BaseSmartDBEntity {
 
     protected static _plutusDataIndex = 0;
     protected static _is_NET_id_Unique = false;
+    
+    // protected static _plutusDataIsSubType = false;
 
     // #region fields
-    
+
     _NET_id_TN: string = DUMMY_ID_TN;
-    _NET_id_CS: string  = DUMMY_ID_CS
+    _NET_id_CS: string = DUMMY_ID_CS;
 
     // #endregion fields
 
@@ -27,8 +28,8 @@ export class DummyEntity extends BaseSmartDBEntity {
     @Convertible({ isForDatum: true, type: Maybe<StakeCredentialPubKeyHash> })
     ddStakePKH!: Maybe<StakeCredentialPubKeyHash>;
 
+    @Convertible({ isForDatum: true })
+    ddValue!: BigInt;
 
     // #endregion datum
-
-   
 }

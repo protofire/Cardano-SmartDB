@@ -10,6 +10,7 @@ export * from './SmartUTxO.WithDetails.Entity';
 export * from './Transaction.Entity';
 export * from './Token.Metadata.Entity';
 export * from './Wallet.Entity';
+export * from './Redeemers/Base.Redeemer';
 
 
 

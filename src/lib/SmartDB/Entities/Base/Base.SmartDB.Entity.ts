@@ -279,65 +279,72 @@ export class BaseSmartDBEntity extends BaseEntity {
         if (conversionFunctions) {
             const lucidDataForDatum: any = Data.from(cborHex);
             if (lucidDataForDatum.index === this.plutusDataIndex()) {
-                const lucidDataForConstr0 = lucidDataForDatum.fields;
-                //constr para lista de campos
-                if (lucidDataForConstr0[0].index === 0) {
-                    //lista de campos del tipo de datum
-                    const lucidDataForFields = lucidDataForConstr0[0].fields;
-                    const countDatumFields = this.countDatumFields();
-                    if (lucidDataForFields.length === countDatumFields) {
-                        const processValue = (propertyKey: string, conversions: ConversionFunctions<any>, itemData: any) => {
-                            try {
-                                let type = conversions.type as any;
-                                let value;
-                                if (conversions.fromPlutusData) {
-                                    value = conversions.fromPlutusData.call(this, itemData);
-                                } else if (type.fromPlutusData) {
-                                    value = type.fromPlutusData(itemData);
-                                } else if (conversions.type !== Number && conversions.type !== BigInt && conversions.type !== String && conversions.type !== Boolean) {
-                                    //const obj = objFromLucidData(itemData)
-                                    value = new type(itemData);
-                                } else if (conversions.type === Number) {
-                                    value = Number(itemData);
-                                } else {
-                                    value = itemData;
-                                }
-                                return value;
-                            } catch (error) {
-                                throw `${this.className()} - ${propertyKey}: ${error}`;
-                            }
-                        };
+                
+                let lucidDataForFields = [];
 
-                        let indexLucidData = 0;
-                        for (const [propertyKey, conversions] of conversionFunctions.entries()) {
-                            if (conversions.isForDatum) {
-                                let itemData = lucidDataForFields[indexLucidData];
-
-                                if (conversions.isArray === true) {
-                                    let array = [];
-
-                                    if (itemData) {
-                                        if (Array.isArray(itemData) === false) {
-                                            throw `${this.className()} - ${propertyKey}: value must be an array`;
-                                        }
-                                        for (let i = 0; i < itemData.length; i++) {
-                                            const item = processValue(propertyKey, conversions, itemData[i]);
-                                            array.push(item);
-                                        }
-                                    }
-                                    itemData = array;
-                                } else {
-                                    itemData = processValue(propertyKey, conversions, itemData);
-                                }
-                                datum[propertyKey] = itemData;
-                                indexLucidData = indexLucidData + 1;
-                            }
-                        }
+                if (this.plutusDataIsSubType() === false) {
+                    lucidDataForFields = lucidDataForDatum.fields;
+                } else {
+                    const lucidDataForConstr0 = lucidDataForDatum.fields;
+                    //constr para lista de campos
+                    if (lucidDataForConstr0[0].index === 0) {
+                        lucidDataForFields = lucidDataForConstr0[0].fields;
                     } else {
-                        throw `${this.className()} - Can't get Datum - error: expected ${countDatumFields} fields, found ${lucidDataForFields.length}`;
+                        throw `${this.className()} - Can't get Datum - error: expected index 0 at firts level`;
+                    }
+                }
+
+                const countDatumFields = this.countDatumFields();
+                if (lucidDataForFields.length === countDatumFields) {
+                    const processValue = (propertyKey: string, conversions: ConversionFunctions<any>, itemData: any) => {
+                        try {
+                            let type = conversions.type as any;
+                            let value;
+                            if (conversions.fromPlutusData) {
+                                value = conversions.fromPlutusData.call(this, itemData);
+                            } else if (type.fromPlutusData) {
+                                value = type.fromPlutusData(itemData);
+                            } else if (conversions.type !== Number && conversions.type !== BigInt && conversions.type !== String && conversions.type !== Boolean) {
+                                //const obj = objFromLucidData(itemData)
+                                value = new type(itemData);
+                            } else if (conversions.type === Number) {
+                                value = Number(itemData);
+                            } else {
+                                value = itemData;
+                            }
+                            return value;
+                        } catch (error) {
+                            throw `${this.className()} - ${propertyKey}: ${error}`;
+                        }
+                    };
+
+                    let indexLucidData = 0;
+                    for (const [propertyKey, conversions] of conversionFunctions.entries()) {
+                        if (conversions.isForDatum) {
+                            let itemData = lucidDataForFields[indexLucidData];
+
+                            if (conversions.isArray === true) {
+                                let array = [];
+
+                                if (itemData) {
+                                    if (Array.isArray(itemData) === false) {
+                                        throw `${this.className()} - ${propertyKey}: value must be an array`;
+                                    }
+                                    for (let i = 0; i < itemData.length; i++) {
+                                        const item = processValue(propertyKey, conversions, itemData[i]);
+                                        array.push(item);
+                                    }
+                                }
+                                itemData = array;
+                            } else {
+                                itemData = processValue(propertyKey, conversions, itemData);
+                            }
+                            datum[propertyKey] = itemData;
+                            indexLucidData = indexLucidData + 1;
+                        }
                     }
                 } else {
-                    throw `${this.className()} - Can't get Datum - error: expected index 0 at firts level`;
+                    throw `${this.className()} - Can't get Datum - error: expected ${countDatumFields} fields, found ${lucidDataForFields.length}`;
                 }
             } else {
                 throw `${this.className()} - Can't get Datum - error: plutusDataIndex dont match`;

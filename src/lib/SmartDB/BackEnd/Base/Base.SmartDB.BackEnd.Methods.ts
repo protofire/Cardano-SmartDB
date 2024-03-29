@@ -373,7 +373,7 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             console_errorLv1(
                 0,
                 Entity.className(),
-                `createOrUpdate_Instance_From_SmartUTxO - this UTxO DB has a datum of another format - this sync process will not add it - try other syncs methods`
+                `createOrUpdate_Instance_From_SmartUTxO - this UTxO DB has a datum of another format - error: ${error}`
             );
             return;
         }
