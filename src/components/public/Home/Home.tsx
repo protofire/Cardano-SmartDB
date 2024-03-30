@@ -1,11 +1,11 @@
-import { DummyEntity } from '@/src/lib/Example-AlwaysSucess/Entities/Dummy.Entity';
+import { DummyEntity } from '@/src/lib/DummyExample/Entities/Dummy.Entity';
 import {
     DummyPolicyRedeemerBurnID,
     DummyPolicyRedeemerMintID,
     DummyValidatorRedeemerClaim,
     DummyValidatorRedeemerDatumUpdate,
-} from '@/src/lib/Example-AlwaysSucess/Entities/Redeemers/Dummy.Redeemer';
-import { DummyApi } from '@/src/lib/Example-AlwaysSucess/FrontEnd/Dummy.FrontEnd.Api.Calls';
+} from '@/src/lib/DummyExample/Entities/Redeemers/Dummy.Redeemer';
+import { DummyApi } from '@/src/lib/DummyExample/FrontEnd/Dummy.FrontEnd.Api.Calls';
 import {
     ADA_UI,
     BaseSmartDBFrontEndApiCalls,

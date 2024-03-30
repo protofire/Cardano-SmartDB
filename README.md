@@ -30,7 +30,7 @@ Before you begin, ensure you have:
 1. **Clone the Repository**
 
    ```
-   git clone [https://github.com/protofire/Cardano-SmartDB.git](https://github.com/protofire/Cardano-SmartDB)
+   git clone git@github.com:protofire/Cardano-SmartDB.git
    cd Cardano-SmartDB
    ```
 
@@ -42,7 +42,34 @@ Before you begin, ensure you have:
    yarn
    ```
 
-3. **Run the Application**
+3. **Environment Setup**
+
+Create a `.env.local` file at the root of your project by copying the contents from the `.env` template file. Adjust the environment variables according to your project's needs:
+
+- `REACT_EDITOR`: Specifies the IDE to open files from within the application.
+- `NEXT_PUBLIC_CARDANO_NET`: Sets the Cardano network environment. Valid options include 'Mainnet', 'Preview' or 'Preprod'.
+- `NEXT_PUBLIC_BLOCKFROST_URL_MAINNET`: Blockfrost API URL for the Cardano Mainnet.
+- `NEXT_PUBLIC_BLOCKCHAIN_EXPLORER_URL_MAINNET`: URL for the Cardano Mainnet blockchain explorer.
+- `NEXT_PUBLIC_BLOCKFROST_URL_PREVIEW`: Blockfrost API URL for the Cardano Preview testnet.
+- `NEXT_PUBLIC_BLOCKCHAIN_EXPLORER_URL_PREVIEW`: URL for the Cardano Preview testnet blockchain explorer.
+- `NEXT_PUBLIC_BLOCKFROST_URL_PREPROD`: Blockfrost API URL for the Cardano Preprod testnet.
+- `NEXT_PUBLIC_BLOCKCHAIN_EXPLORER_URL_PREPROD=`: URL for the Cardano Preprod testnet blockchain explorer.
+- `BLOCKFROST_KEY_MAINNET`: Your Blockfrost project key for the Mainnet.
+- `BLOCKFROST_KEY_PREVIEW`: Your Blockfrost project key for the Preview testnet.
+- `BLOCKFROST_KEY_PREPROD`: Your Blockfrost project key for the Preprod testnet.
+- `NEXT_PUBLIC_REACT_SERVER_BASEURL`: Base URL for the React server.
+- `NEXT_PUBLIC_REACT_SERVER_URL`: Full URL for the React server, including the port.
+- `NEXT_PUBLIC_REACT_SERVER_API_URL`: Full URL for the React server's API endpoint.
+- `NEXTAUTH_URL`: Base URL for NextAuth to use for redirects and callback URLs.
+- `NEXTAUTH_SECRET`: A secret used by NextAuth for session tokens; changing it invalidates all active sessions.
+- `LOGIN_JWT_SECRET_KEY`: A secret used to create challenge tokens and our session tokens; changing it invalidates these tokens and associated sessions.
+- `NEXT_PUBLIC_USE_BLOCKCHAIN_TIME`: Boolean flag to decide if blockchain time should be used.
+- `USE_DATABASE`: Type of database used, such as 'mongo' for MongoDB.
+- `MONGO_URLDB`: MongoDB connection string.
+
+After setting these variables, your application will be configured to communicate with the specified Cardano network and utilize the necessary services and databases.
+
+4. **Run the Application in developer mode**
 
    ```
    npm run dev
@@ -50,11 +77,55 @@ Before you begin, ensure you have:
    yarn dev
    ```
 
-   Visit `http://localhost:3000` in your browser to view the application.
+   Visit `http://localhost:3000` in your browser to view the application in developer mode.
+
+5. **Build and Run Application**
+
+First, compile your application into static assets for production by running the build command. This process bundles your React application and optimizes it for the best performance. The build is minified, and filenames include the hashes for browser caching efficiency.
+
+```
+npm run build
+# Or if you use Yarn
+yarn build
+```
+
+**Run the Built Application**
+
+Once the build is complete, you can start the application in production mode. The start script will initiate the server to serve your built static files. In production mode, you'll see the performance benefits of the optimization steps taken during the build.
+
+```
+npm run start
+# Or for Yarn users
+yarn start
+```
+
+Visit http://localhost:3000 in your browser to interact with the application in production mode.
+
+**Additional Notes:**
+
+It's important to ensure that all environment variables set in your `.env.local` file are compatible with your production environment. Any sensitive keys should not be hard-coded and must be securely managed.
+
+The npm run build or yarn build command should be run in your production environment or as part of a CI/CD pipeline to ensure that the build assets are suitable for the production servers they will run on.
+
+When running in production, monitoring and logging tools should be implemented to keep track of the application's health and performance.
+
+By following these steps, your application will be built and run in a production environment, providing users with a faster and more secure experience.
 
 ## Familiarize Yourself
 
-Open the `Home.tsx` component file in your preferred code editor and review the code structure and functions provided.
+Open The `Home` component, located in `src/components/public/Home/Home.tsx`, in your preferred code editor and review the code structure and functions provided.
+
+The `Home` component is the main entry point, managing state and user interactions. It includes functions for generating scripts, managing transactions, and syncing with the blockchain.
+
+- generateScripts: Generates the necessary scripts (minting policy and validator) for the dummy smart contract.
+- getBalance: Retrieves the balance of the connected wallet.
+- handleBtnCreateTx: Creates a new dummy datum transaction and saves the entity in the internal database.
+- handleBtnUpdateTx: Updates the value of a dummy datum and syncs the changes with the internal database.
+- handleBtnClaimTx: Claims the funds associated with a dummy datum.
+- handleBtnSync: Synchronizes the local database with the blockchain state, ensuring data consistency.
+
+The component leverages various helper functions and libraries from the Smart DB library to interact with the Cardano blockchain, manage the smart contract state, and perform database synchronization.
+
 
 ## Usage
 
@@ -105,18 +176,140 @@ This modal appears during any transaction process to display status and details.
 
 The example validator script only permits the creator of the datum to consume it for updates or claims, demonstrating the implementation of custom business logic on the blockchain.
 
-## Code Structure
+## Proyect Code Structure
 
-The `Home` component is the main entry point, managing state and user interactions. It includes functions for generating scripts, managing transactions, and syncing with the blockchain.
+The project's architecture is designed for applications interacting with the Cardano blockchain. It comprises essential directories and files, each serving a distinct role:
 
-- generateScripts: Generates the necessary scripts (minting policy and validator) for the dummy smart contract.
-- getBalance: Retrieves the balance of the connected wallet.
-- handleBtnCreateTx: Creates a new dummy datum transaction and saves the entity in the internal database.
-- handleBtnUpdateTx: Updates the value of a dummy datum and syncs the changes with the internal database.
-- handleBtnClaimTx: Claims the funds associated with a dummy datum.
-- handleBtnSync: Synchronizes the local database with the blockchain state, ensuring data consistency.
+### Configuration and Contracts
+- `_config`: Contains configuration files for various tools within the project.
+- `_smart-contracts`: Stores the Plutus files with the cbor hex code of the scripts used in the Dummy Test Example. While the code is hardcoded in the Home component, it's maintained here for reference.
 
-The component leverages various helper functions and libraries from the Smart DB library to interact with the Cardano blockchain, manage the smart contract state, and perform database synchronization.
+### Components and Pages
+- `src/components`: React components used throughout the application reside here.
+- `src/pages`: New pages can be added within this directory. Essential files like _app.tsx, _document.tsx, and index.tsx are set up to load the `Home` component by default.
+
+### Library and Example Implementation
+- `src/lib/DummyExample`: Sample implementation directory for creating entities that are synced with the blockchain. This directory should contain all entity models required by a project, whether they are synced with the blockchain (like the Dummy Entity) or simply database-backed entities with full API support for the frontend and backend.
+- `src/lib/SmartDB`: The core library directory. This will evolve into a standalone importable library for ease of integration in future development.
+
+### API and Backend
+- `src/pages/api`: Defines the API routes and backend logic for server-side operations.
+
+## Smart DB Library Code Structure
+
+The Smart DB library is organized to offer clear, modular access to its functionalities, structured as follows:
+
+- `src/lib/SmartDB`: The main library folder where core features and functionalities are implemented.
+
+### Entities
+- `src/lib/SmartDB/Entities`: Entity definitions and models representing the core data structures used in the application.
+  - `Base`: Core entity classes and models.
+  - `Redeemers`: Scripts and logic defining how the blockchain transactions are handled.
+
+### BackEnd
+- `src/lib/SmartDB/BackEnd`: Contains backend logic for blockchain interactions and API handling.
+  - `Base`: Base classes providing foundational backend functionality.
+  - `DatabaseService`: Modules that interface with the database services like MongoDB.
+  - `ApiHandlers`: Handlers for API endpoints that interact with blockchain and database.
+  - `Applied`: Applied logic that binds the handlers with the blockchain and database for transactions and other operations.
+
+### FrontEnd
+- `src/lib/SmartDB/FrontEnd`: Contains the frontend logic for the library, facilitating interactions with the backend.
+  - `ApiCalls`: API calls to backend endpoints for the library's frontend.
+  - `BtnHandlers`: Button handlers for frontend UI elements, providing a bridge to backend operations.
+
+### Commons
+- `src/lib/SmartDB/Commons`: Shared resources and utilities across the library.
+  - `Auth`: Authentication helpers and utilities.
+  - `Decorators`: Decorators to enhance entities with additional functionalities and integration capabilities.
+  - `Types`: Shared type definitions used throughout the library.
+  - `Utils`: Utility functions that provide common functionality needed by various parts of the library.
+
+### lib
+- `src/lib/SmartDB/lib`: Contains sub-modules that provide specialized functionality.
+  - `Auth`: Authentication modules.
+  - `Lucid`: Modules to interact with Lucid, a library for Cardano blockchain interactions.
+  - `store`: State management stores for application-wide state handling.
+
+Remember that this structure is designed to support scalable application development and provides a logical separation of functionalities for ease of use and clarity.
+
+## Setting Up New Projects with Custom Entities
+
+### Entities
+Located within `src/lib/DummyExample/Entities`, it is the primary directory for defining your custom entity models.
+
+Entities must extend `BaseSmartDBEntity` and use the `@asSmartDBEntity` decorator. Fields synchronized with the database should utilize the `@Convertible({ isForDatum: true })` decorator.
+
+**Example Entity Model**
+
+Here's an example of how to define a new entity:
+
+```
+@asSmartDBEntity()
+export class DummyEntity extends BaseSmartDBEntity {
+    protected static _apiRoute: string = 'dummy';
+    protected static _className: string = 'Dummy';
+
+    protected static _plutusDataIndex = 0;
+    protected static _is_NET_id_Unique = false;
+    
+
+    // #region fields
+
+    _NET_id_TN: string = 'DummyID';
+
+    // #endregion fields
+
+    // #region datum
+
+    @Convertible({ isForDatum: true })
+    ddPaymentPKH!: PaymentKeyHash;
+
+    @Convertible({ isForDatum: true, type: Maybe<StakeCredentialPubKeyHash> })
+    ddStakePKH!: Maybe<StakeCredentialPubKeyHash>;
+
+    @Convertible({ isForDatum: true })
+    ddValue!: BigInt;
+
+    // #endregion datum
+}
+
+```
+
+### FrontEnd
+
+Located within `src/lib/DummyExample/FrontEnd`, it is the primary directory for defining your custom classes for FrontEnd.
+
+Classes for frontend API calls should extend `BaseSmartDBFrontEndApiCalls`.
+
+```
+export class DummyApi extends BaseSmartDBFrontEndApiCalls {
+    protected static _Entity = DummyEntity;
+
+    // #region api
+   
+    // #endregion api
+}
+
+```
+
+### BackEnd
+
+Located within `src/lib/DummyExample/BackEnd`, it is the primary directory for defining your custom classes for BackEnd.
+
+The backend for new entities synced with the blockchain must extend both `BaseSmartDBBackEndApplied` and `BaseSmartDBBackEndApiHandlers`:
+
+```
+export class DummyBackEndApplied extends BaseSmartDBBackEndApplied {
+    protected static _Entity = DummyEntity;
+    protected static _BackEndMethods = BaseSmartDBBackEndMethods;
+}
+
+export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
+    protected static _Entity = DummyEntity;
+    protected static _BackEndApplied = DummyBackEndApplied;
+}
+```
 
 ## Conclusion
 

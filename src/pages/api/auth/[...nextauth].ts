@@ -13,7 +13,7 @@ import { v4 } from 'uuid';
 import { showData, LucidLUCID_NETWORK_MAINNET_NAME, isNullOrBlank, WalletEntity, WALLET_CREATEDBY_LOGIN, VALID_SESSION_DURATION_SECONDS } from '@/src/lib/SmartDB';
 import { WalletBackEndApplied } from '@/src/lib/SmartDB/BackEnd/Wallet.BackEnd.Applied';
 import { requestContext, getGlobalSettings, getGlobalEmulator, getGlobalLucid, TimeBackEnd } from '@/src/lib/SmartDB/backEnd';
-import { initAllDecoratorsExample } from '@/src/lib/Example-AlwaysSucess/backEnd';
+import { initAllDecoratorsExample } from '@/src/lib/DummyExample/backEnd';
 initAllDecoratorsExample();
 
 /**

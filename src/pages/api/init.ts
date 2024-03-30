@@ -1,4 +1,4 @@
-import { initAllDecoratorsExample } from '@/src/lib/Example-AlwaysSucess/backEnd';
+import { initAllDecoratorsExample } from '@/src/lib/DummyExample/backEnd';
 import { NextApiRequestAuthenticated, console_error,  initApiRequestWithContext, initGlobals, isEmulator } from '@/src/lib/SmartDB/backEnd';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { v4 } from 'uuid';
