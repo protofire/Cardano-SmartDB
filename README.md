@@ -1,5 +1,50 @@
 # Smart DB Library: Cardano Blockchain Integration Example
 
+## Table of Contents
+- [Smart DB Library: Cardano Blockchain Integration Example](#smart-db-library-cardano-blockchain-integration-example)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Features](#features)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installing Node.js and npm](#installing-nodejs-and-npm)
+      - [Windows](#windows)
+      - [macOS](#macos)
+      - [Ubuntu](#ubuntu)
+      - [Optional: Install Yarn](#optional-install-yarn)
+    - [Obtaining Blockfrost API Keys](#obtaining-blockfrost-api-keys)
+    - [Installation of the Project](#installation-of-the-project)
+  - [Familiarize Yourself](#familiarize-yourself)
+  - [Usage](#usage)
+    - [Wallet Creation](#wallet-creation)
+    - [Faucet](#faucet)
+    - [Check Balance](#check-balance)
+    - [Create Dummy Datum Transaction](#create-dummy-datum-transaction)
+    - [Sync Database](#sync-database)
+    - [Update Datum Value](#update-datum-value)
+    - [Claim Funds](#claim-funds)
+    - [Transaction Modal](#transaction-modal)
+  - [Validator Script Logic](#validator-script-logic)
+  - [Proyect Code Structure](#proyect-code-structure)
+    - [Configuration and Contracts](#configuration-and-contracts)
+    - [Components and Pages](#components-and-pages)
+    - [Library and Example Implementation](#library-and-example-implementation)
+    - [API and Backend](#api-and-backend)
+  - [Smart DB Library Code Structure](#smart-db-library-code-structure)
+    - [Entities](#entities)
+    - [BackEnd](#backend)
+    - [FrontEnd](#frontend)
+    - [Commons](#commons)
+    - [lib](#lib)
+  - [Setting Up New Projects with Custom Entities](#setting-up-new-projects-with-custom-entities)
+    - [Entities](#entities-1)
+    - [FrontEnd](#frontend-1)
+    - [BackEnd](#backend-1)
+  - [Conclusion](#conclusion)
+  - [Contribution](#contribution)
+  - [License](#license)
+  - [Acknowledgements](#acknowledgements)
+  
 ## Introduction
 
 This example demonstrates the usage of the Smart DB library, which simplifies the interaction between JavaScript entities, a database, and the Cardano blockchain. The library enables developers to work with entities backed by a database and synced with the blockchain, providing a transparent and seamless experience.
@@ -24,8 +69,113 @@ Before you begin, ensure you have:
 - Node.js (version 14.0.0 or later)
 - npm (version 6.0.0 or later) or Yarn
 - Basic knowledge of React and Next.js
+- Blockfrost API Keys
+  
+### Installing Node.js and npm
 
-### Installation
+Node.js is a runtime required to execute JavaScript on the server, and npm is the package manager for JavaScript.
+
+#### Windows
+
+1. Download the Node.js installer from the [official Node.js website](https://nodejs.org/).
+2. Run the installer, which includes npm, and follow the prompts.
+
+Check the installation:
+
+```
+node -v
+npm -v
+```
+
+#### macOS
+
+1. If Homebrew is not installed, install it first from [Homebrew's website](https://brew.sh/).
+2. Install Node.js (npm will be included) using Homebrew:
+
+```
+brew update
+brew install node
+```
+
+Check the installation:
+
+```
+node -v
+npm -v
+```
+
+#### Ubuntu
+
+1. Update your local package index:
+
+```
+sudo apt update
+```
+
+2. Install Node.js and npm:
+
+```
+sudo apt install nodejs npm
+```
+
+Check the installation:
+
+```
+node -v
+npm -v
+```
+
+#### Optional: Install Yarn
+
+Yarn is an alternative package manager to npm. To install Yarn using npm, run:
+
+```
+npm install --global yarn
+```
+
+Verify the installation of Yarn:
+
+```
+yarn --version
+```
+
+### Obtaining Blockfrost API Keys
+
+To interact with the Cardano blockchain through our project, you will need to obtain API keys from Blockfrost, a service that provides access to the Cardano blockchain data. You'll require separate keys for each network you intend to work with: Mainnet, Preview testnet, and Preprod testnet.
+
+Follow the steps below to get your API keys from Blockfrost:
+
+1. Create a Blockfrost Account:
+
+Navigate to the [Blockfrost website](https://blockfrost.io/).
+Sign up for an account by clicking the "Sign Up" button and following the registration process.
+
+2. Create a New Project:
+
+Once logged in, go to the dashboard and create a new project.
+Provide a name for your project and select the network for which you want the API key.
+You will need to create three separate projects if you want keys for all three networks: Mainnet, Preview testnet, and Preprod testnet.
+
+3. Retrieve Your API Keys:
+
+After creating a project, you will be directed to the project overview page.
+Here, you can find the API key under the 'Project keys' section.
+Copy the PROJECT_ID which is your API key for the respective network.
+Set Up Environment Variables:
+
+4. In your local development environment, set the API keys as environment variables in `.env.local` file:
+
+```
+BLOCKFROST_KEY_MAINNET=your_mainnet_project_key_here
+BLOCKFROST_KEY_PREVIEW=your_preview_testnet_project_key_here
+BLOCKFROST_KEY_PREPROD=your_preprod_testnet_project_key_here
+```
+
+Replace your_mainnet_project_key_here, your_preview_testnet_project_key_here, and your_preprod_testnet_project_key_here with the actual keys you obtained from Blockfrost.
+
+The configuration for the `.env.local` file is explained in details in the following section of this README.
+
+### Installation of the Project
 
 1. **Clone the Repository**
 
