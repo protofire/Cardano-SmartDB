@@ -1,5 +1,5 @@
 import { BackEndAppliedFor } from '../../SmartDB';
-import { BaseSmartDBBackEndApiHandlers, BaseSmartDBBackEndApplied, BaseSmartDBBackEndMethods } from '../../SmartDB/BackEnd';
+import { BaseSmartDBBackEndApiHandlers, BaseSmartDBBackEndApplied, BaseSmartDBBackEndMethods } from '../../SmartDB/backEnd';
 import { DummyEntity } from '../Entities/Dummy.Entity';
 
 @BackEndAppliedFor(DummyEntity)
