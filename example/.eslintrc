@@ -13,15 +13,12 @@
   },
   "ignorePatterns": [
     "_OLD/**/*",
-    "dist/**/*",
-    "example/**/*",
-    "node_modules/**/*",
     "src/**/_OLD/**/*",
     "next.config.js",
-    "prettier.config.js"
+    "prettier.config.js",
   ],
   "rules": {
-        "react-hooks/exhaustive-deps": "off"
+        "react-hooks/exhaustive-deps": "off",
    }
    
 }

@@ -1,13 +1,6 @@
 {
-    "name": "smart-db",
+    "name": "example-use-smart-db",
     "version": "1.0.0",
-    "description": "Smart DB",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "files": [
-        "dist"
-    ],
-    "type": "module",
     "private": true,
     "engines": {
         "node": "^18"
@@ -17,34 +10,31 @@
         "extends": "./.eslintrc"
     },
     "scripts": {
-        "build": "rm -rf ./dist && tsc -p tsconfig.json",
-        "watch": "tsc -w -p tsconfig.json",
-        "clean": "rm -rf ./dist ",
-        "cleanAll": "rm -rf ./dist ./node_modules",
-        "lint": "eslint 'src/**/*.ts' --fix",
-        "test": "jest",
-        "pack": "npm run build && npm run test && npm pack"
+        "dev": "node --max-old-space-size=8192 node_modules/.bin/next dev -p 3000",
+        "deb": "cross-env DEBUG=true NODE_OPTIONS='--inspect' next dev  -p 3000",
+        "build": "rm -fr ./.next && next build",
+        "start": "next start -p 3000",
+        "clean": "rm -fr ./.next",
+        "cleanAll": "rm -fr ./node_modules ./.next",
+        "lint": "next lint",
+        "test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js",
+        "standalone": "TS_NODE_PROJECT='tsconfig-for-standalone.json' ts-node ./src/__standalone__/minADA.ts"
     },
     "dependencies": {
-        "bignumber.js": "^9.1.1",
-        "cls-hooked": "^4.2.2",
-        "cors": "^2.8.5",
-        "date-fns": "^2.30.0",
-        "date-fns-tz": "^2.0.0",
         "easy-peasy": "^5.0.4",
-        "jsonwebtoken": "^9.0.2",
         "lucid-cardano": "^0.10.7",
-        "mongoose": "^8.3.2",
         "next": "^12.1.6",
         "next-auth": "^4.22.1",
+        "next-http-proxy-middleware": "^1.2.5",
+        "next-swagger-doc": "^0.4.0",
         "nodemailer": "^6.9.1",
         "react": "18.2.0",
         "react-dom": "18.2.0",
+        "react-modal": "^3.16.1",
         "react-notifications-component": "^4.0.1",
-        "yup": "^1.0.2"
+        "smart-db": "file:../dist"
     },
     "devDependencies": {
-        "@types/mongoose": "^5.11.97",
         "@next/eslint-plugin-next": "^13.4.12",
         "@types/cls-hooked": "^4.3.8",
         "@types/cors": "^2.8.13",
@@ -59,7 +49,6 @@
         "@types/uuid": "^9.0.8",
         "@typescript-eslint/eslint-plugin": "^5.61.0",
         "@typescript-eslint/parser": "^5.61.0",
-        "babel-loader": "^9.1.3",
         "cross-env": "^7.0.3",
         "eslint": "8.48.0",
         "eslint-config-next": "13.4.19",
@@ -67,6 +56,7 @@
         "prettier": "^2.5.1",
         "reflect-metadata": "^0.1.13",
         "sass": "^1.72.0",
+        "ts-jest": "^29.1.1",
         "typescript": "5.2.2"
     }
 }
