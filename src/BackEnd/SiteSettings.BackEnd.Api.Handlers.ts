@@ -1,10 +1,11 @@
 import { NextApiResponse } from 'next';
-import { SiteSettingsEntity } from '../Entities/SiteSettings.Entity';
-import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers';
-import { SiteSettingsBackEndApplied } from './SiteSettings.BackEnd.Applied';
-import { NextApiRequestAuthenticated } from '../lib/Auth/index';
-import { console_error, console_log, showData, tabs } from '../Commons/index.BackEnd';
+import { SiteSettingsEntity } from '../Entities/SiteSettings.Entity.js';
+import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
+import { SiteSettingsBackEndApplied } from './SiteSettings.BackEnd.Applied.js';
+import { NextApiRequestAuthenticated } from '../lib/Auth/index.js';
+import { BackEndApiHandlersFor, console_error, console_log, showData, tabs } from '../Commons/index.BackEnd.js';
 
+@BackEndApiHandlersFor(SiteSettingsEntity)
 export class SiteSettingsBackEndApiHandlers extends BaseBackEndApiHandlers {
     protected static _Entity = SiteSettingsEntity;
     protected static _BackEndApplied = SiteSettingsBackEndApplied;

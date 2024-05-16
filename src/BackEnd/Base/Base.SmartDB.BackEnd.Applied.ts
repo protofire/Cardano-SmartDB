@@ -1,10 +1,10 @@
 import { Lucid } from "lucid-cardano";
-import { OptionsGet, OptionsGetOne } from '../../Commons';
-import { BackEndAppliedFor } from '../../Commons/Decorator.BackEndAppliedFor';
-import { AddressToFollowEntity, EmulatorEntity } from '../../Entities';
-import { BaseSmartDBEntity } from '../../Entities/Base/Base.SmartDB.Entity';
-import { BaseSmartDBBackEndMethods } from './Base.SmartDB.BackEnd.Methods';
-import { BaseBackEndApplied } from './Base.BackEnd.Applied';
+import { OptionsGet, OptionsGetOne } from '../../Commons/index.js';
+import { BackEndAppliedFor } from '../../Commons/Decorators/Decorator.BackEndAppliedFor.js';
+import { AddressToFollowEntity, EmulatorEntity } from '../../Entities/index.js';
+import { BaseSmartDBEntity } from '../../Entities/Base/Base.SmartDB.Entity.js';
+import { BaseSmartDBBackEndMethods } from './Base.SmartDB.BackEnd.Methods.js';
+import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
 
 @BackEndAppliedFor(BaseSmartDBEntity)
 export class BaseSmartDBBackEndApplied extends BaseBackEndApplied {

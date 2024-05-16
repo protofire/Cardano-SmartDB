@@ -1,8 +1,8 @@
 import { Address, Emulator, Lucid, PrivateKey } from 'lucid-cardano';
 import 'reflect-metadata';
-import { asEntity, Convertible } from '../Commons';
-import { deserealizeEmulator } from '../Commons/conversions';
-import { BaseEntity } from './Base/Base.Entity';
+import { asEntity, Convertible } from '../Commons/index.js';
+import { deserealizeEmulator } from '../Commons/conversions.js';
+import { BaseEntity } from './Base/Base.Entity.js';
 
 @asEntity()
 export class EmulatorEntity extends BaseEntity {

@@ -1,80 +1,30 @@
-import { SmartUTxOEntity } from '../../Entities/SmartUTxO.Entity';
-import { TransactionEntity } from '../../Entities/Transaction.Entity';
-import { SmartDBEntitiesRegistry } from '../Decorator.asSmartDBEntity';
-import { TRANSACTION_STATUS_FAILED, TRANSACTION_STATUS_TIMEOUT, TRANSACTION_STATUS_CANCELED, TRANSACTION_STATUS_SUBMITTED, TRANSACTION_STATUS_PENDING, TX_CHECK_INTERVAL, TX_PREPARING_TIME, isEmulator, TRANSACTION_STATUS_CONFIRMED, TX_TIMEOUT, TX_CONSUMING_TIME } from '../constants';
-import { toJson, sleep, showData } from '../utils';
-import { globalEmulator } from './globalEmulator';
-import { console_error, console_log } from './globalLogs';
+import { SmartUTxOEntity } from '../../Entities/SmartUTxO.Entity.js';
+import { TransactionEntity } from '../../Entities/Transaction.Entity.js';
+import { BlockFrostBackEnd } from '../../lib/BlockFrost/BlockFrost.BackEnd.js';
+import {
+    TRANSACTION_STATUS_CANCELED,
+    TRANSACTION_STATUS_CONFIRMED,
+    TRANSACTION_STATUS_FAILED,
+    TRANSACTION_STATUS_PENDING,
+    TRANSACTION_STATUS_SUBMITTED,
+    TRANSACTION_STATUS_TIMEOUT,
+    TX_CHECK_INTERVAL,
+    TX_CONSUMING_TIME,
+    TX_PREPARING_TIME,
+    TX_TIMEOUT,
+    isEmulator
+} from '../Constants/constants.js';
+import { RegistryManager } from '../Decorators/registerManager.js';
+import { showData, sleep, toJson } from '../utils.js';
+import { globalEmulator } from './globalEmulator.js';
+import { console_error, console_log } from './globalLogs.js';
 
 export class TransactionStatusUpdater {
     private isRunning = false;
 
-    public static async getTxCountBlockfrostApi(scriptAddress: string) {
-        try {
-            //----------------------------
-            const urlApi = process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost' + '/addresses/' + scriptAddress + '/total';
-            const requestOptions = {
-                method: 'GET',
-                headers: {
-                    project_id: 'xxxxx',
-                },
-            };
-            //----------------------------
-            const response = await fetch(urlApi, requestOptions);
-            //----------------------------
-            if (response.status === 200) {
-                const data = await response.json();
-                if (!data.tx_count) {
-                    throw `Invalid response format: tx_count not found`;
-                }
-                console_log(0, `TxStatus`, ` getTxCountBlockfrostApi - tx_count: ${data.tx_count} - response OK`);
-                return data.tx_count;
-            } else {
-                const errorData = await response.json();
-                //throw `Received status code ${response.status} with message: ${errorData.error.message ? errorData.error.message : errorData.error}`;
-                throw `${errorData.error.message ? errorData.error.message : errorData.error}`;
-            }
-            //----------------------------
-        } catch (error) {
-            console_error(0, `TxStatus`, ` getTxCountBlockfrostApi - Error: ${error}`);
-            throw `${error}`;
-        }
-    }
-
-    public static async getTxIsConfirmedBlockfrostApi(hash: string): Promise<boolean> {
-        try {
-            //----------------------------
-            const urlApi = process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost' + '/txs/' + hash;
-            const requestOptions = {
-                method: 'GET',
-                headers: {
-                    project_id: 'xxxxx',
-                },
-            };
-            //----------------------------
-            const response = await fetch(urlApi, requestOptions);
-            //----------------------------
-            if (response.status === 200) {
-                const data = await response.json();
-                console_log(0, `TxStatus`, ` getTxIsConfirmedBlockfrostApi - data: ${toJson(data)} - ${hash}: true - response OK`);
-                return true;
-            } else {
-                // const errorData = await response.json();
-                // //throw `Received status code ${response.status} with message: ${errorData.error.message ? errorData.error.message : errorData.error}`;
-                // //throw `${errorData.error.message ? errorData.error.message : errorData.error}`;
-                console_log(0, `TxStatus`, ` getTxIsConfirmedBlockfrostApi - ${hash}: false - response OK`);
-                return false;
-            }
-            //----------------------------
-        } catch (error) {
-            console_error(0, `TxStatus`, ` getTxIsConfirmedBlockfrostApi - Error: ${error}`);
-            throw `${error}`;
-        }
-    }
-
     protected async releaseUTxOs(transaction: TransactionEntity) {
         //-------------------------
-        const SmartUTxOBackEndApplied = (await import('../../BackEnd/SmartUTxO.BackEnd.Applied')).SmartUTxOBackEndApplied;
+        const SmartUTxOBackEndApplied = (await import('../../BackEnd/SmartUTxO.BackEnd.Applied.js')).SmartUTxOBackEndApplied;
         //-------------------------
         const consuming_UTxOs = transaction.consuming_UTxOs;
         for (let consuming_UTxO of consuming_UTxOs) {
@@ -100,7 +50,7 @@ export class TransactionStatusUpdater {
         console_log(0, `TxStatus`, `transactionUpdater - Init`);
         try {
             //-------------------------
-            const TransactionBackEndApplied = (await import('../../BackEnd/Transaction.BackEnd.Applied')).TransactionBackEndApplied;
+            const TransactionBackEndApplied = (await import('../../BackEnd/Transaction.BackEnd.Applied.js')).TransactionBackEndApplied;
             //-------------------------
             const unconfirmedTransaction: TransactionEntity | undefined = await TransactionBackEndApplied.getOneByParams_({
                 hash: txHash,
@@ -134,7 +84,7 @@ export class TransactionStatusUpdater {
         this.isRunning = true;
         try {
             //-------------------------
-            const TransactionBackEndApplied = (await import('../../BackEnd/Transaction.BackEnd.Applied')).TransactionBackEndApplied;
+            const TransactionBackEndApplied = (await import('../../BackEnd/Transaction.BackEnd.Applied.js')).TransactionBackEndApplied;
             //-------------------------
             // busco transacciones submitted que ya hayan pasado el time out, y las pongo en timeout
             // hago lo mismo con las utxo que esten en consuming, dentro de esa transaccion, y las pongo en normal
@@ -178,8 +128,8 @@ export class TransactionStatusUpdater {
 
     private async updatePendingTransactions(pendingTransactions: TransactionEntity[]) {
         //-------------------------
-        const TimeBackEnd = (await import('../../lib/Time/Time.BackEnd')).TimeBackEnd;
-        const TransactionBackEndApplied = (await import('../../BackEnd/Transaction.BackEnd.Applied')).TransactionBackEndApplied;
+        const TimeBackEnd = (await import('../../lib/Time/Time.BackEnd.js')).TimeBackEnd;
+        const TransactionBackEndApplied = (await import('../../BackEnd/Transaction.BackEnd.Applied.js')).TransactionBackEndApplied;
         //-------------------------
         console_log(0, `TxStatus`, `UpdaterJob - ${pendingTransactions.length} pendingTransactions`);
         //-------------------------
@@ -200,11 +150,11 @@ export class TransactionStatusUpdater {
 
     private async updateUnconfirmedTransactions(unconfirmedTransactions: TransactionEntity[]) {
         //-------------------------
-        const AddressToFollowBackEndApplied = (await import('../../BackEnd/AddressToFollow.BackEnd.Applied')).AddressToFollowBackEndApplied;
-        const TransactionBackEndApplied = (await import('../../BackEnd/Transaction.BackEnd.Applied')).TransactionBackEndApplied;
-        const BaseSmartDBBackEndMethods = (await import('../../BackEnd/Base/Base.SmartDB.BackEnd.Methods')).BaseSmartDBBackEndMethods;
-        const LucidToolsBackEnd = (await import('../../lib/Lucid/backEnd')).LucidToolsBackEnd;
-        const TimeBackEnd = (await import('../../lib/Time/Time.BackEnd')).TimeBackEnd;
+        const AddressToFollowBackEndApplied = (await import('../../BackEnd/AddressToFollow.BackEnd.Applied.js')).AddressToFollowBackEndApplied;
+        const TransactionBackEndApplied = (await import('../../BackEnd/Transaction.BackEnd.Applied.js')).TransactionBackEndApplied;
+        const BaseSmartDBBackEndMethods = (await import('../../BackEnd/Base/Base.SmartDB.BackEnd.Methods.js')).BaseSmartDBBackEndMethods;
+        const LucidToolsBackEnd = (await import('../../lib/Lucid/backEnd.js')).LucidToolsBackEnd;
+        const TimeBackEnd = (await import('../../lib/Time/Time.BackEnd.js')).TimeBackEnd;
         //-------------------------
         console_log(0, `TxStatus`, `UpdaterJob - ${unconfirmedTransactions.length} unconfirmedTransactions`);
         //-------------------------
@@ -225,7 +175,7 @@ export class TransactionStatusUpdater {
                 }
                 // si es emulador la primera vez que se ejecute este job ya va a retornar confirmed, agrego un tiempo solo para simular un poco
             } else {
-                isConfirmed = await TransactionStatusUpdater.getTxIsConfirmedBlockfrostApi(unconfirmedTransaction.hash);
+                isConfirmed = await BlockFrostBackEnd.getTxIsConfirmed_Api(unconfirmedTransaction.hash);
             }
             if (isConfirmed) {
                 //--------------------------------------
@@ -280,8 +230,11 @@ export class TransactionStatusUpdater {
                     //TODO y si hay mas de una en la misma address? deberia hacer la que coincida tmb el tupo de datum
                     const addressToFollow = addressesToFollow[0];
                     let datumType = addressAdnDatumType.datumType;
-                    // const EntityClass = this._SmartDBEntities[datumType];
-                    const EntityClass = SmartDBEntitiesRegistry.get(datumType);
+                    if (datumType === undefined) {
+                        throw `datumType is undefined`;
+                    }
+                    //--------------------------------------
+                    const EntityClass = RegistryManager.getFromSmartDBEntitiesRegistry(datumType);
                     if (EntityClass !== undefined) {
                         if (isEmulator === true && globalEmulator.emulatorDB === undefined) {
                             throw `globalEmulator emulatorDB current not found`;

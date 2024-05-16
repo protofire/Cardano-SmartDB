@@ -1,12 +1,13 @@
 import { Address, Lucid, UTxO } from 'lucid-cardano';
-import { OptionsGet, OptionsGetOne, console_errorLv1, console_logLv1, isEmulator, isFrontEndEnvironment, isNullOrBlank, showData, tabs, toJson } from '../../Commons/index.BackEnd';
-import { addAssetsList, isNFT_With_AC_Lucid_InValue, sumTokensAmt_From_CS } from '../../Commons/helpers';
-import { AddressToFollowEntity } from '../../Entities/AddressToFollow.Entity';
-import { BaseSmartDBEntity } from '../../Entities/Base/Base.SmartDB.Entity';
-import { EmulatorEntity } from '../../Entities/Emulator.Entity';
-import { SmartUTxOEntity } from '../../Entities/SmartUTxO.Entity';
-import { BaseBackEndMethods } from './Base.BackEnd.Methods';
-import { TimeApi } from '../../lib';
+import { OptionsGet, OptionsGetOne, console_errorLv1, console_logLv1, isEmulator, isFrontEndEnvironment, isNullOrBlank, showData, tabs, toJson } from '../../Commons/index.BackEnd.js';
+import { addAssetsList, isNFT_With_AC_Lucid_InValue, sumTokensAmt_From_CS } from '../../Commons/helpers.js';
+import { AddressToFollowEntity } from '../../Entities/AddressToFollow.Entity.js';
+import { BaseSmartDBEntity } from '../../Entities/Base/Base.SmartDB.Entity.js';
+import { EmulatorEntity } from '../../Entities/Emulator.Entity.js';
+import { SmartUTxOEntity } from '../../Entities/SmartUTxO.Entity.js';
+import { BaseBackEndMethods } from './Base.BackEnd.Methods.js';
+import { BlockFrostBackEnd } from '../../lib/BlockFrost/BlockFrost.BackEnd.js';
+
 
 // BaseSmartDBBackEndMethods es generico
 // Todos los metodos reciven o instancia o entidad
@@ -85,7 +86,7 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
                 // la primera vez espera 5 segundos, la segunda 5, la tercera 10
                 const times = [5000, 5000, 10000];
                 for (let i = 0; i < 3; i++) {
-                    tx_count_blockchain = await TimeApi.getTxCountBlockfrostApi(address);
+                    tx_count_blockchain = await BlockFrostBackEnd.getTxCount_Api(address);
                     if (tx_count_blockchain === tx_count_DB && force !== true && tryCountAgain === true) {
                         // a veces el api de query tx dice que la transaccion existe, pero el api de tx count no lo refleja
                         // agrego esto por las dudas, para dar tiempo a blockfrost actualize sus registros

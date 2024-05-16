@@ -1,13 +1,13 @@
 import { NextApiResponse } from 'next';
-import { NextApiRequestAuthenticated } from '../lib/Auth/index';
-import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers';
-import { console_error, console_log, tabs } from '../Commons/BackEnd/globalLogs';
-import { WalletBackEndApplied } from './Wallet.BackEnd.Applied';
-import { WalletEntity } from '../Entities/Wallet.Entity';
-import { showData, sanitizeForDatabase } from '../Commons';
-import yup from '../Commons/yupLocale';
+import { NextApiRequestAuthenticated } from '../lib/Auth/index.js';
+import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
+import { console_error, console_log, tabs } from '../Commons/BackEnd/globalLogs.js';
+import { WalletBackEndApplied } from './Wallet.BackEnd.Applied.js';
+import { WalletEntity } from '../Entities/Wallet.Entity.js';
+import { showData, sanitizeForDatabase, BackEndApiHandlersFor } from '../Commons/index.js';
+import yup from '../Commons/yupLocale.js';
 
-
+@BackEndApiHandlersFor(WalletEntity)
 export class WalletBackEndApiHandlers extends BaseBackEndApiHandlers {
     protected static _Entity = WalletEntity;
     protected static _BackEndApplied = WalletBackEndApplied;

@@ -1,10 +1,10 @@
 import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
-import { MongoAppliedFor } from '../Commons/Decorator.MongoAppliedFor';
-import { SmartUTxOEntity } from './SmartUTxO.Entity';
+import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
+import { SmartUTxOEntity } from './SmartUTxO.Entity.js';
 import { Address, Datum, Script } from "lucid-cardano";
-import { BaseEntityMongo } from './Base/Base.Entity.Mongo';
-import { SmartUTxOWithDetailsEntity } from './SmartUTxO.WithDetails.Entity';
+import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
+import { SmartUTxOWithDetailsEntity } from './SmartUTxO.WithDetails.Entity.js';
 
 @MongoAppliedFor([SmartUTxOEntity, SmartUTxOWithDetailsEntity])
 export class SmartUTxOEntityMongo extends BaseEntityMongo {

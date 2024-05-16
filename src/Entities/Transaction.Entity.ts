@@ -1,7 +1,7 @@
 import { type PaymentKeyHash } from 'lucid-cardano';
 import 'reflect-metadata';
-import { Convertible, TransactionDatum, TransactionRedeemer, asEntity } from '../Commons';
-import { BaseEntity } from './Base/Base.Entity';
+import { Convertible, TransactionDatum, TransactionRedeemer, asEntity } from '../Commons/index.js';
+import { BaseEntity } from './Base/Base.Entity.js';
 import {type UTxO } from "lucid-cardano";
 
 @asEntity()

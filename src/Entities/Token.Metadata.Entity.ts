@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { Convertible, OptionsGet, asEntity, optionsGetMinimal, type CS, type Decimals, type TN } from '../Commons';
-import { BaseEntity } from './Base/Base.Entity';
+import { Convertible, OptionsGet, asEntity, optionsGetMinimal, type CS, type Decimals, type TN } from '../Commons/index.js';
+import { BaseEntity } from './Base/Base.Entity.js';
 
 @asEntity()
 export class TokenMetadataEntity extends BaseEntity {

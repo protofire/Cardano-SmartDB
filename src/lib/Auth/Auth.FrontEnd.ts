@@ -1,7 +1,8 @@
-import { strToHex, toJson } from '../../Commons';
-import { Lucid, SignedMessage } from "lucid-cardano";
-import { Credentials, CredentialsAuthenticated } from './types';
-import yup from '../../Commons/yupLocale';
+import { Lucid, SignedMessage } from 'lucid-cardano';
+import fetchWrapper from '../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
+import { strToHex, toJson } from '../../Commons/index.js';
+import yup from '../../Commons/yupLocale.js';
+import { Credentials, CredentialsAuthenticated } from './types.js';
 
 export class AuthApi {
     // #region generic methods
@@ -20,9 +21,10 @@ export class AuthApi {
             //-------------------------
             const schemaBody = yup.object().shape({
                 address: yup.string().required().label('Address'),
-                walletName: yup.string().required().label('Wallet name'),
+                walletNameOrSeedOrKey: yup.string().required().label('Wallet name or seed or key'),
                 useBlockfrostToSubmit: yup.string().required().label('useBlockfrostToSubmit'),
-                isWalletFromSeedOrKey: yup.string().required().label('isWalletFromSeedOrKey'),
+                isWalletFromSeed: yup.string().required().label('isWalletFromSeed'),
+                isWalletFromKey: yup.string().required().label('isWalletFromKey'),
             });
             //-------------------------
             let validatedCredentials: Credentials;
@@ -45,15 +47,16 @@ export class AuthApi {
             //----------------------------
             const credentialAuthenticated: CredentialsAuthenticated = {
                 address: credentials.address,
-                walletName: credentials.walletName,
+                walletNameOrSeedOrKey: credentials.walletNameOrSeedOrKey,
                 useBlockfrostToSubmit: credentials.useBlockfrostToSubmit,
-                isWalletFromSeedOrKey: credentials.isWalletFromSeedOrKey,
+                isWalletFromSeed: credentials.isWalletFromSeed,
+                isWalletFromKey: credentials.isWalletFromKey,
                 challengue,
                 signedChallengue: signedChallengue === undefined ? undefined : toJson(signedChallengue),
             };
             //----------------------------
             console.log(`[Auth] - generateAuthToken - Getting JWT Token`);
-            const token = await this.getJWTTokenApi(credentialAuthenticated);
+            const token = await this.getJWTTokenWithCredentialsApi(credentialAuthenticated);
             if (token === undefined) {
                 throw `Can't get JWT Token`;
             }
@@ -65,17 +68,17 @@ export class AuthApi {
         }
     }
 
-    public static async getJWTTokenApi(credentials: CredentialsAuthenticated): Promise<string> {
+    public static async getJWTTokenWithCredentialsApi(credentials: CredentialsAuthenticated): Promise<string> {
         try {
             //----------------------------
-            const urlApi = process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/auth/get-token';
+            const urlApi = process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/smart-db-auth/get-token';
             const requestOptions = {
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST',
                 body: toJson(credentials),
             };
             //----------------------------
-            const response = await fetch(urlApi, requestOptions);
+            const response = await fetchWrapper(urlApi, requestOptions);
             //----------------------------
             if (response.status === 200) {
                 const datas = await response.json();
@@ -99,12 +102,12 @@ export class AuthApi {
     public static async getChallengueTokenApi(): Promise<string> {
         try {
             //----------------------------
-            const urlApi = process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/auth/get-challengue';
+            const urlApi = process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/smart-db-auth/get-challengue';
             const requestOptions = {
                 method: 'GET',
             };
             //----------------------------
-            const response = await fetch(urlApi, requestOptions);
+            const response = await fetchWrapper(urlApi, requestOptions, false);
             //----------------------------
             if (response.status === 200) {
                 const datas = await response.json();

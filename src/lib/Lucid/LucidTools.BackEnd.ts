@@ -1,11 +1,23 @@
 //--------------------------------------
-import { WalletTxParams, console_error, console_log, globalEmulator, isEmulator } from '../../Commons/index.BackEnd';
+import { WalletTxParams, console_error, console_log, globalEmulator, isEmulator } from '../../Commons/index.BackEnd.js';
 import { ExternalWallet, Lucid } from 'lucid-cardano';
-import { LucidToolsFrontEnd } from './LucidTools.FrontEnd';
+import { LucidToolsFrontEnd } from './LucidTools.FrontEnd.js';
+import { BlockfrostCustomProviderBackEnd } from '../BlockFrost/BlockFrost.BackEnd.js';
 //--------------------------------------
 
-export class LucidToolsBackEnd {
+export class LucidToolsBackEnd extends LucidToolsFrontEnd {
     // #region use lucid in back end
+
+    public static initializeLucidWithBlockfrost = async () => {
+        console.log(`[Lucid] - initializeLucidWithBlockfrost`);
+        try {
+            const lucid = await Lucid.new(new BlockfrostCustomProviderBackEnd(process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost', 'xxxx'), process.env.NEXT_PUBLIC_CARDANO_NET! as any);
+            return lucid;
+        } catch (error) {
+            console.log(`[Lucid] - initializeLucidWithBlockfrost - Error: ${error}`);
+            throw error;
+        }
+    };
 
     public static async prepareLucidBackEndForTx(walletTxParams?: WalletTxParams): Promise<{ lucid: Lucid; wallet: ExternalWallet | undefined }> {
         try {
@@ -27,7 +39,7 @@ export class LucidToolsBackEnd {
                 };
             }
             //--------------------------------------
-            const lucid = await LucidToolsBackEnd.prepareLucidBackEnd(wallet);
+            const lucid = await this.prepareLucidBackEnd(wallet);
             //--------------------------------------
             return { lucid, wallet };
         } catch (error) {
@@ -45,21 +57,21 @@ export class LucidToolsBackEnd {
             let lucid;
             //--------------------------------------
             if (isEmulator) {
-                // const EmulatorBackEndApplied = (await import('../MayzSmartDB/BackEnd/index.exports')).EmulatorBackEndApplied;
+                // const EmulatorBackEndApplied = (await import('../MayzSmartDB/BackEnd/index.exports.js')).EmulatorBackEndApplied;
                 // emulatorDB = await EmulatorBackEndApplied.getOneByParams_({ current: true });
                 if (globalEmulator.emulatorDB === undefined) {
                     throw `globalEmulator emulatorDB current not found`;
                 }
                 if (wallet !== undefined) {
-                    lucid = await LucidToolsFrontEnd.initializeLucidWithEmulatorAndExternalWallet(globalEmulator.emulatorDB, wallet);
+                    lucid = await this.initializeLucidWithEmulatorAndExternalWallet(globalEmulator.emulatorDB, wallet);
                 } else {
-                    lucid = await LucidToolsFrontEnd.initializeLucidWithEmulator(globalEmulator.emulatorDB);
+                    lucid = await this.initializeLucidWithEmulator(globalEmulator.emulatorDB);
                 }
             } else {
                 if (wallet !== undefined) {
-                    lucid = await LucidToolsFrontEnd.initializeLucidWithBlockfrostAndExternalWallet(wallet);
+                    lucid = await this.initializeLucidWithBlockfrostAndExternalWallet(wallet);
                 } else {
-                    lucid = await LucidToolsFrontEnd.initializeLucidWithBlockfrost();
+                    lucid = await this.initializeLucidWithBlockfrost();
                 }
             }
             return lucid;
@@ -72,7 +84,7 @@ export class LucidToolsBackEnd {
     // public static async syncEmulatorAfterTx(lucid: Lucid, emulatorDB: EmulatorEntity) {
     //     console_log(0, `Lucid`, `syncEmulatorAfterTx - Saving emulator ledger...`);
     //     emulatorDB.emulator = lucid.provider as any;
-    //     const EmulatorBackEndApplied = (await import('../MayzSmartDB/BackEnd/index.exports')).EmulatorBackEndApplied;
+    //     const EmulatorBackEndApplied = (await import('../MayzSmartDB/BackEnd/index.exports.js')).EmulatorBackEndApplied;
     //     await EmulatorBackEndApplied.update(emulatorDB);
     // }
 

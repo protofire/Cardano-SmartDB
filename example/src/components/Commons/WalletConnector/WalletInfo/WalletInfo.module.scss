@@ -1,0 +1,20 @@
+.walletInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .walletDetails {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        width: 250px;
+        align-items: center;
+      
+        .walletImg{
+            width: 30px;
+            height: 30px;
+        }
+        
+       
+    }
+}

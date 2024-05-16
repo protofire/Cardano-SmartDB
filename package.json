@@ -1,31 +1,26 @@
 {
     "name": "smart-db",
-    "version": "1.0.0",
+    "version": "1.0.352",
     "description": "Smart DB",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "files": [
-        "dist"
-    ],
     "type": "module",
+    "main": "index.js",
+    "types": "index.d.ts",
     "private": true,
     "engines": {
-        "node": "^18"
-    },
-    "eslintConfig": {
-        "root": true,
-        "extends": "./.eslintrc"
+        "node": ">=18"
     },
     "scripts": {
-        "build": "rm -rf ./dist && tsc -p tsconfig.json",
-        "watch": "tsc -w -p tsconfig.json",
-        "clean": "rm -rf ./dist ",
-        "cleanAll": "rm -rf ./dist ./node_modules",
+        "build": "rm -rf ./dist ./tsconfig.tsbuildinfo  && tsc -p tsconfig.json ",
+        "watchBuild": "tsc -w -p tsconfig.json",
+        "watchPack": "chokidar \"src/**/*\" -c \"npm run pack\"",
+        "clean": "rm -rf ./dist ./tsconfig.tsbuildinfo ",
+        "cleanAll": "rm -rf ./dist ./tsconfig.tsbuildinfo  ./node_modules",
         "lint": "eslint 'src/**/*.ts' --fix",
-        "test": "jest",
-        "pack": "npm run build && npm run test && npm pack"
+        "test": "jest --passWithNoTests",
+        "pack": "npm version patch --no-git-tag-version && npm run build && npm run test && cp package.json ./dist/package.json  && cp -r assets ./dist/assets && cd ./dist && npm pack --pack-destination=../ && cd .. && mv smart-db-*.tgz smart-db.tgz"
     },
     "dependencies": {
+        "axios": "^1.6.8",
         "bignumber.js": "^9.1.1",
         "cls-hooked": "^4.2.2",
         "cors": "^2.8.5",
@@ -36,21 +31,24 @@
         "lucid-cardano": "^0.10.7",
         "mongoose": "^8.3.2",
         "next": "^12.1.6",
-        "next-auth": "^4.22.1",
+        "next-auth": "^4.24.7",
+        "next-http-proxy-middleware": "^1.2.5",
         "nodemailer": "^6.9.1",
+        "raw-body": "^2.5.2",
         "react": "18.2.0",
         "react-dom": "18.2.0",
         "react-notifications-component": "^4.0.1",
         "yup": "^1.0.2"
     },
     "devDependencies": {
-        "@types/mongoose": "^5.11.97",
         "@next/eslint-plugin-next": "^13.4.12",
         "@types/cls-hooked": "^4.3.8",
         "@types/cors": "^2.8.13",
         "@types/formidable": "^3.4.5",
         "@types/jest": "^29.5.3",
         "@types/jsonwebtoken": "^9.0.2",
+        "@types/mongoose": "^5.11.97",
+        "@types/next-auth": "^3.15.0",
         "@types/node": "20.5.9",
         "@types/nodemailer": "^6.4.7",
         "@types/react": "18.2.21",
@@ -60,6 +58,7 @@
         "@typescript-eslint/eslint-plugin": "^5.61.0",
         "@typescript-eslint/parser": "^5.61.0",
         "babel-loader": "^9.1.3",
+        "chokidar-cli": "^3.0.0",
         "cross-env": "^7.0.3",
         "eslint": "8.48.0",
         "eslint-config-next": "13.4.19",
@@ -67,6 +66,7 @@
         "prettier": "^2.5.1",
         "reflect-metadata": "^0.1.13",
         "sass": "^1.72.0",
-        "typescript": "5.2.2"
+        "typescript": "^5.2.2",
+        "typescript-transform-paths": "^3.4.7"
     }
 }

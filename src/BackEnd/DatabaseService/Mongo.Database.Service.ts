@@ -1,7 +1,12 @@
-import { OptionsGet, connectMongoDB, console_error, console_log, getCombinedConversionFunctions, isEmptyObject, isString, tabs, toJson } from '../../Commons/index.BackEnd';
-import { BaseEntity } from '../../Entities/Base/Base.Entity';
+import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
 import mongoose from 'mongoose';
 import { Types } from 'mongoose';
+import { connectMongoDB } from '../../Commons/BackEnd/dbMongo.js';
+import { console_error, console_log } from '../../Commons/BackEnd/globalLogs.js';
+import { isEmptyObject, isString, toJson } from '../../Commons/utils.js';
+import { OptionsGet } from '../../Commons/types.js';
+import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
+
 
 export class MongoDatabaseService {
     public static async create<T extends BaseEntity>(instance: T): Promise<string> {

@@ -1,10 +1,10 @@
 import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
-import { MongoAppliedFor } from '../Commons/Decorator.MongoAppliedFor';
-import { TransactionEntity } from './Transaction.Entity';
+import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
+import { TransactionEntity } from './Transaction.Entity.js';
 import { PaymentKeyHash, UTxO } from 'lucid-cardano';
-import { BaseEntityMongo } from './Base/Base.Entity.Mongo';
-import { TransactionDatum, TransactionRedeemer } from '../Commons';
+import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
+import { TransactionDatum, TransactionRedeemer } from '../Commons/index.js';
 
 @MongoAppliedFor([TransactionEntity])
 export class TransactionEntityMongo extends BaseEntityMongo {

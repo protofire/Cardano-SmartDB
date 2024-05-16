@@ -1,8 +1,9 @@
-import { OptionsGet, isEqual, isNullOrBlank, optionsGetDefault, toJson } from '../../../Commons';
-import { AddressToFollowEntity } from '../../../Entities/AddressToFollow.Entity';
-import { BaseSmartDBEntity } from '../../../Entities/Base/Base.SmartDB.Entity';
-import { AddressToFollowFrontEndApiCalls } from '../AddressToFollow.FrontEnd.Api.Calls';
-import { BaseFrontEndApiCalls } from './Base.FrontEnd.Api.Calls';
+import fetchWrapper from '../../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
+import { OptionsGet, isEqual, isNullOrBlank, optionsGetDefault, toJson } from '../../../Commons/index.js';
+import { AddressToFollowEntity } from '../../../Entities/AddressToFollow.Entity.js';
+import { BaseSmartDBEntity } from '../../../Entities/Base/Base.SmartDB.Entity.js';
+import { AddressToFollowFrontEndApiCalls } from '../AddressToFollow.FrontEnd.Api.Calls.js';
+import { BaseFrontEndApiCalls } from './Base.FrontEnd.Api.Calls.js';
 
 // es generica, todos los metodos llevan instancia o entidad como parametro
 // todas las clases la pueden usar
@@ -33,10 +34,10 @@ export class BaseSmartDBFrontEndApiCalls extends BaseFrontEndApiCalls {
         try {
             let response;
             if (isEqual(optionsGet, optionsGetDefault)) {
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/deployed`);
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/deployed`);
             } else {
                 const body = toJson(optionsGet);
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/deployed`, {
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/deployed`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -90,7 +91,7 @@ export class BaseSmartDBFrontEndApiCalls extends BaseFrontEndApiCalls {
                 throw `address not defined`;
             }
             const body = toJson({ event: 'sync', force, tryCountAgain: false });
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/sync/${address}`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/sync/${address}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

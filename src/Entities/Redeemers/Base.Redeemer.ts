@@ -1,6 +1,6 @@
 import { C, Constr, Data, fromHex } from 'lucid-cardano';
-import { BaseConstructor } from '../Base/Base.Constructor';
-import { getCombinedConversionFunctions, ConversionFunctions, itemToLucidData, showPtrInHex } from '../../Commons';
+import { BaseConstructor } from '../Base/Base.Constructor.js';
+import { getCombinedConversionFunctions, ConversionFunctions, itemToLucidData, showPtrInHex } from '../../Commons/index.js';
 
 export class BaseTxRedeemer extends BaseConstructor {
     protected static _plutusDataIndex = 0;

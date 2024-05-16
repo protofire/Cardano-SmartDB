@@ -1,10 +1,10 @@
 import crypto from 'crypto';
-import { getGlobalSettings } from '../Commons/BackEnd/globalSettings';
-import { BackEndAppliedFor } from '../Commons/Decorator.BackEndAppliedFor';
-import { console_log, isFrontEndEnvironment } from '../Commons/index.BackEnd';
-import { SiteSettingsEntity } from '../Entities/SiteSettings.Entity';
-import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied';
-import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods';
+import { getGlobalSettings } from '../Commons/BackEnd/globalSettings.js';
+import { BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndAppliedFor.js';
+import { console_log, isFrontEndEnvironment } from '../Commons/index.BackEnd.js';
+import { SiteSettingsEntity } from '../Entities/SiteSettings.Entity.js';
+import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied.js';
+import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods.js';
 
 @BackEndAppliedFor(SiteSettingsEntity)
 export class SiteSettingsBackEndApplied extends BaseBackEndApplied {

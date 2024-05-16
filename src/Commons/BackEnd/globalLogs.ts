@@ -1,8 +1,8 @@
 //----------------------------------------------------------------------
 
 import { NextApiResponse } from 'next';
-import { requestContext } from './globalContext';
-import { isNullOrBlank } from '../utils';
+import { requestContext } from './globalContext.js';
+import { isFrontEndEnvironment, isNullOrBlank } from '../utils.js';
 
 export const swShowAlwaysError = process.env.LOGS_SHOW_ALWAYS_ERROR !== undefined ? (process.env.LOGS_SHOW_ALWAYS_ERROR === 'true' ? true : false) : true;
 export const swUseFilter = process.env.LOGS_USE_FILTER !== undefined ? (process.env.LOGS_USE_FILTER === 'true' ? true : false) : false;
@@ -82,10 +82,7 @@ export function flushLogs() {
             );
         } else {
             console.log(
-                `${(requestContext.get('requestId') as string).slice(
-                    0,
-                    5
-                )}  [Logs] - isDebugMode: ${isDebugMode} - swShowAlwaysErr: ${swShowAlwaysError} - swUseFilter: ${swUseFilter} - debugNamesInclude.length: ${
+                `${requestId.slice(0, 5)}-[Logs] - isDebugMode: ${isDebugMode} - swShowAlwaysErr: ${swShowAlwaysError} - swUseFilter: ${swUseFilter} - debugNamesInclude.length: ${
                     debugNamesInclude.length
                 } - debugNamesExclude.length: ${debugNamesExclude.length} - waitForFLush: ${waitForFLush}`
             );
@@ -116,9 +113,9 @@ export function console_logBase(tab: number = 0, name: string, text: string, isE
                 requestContext.set('logs', logs);
             } else {
                 if (isError) {
-                    console.error(`${(requestContext.get('requestId') as string).slice(0, 5)}  ${tabs(tab)}[${name}] - INTERNAL ERROR - ${text}`);
+                    console.error(`${requestId.slice(0, 5)}-${tabs(tab)}[${name}] - INTERNAL ERROR - ${text}`);
                 } else {
-                    console.log(`${(requestContext.get('requestId') as string).slice(0, 5)}  ${tabs(tab)}[${name}] - ${text}`);
+                    console.log(`${requestId.slice(0, 5)}-${tabs(tab)}[${name}] - ${text}`);
                 }
             }
         }
@@ -133,70 +130,94 @@ export function console_logBase(tab: number = 0, name: string, text: string, isE
 }
 
 export function console_log(tab: number = 0, name: string, text: string) {
-    if (
-        (swUseFilter as any) === false ||
-        (debugNamesInclude.includes(name) && !debugNamesExclude.includes(name)) ||
-        (debugNamesInclude.length === 0 && !debugNamesExclude.includes(name)) ||
-        (debugNamesInclude.length === 0 && debugNamesExclude.length === 0)
-    ) {
-        console_logBase(tab, name, text);
+    if (isFrontEndEnvironment()) {
+        console.log(`[${name}] - ${text}`);
+    } else {
+        if (
+            (swUseFilter as any) === false ||
+            (debugNamesInclude.includes(name) && !debugNamesExclude.includes(name)) ||
+            (debugNamesInclude.length === 0 && !debugNamesExclude.includes(name)) ||
+            (debugNamesInclude.length === 0 && debugNamesExclude.length === 0)
+        ) {
+            console_logBase(tab, name, text);
+        }
     }
 }
 
 export function console_logLv1(tab: number = 0, name: string, text: string) {
-    if (
-        (swUseFilter as any) === false ||
-        (debugNamesInclude.includes(name) && !debugNamesExclude.includes(name)) ||
-        (debugNamesInclude.length === 0 && !debugNamesExclude.includes(name)) ||
-        (debugNamesInclude.length === 0 && debugNamesExclude.length === 0)
-    ) {
-        console_logBase(tab, `${name}*`, text);
+    if (isFrontEndEnvironment()) {
+        console.log(`[${name}*] - ${text}`);
+    } else {
+        if (
+            (swUseFilter as any) === false ||
+            (debugNamesInclude.includes(name) && !debugNamesExclude.includes(name)) ||
+            (debugNamesInclude.length === 0 && !debugNamesExclude.includes(name)) ||
+            (debugNamesInclude.length === 0 && debugNamesExclude.length === 0)
+        ) {
+            console_logBase(tab, `${name}*`, text);
+        }
     }
 }
 
 export function console_logLv2(tab: number = 0, name: string, text: string) {
-    if (
-        (swUseFilter as any) === false ||
-        (debugNamesInclude.includes(name) && !debugNamesExclude.includes(name)) ||
-        (debugNamesInclude.length === 0 && !debugNamesExclude.includes(name)) ||
-        (debugNamesInclude.length === 0 && debugNamesExclude.length === 0)
-    ) {
-        console_logBase(tab, `${name}**`, text);
+    if (isFrontEndEnvironment()) {
+        console.log(`[${name}**] - ${text}`);
+    } else {
+        if (
+            (swUseFilter as any) === false ||
+            (debugNamesInclude.includes(name) && !debugNamesExclude.includes(name)) ||
+            (debugNamesInclude.length === 0 && !debugNamesExclude.includes(name)) ||
+            (debugNamesInclude.length === 0 && debugNamesExclude.length === 0)
+        ) {
+            console_logBase(tab, `${name}**`, text);
+        }
     }
 }
 
 export function console_error(tab: number = 0, name: string, text: string) {
-    if (
-        swShowAlwaysError === true ||
-        (swUseFilter as any) === false ||
-        (debugNamesInclude.includes(name) && !debugNamesExclude.includes(name)) ||
-        (debugNamesInclude.length === 0 && !debugNamesExclude.includes(name)) ||
-        (debugNamesInclude.length === 0 && debugNamesExclude.length === 0)
-    ) {
-        console_logBase(tab, name, text, true);
+    if (isFrontEndEnvironment()) {
+        console.error(`[${name}] - ${text}`);
+    } else {
+        if (
+            swShowAlwaysError === true ||
+            (swUseFilter as any) === false ||
+            (debugNamesInclude.includes(name) && !debugNamesExclude.includes(name)) ||
+            (debugNamesInclude.length === 0 && !debugNamesExclude.includes(name)) ||
+            (debugNamesInclude.length === 0 && debugNamesExclude.length === 0)
+        ) {
+            console_logBase(tab, name, text, true);
+        }
     }
 }
 
 export function console_errorLv1(tab: number = 0, name: string, text: string) {
-    if (
-        swShowAlwaysError === true ||
-        (swUseFilter as any) === false ||
-        (debugNamesInclude.includes(name) && !debugNamesExclude.includes(name)) ||
-        (debugNamesInclude.length === 0 && !debugNamesExclude.includes(name)) ||
-        (debugNamesInclude.length === 0 && debugNamesExclude.length === 0)
-    ) {
-        console_logBase(tab, `${name}*`, text, true);
+    if (isFrontEndEnvironment()) {
+        console.error(`[${name}*] - ${text}`);
+    } else {
+        if (
+            swShowAlwaysError === true ||
+            (swUseFilter as any) === false ||
+            (debugNamesInclude.includes(name) && !debugNamesExclude.includes(name)) ||
+            (debugNamesInclude.length === 0 && !debugNamesExclude.includes(name)) ||
+            (debugNamesInclude.length === 0 && debugNamesExclude.length === 0)
+        ) {
+            console_logBase(tab, `${name}*`, text, true);
+        }
     }
 }
 
 export function console_errorLv2(tab: number = 0, name: string, text: string) {
-    if (
-        swShowAlwaysError === true ||
-        (swUseFilter as any) === false ||
-        (debugNamesInclude.includes(name) && !debugNamesExclude.includes(name)) ||
-        (debugNamesInclude.length === 0 && !debugNamesExclude.includes(name)) ||
-        (debugNamesInclude.length === 0 && debugNamesExclude.length === 0)
-    ) {
-        console_logBase(tab, `${name}**`, text, true);
+    if (isFrontEndEnvironment()) {
+        console.error(`[${name}**] - ${text}`);
+    } else {
+        if (
+            swShowAlwaysError === true ||
+            (swUseFilter as any) === false ||
+            (debugNamesInclude.includes(name) && !debugNamesExclude.includes(name)) ||
+            (debugNamesInclude.length === 0 && !debugNamesExclude.includes(name)) ||
+            (debugNamesInclude.length === 0 && debugNamesExclude.length === 0)
+        ) {
+            console_logBase(tab, `${name}**`, text, true);
+        }
     }
 }

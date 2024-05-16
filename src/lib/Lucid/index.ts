@@ -1,1 +1,1 @@
-export * from './LucidTools.FrontEnd';
+export * from './LucidTools.FrontEnd.js';

@@ -1,10 +1,10 @@
 import 'reflect-metadata';
 import { Types } from 'mongoose';
-import { deserealizeBigInt } from '../../Commons/conversions';
-import { ConversionFunctions, getCombinedConversionFunctions } from '../../Commons/Decorator.Convertible';
-import { MongoAppliedFor } from '../../Commons/Decorator.MongoAppliedFor';
-import { BaseEntity } from './Base.Entity';
-import { executeFunction, toJson } from '../../Commons';
+import { deserealizeBigInt } from '../../Commons/conversions.js';
+import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
+import { MongoAppliedFor } from '../../Commons/Decorators/Decorator.MongoAppliedFor.js';
+import { BaseEntity } from './Base.Entity.js';
+import { ConversionFunctions, executeFunction, toJson } from '../../Commons/index.js';
 
 @MongoAppliedFor([BaseEntity])
 export class BaseEntityMongo {

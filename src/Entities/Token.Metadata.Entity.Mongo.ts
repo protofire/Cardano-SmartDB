@@ -1,9 +1,9 @@
 import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
-import { MongoAppliedFor } from '../Commons/Decorator.MongoAppliedFor';
-import { TokenMetadataEntity } from './Token.Metadata.Entity';
-import { CS, TN } from '../Commons';
-import { BaseEntityMongo } from './Base/Base.Entity.Mongo';
+import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
+import { TokenMetadataEntity } from './Token.Metadata.Entity.js';
+import { CS, TN } from '../Commons/index.js';
+import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
 
 @MongoAppliedFor([TokenMetadataEntity])
 export class TokenMetadataEntityMongo extends BaseEntityMongo {

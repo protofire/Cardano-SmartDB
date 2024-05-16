@@ -6,6 +6,9 @@ import {
     DummyValidatorRedeemerDatumUpdate,
 } from '@example/src/lib/DummyExample/Entities/Redeemers/Dummy.Redeemer';
 import { DummyApi } from '@example/src/lib/DummyExample/FrontEnd/Dummy.FrontEnd.Api.Calls';
+import { Address, Assets, Lucid, Script, SpendingValidator } from 'lucid-cardano';
+import { useEffect, useState } from 'react';
+import Modal from 'react-modal';
 import {
     ADA_UI,
     BaseSmartDBFrontEndApiCalls,
@@ -18,16 +21,14 @@ import {
     formatHash,
     formatTokenAmount,
     formatUTxO,
-    getTotalOfUnitInUTxOList,
     objToCborHex,
     showData,
     strToHex,
-} from 'smart-db/index'
-import { Address, Assets, Data, Lucid, Script, SpendingValidator } from 'lucid-cardano';
-import { useEffect, useState } from 'react';
+    useWalletStore,
+} from 'smart-db';
 import LoaderButton from '../../Commons/LoaderButton/LoaderButton';
+import WalletConnector from '../../Commons/WalletConnector/WalletConnector';
 import styles from './Home.module.scss';
-import Modal from 'react-modal';
 
 export default function Home() {
     //--------------------------------------
@@ -35,6 +36,8 @@ export default function Home() {
     useEffect(() => {
         setIsRefreshing(false);
     }, []);
+    //--------------------------------------
+    const walletStore = useWalletStore();
     //--------------------------------------
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingSync, setIsLoadingSync] = useState(false);
@@ -44,7 +47,6 @@ export default function Home() {
     const [isLoadingTxClaim, setIsLoadingTxClaim] = useState(false);
     //--------------------------------------
     const [lucid, setLucid] = useState<Lucid>();
-    const [privateKey, setPrivateKey] = useState<string>();
     const [address, setAddress] = useState<string>();
     const [balance, setBalance] = useState<bigint>();
     //--------------------------------------
@@ -63,13 +65,12 @@ export default function Home() {
     const [txMessage, setTxMessage] = useState('');
     const [txConfirmed, setTxConfirmed] = useState(false);
     //--------------------------------------
-    const [isWalletConnectorModalOpen, setIsWalletConnectorModalOpen] = useState(false);
-    //--------------------------------------
     const [inputValue, setInputValue] = useState('');
     const [isEditingValue, setIsEditingValue] = useState(false);
     const [editValue, setEditValue] = useState('');
     //--------------------------------------
     async function generateScripts(lucid: Lucid) {
+        //----------------------------
         if (lucid === undefined) return;
         //----------------------------
         const cborHexMintingID =
@@ -101,89 +102,99 @@ export default function Home() {
         setDatumID_TN(tokenName);
         //----------------------------
         await BaseSmartDBFrontEndApiCalls.createHookApi(DummyEntity, validatorAddress, policyID_CS);
+        //----------------------------
     }
     //--------------------------------------
     useEffect(() => {
         const fetch = async () => {
+            //----------------------------
             setIsLoading(true);
+            //----------------------------
             try {
                 const lucid = await LucidToolsFrontEnd.initializeLucidWithBlockfrost();
-                const privateKey = lucid.utils.generatePrivateKey(); // Bech32 encoded private key
                 setLucid(lucid);
-                setPrivateKey(privateKey);
-                console.log(`privateKey: ${privateKey}`);
                 await generateScripts(lucid);
                 const list: DummyEntity[] = await DummyApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
                 setList(list);
             } catch (e) {
                 console.error(e);
             }
+            //----------------------------
             setIsLoading(false);
+            //----------------------------
         };
+        //----------------------------
         fetch();
+        //----------------------------
     }, []);
-
+    //--------------------------------------
+    useEffect(() => {
+        setIsLoadingBalance(walletStore.isLoadingAnyData);
+    }, [walletStore.isLoadingAnyData]);
+    //--------------------------------------
     //--------------------------------------
     useEffect(() => {
         const fetch = async () => {
-            if (lucid === undefined) return;
-            if (privateKey === undefined) return;
+            //----------------------------
             setIsLoading(true);
+            //----------------------------
+            setLucid(await walletStore.getLucid());
+            //----------------------------
             try {
-                lucid.selectWalletFromPrivateKey(privateKey);
-                const address = await lucid.wallet.address();
+                const address = walletStore.info?.address;
                 console.log(`wallet address: ${address}`);
                 setAddress(address);
             } catch (e) {
                 console.error(e);
                 setAddress('');
             }
+            //----------------------------
             setIsLoading(false);
-            getBalance();
+            //----------------------------
         };
-        if (lucid !== undefined && privateKey !== undefined) {
+        if (walletStore.isConnected === true) {
             fetch();
         }
-    }, [lucid, privateKey]);
+    }, [walletStore.isConnected]);
+    //--------------------------------------
+    useEffect(() => {
+        const fetch = async () => {
+            //----------------------------
+            const balance = walletStore.getTotalOfUnit('lovelace');
+            setBalance(balance);
+            console.log(`balance: ${balance.toString()}`);
+            //----------------------------
+        };
+        if (walletStore.isConnected === true && walletStore.isWalletDataLoaded === true) {
+            fetch();
+        }
+    }, [walletStore.isConnected, walletStore.isWalletDataLoaded]);
     //--------------------------------------
     const getBalance = async () => {
-        if (lucid === undefined) return;
-        if (privateKey === undefined) return;
-        //----------------------------
-        setIsLoadingBalance(true);
         //----------------------------
         try {
             //----------------------------
-            const utxos = await lucid.wallet.getUtxos();
-            //----------------------------
-            const balance = getTotalOfUnitInUTxOList('lovelace', utxos);
-            setBalance(balance);
-            //----------------------------
-            console.log(`balance: ${balance.toString()}`);
+            await walletStore.loadWalletData();
             //----------------------------
         } catch (e) {
             console.error(e);
             setBalance(0n);
         }
-        //----------------------------
-        setIsLoadingBalance(false);
     };
     //--------------------------------------
     const handleBtnFaucet = async () => {
-        if (lucid === undefined) return;
-        if (privateKey === undefined) return;
         //----------------------------
         //open link https://docs.cardano.org/cardano-testnet/tools/faucet/
         //----------------------------
         window.open('https://docs.cardano.org/cardano-testnet/tools/faucet/');
     };
     const handleBtnBalance = async () => {
-        getBalance();
+        await getBalance();
     };
     const handleBtnCreateTx = async () => {
         //----------------------------
         if (lucid === undefined) return;
-        if (privateKey === undefined) return;
+        if (walletStore.isConnected !== true) return;
         if (address === undefined) return;
         if (datumID_CS === undefined) return;
         if (datumID_TN === undefined) return;
@@ -237,6 +248,15 @@ export default function Home() {
                 .complete();
             //----------------------------
             const signedTx = await tx.sign().complete();
+            setTxMessage('Transaction has been submited and now waiting for confirmation...');
+
+            console.log(lucid.wallet);
+            console.log(lucid.wallet.submitTx);
+            console.log(lucid.provider);
+            console.log(lucid.provider.submitTx);
+
+            // // return await (this.lucid.wallet || this.lucid.provider).submitTx(toHex(this.txSigned.to_bytes()));
+
             const txHash = await signedTx.submit();
             //----------------------------
             setTxMessage('Transaction has been submited and now waiting for confirmation...');
@@ -263,7 +283,7 @@ export default function Home() {
     const handleBtnClaimTx = async (item: DummyEntity) => {
         //----------------------------
         if (lucid === undefined) return;
-        if (privateKey === undefined) return;
+        if (walletStore.isConnected !== true) return;
         if (address === undefined) return;
         if (datumID_CS === undefined) return;
         if (datumID_TN === undefined) return;
@@ -339,7 +359,6 @@ export default function Home() {
     const handleBtnSync = async () => {
         //----------------------------
         if (lucid === undefined) return;
-        if (privateKey === undefined) return;
         if (validatorAddress === undefined) return;
         //----------------------------
         setIsLoadingSync(true);
@@ -370,7 +389,7 @@ export default function Home() {
     const handleBtnUpdateTx = async (item: DummyEntity) => {
         //----------------------------
         if (lucid === undefined) return;
-        if (privateKey === undefined) return;
+        if (walletStore.isConnected !== true) return;
         if (address === undefined) return;
         if (datumID_CS === undefined) return;
         if (datumID_TN === undefined) return;
@@ -461,7 +480,7 @@ export default function Home() {
                     Smart DB - Dummy test case example{' '}
                     {isLoading && (
                         <>
-                            <LoaderButton></LoaderButton>
+                            <LoaderButton />
                         </>
                     )}
                 </div>
@@ -470,69 +489,63 @@ export default function Home() {
                 <div className={styles.subTitle}>Validator Address:</div>
                 <div>{validatorAddress}</div>
             </div>
-            {/* <button onClick={handleBtnConnectWallet} className={styles.buttonNormal}>
-                        Connect Wallet{' '}
-                        {isConnec && (
-                            <>
-                                <LoaderButton></LoaderButton>
-                            </>
-                        )}
-                    </button> */}
-            <div>
-                <div className={styles.subTitle}>Wallet Private Key:</div>
-                <div>
-                    <input name="privateKey" value={privateKey ?? ''} onChange={(e) => setPrivateKey(e.target.value)} />
-                </div>
-            </div>
-            <div>
-                <div className={styles.subTitle}>Address:</div>
-                <div>{address}</div>
-            </div>
-            <div>
-                <div className={styles.subTitle}>1: Faucet to get ADA</div>
-                <button onClick={handleBtnFaucet} className={styles.buttonNormal}>Faucet</button>
-            </div>
-            <div>
-                <div className={styles.subTitle}>2: Check Balance</div>
-                <button onClick={handleBtnBalance} className={styles.buttonNormal}>
-                    Refresh Balance{' '}
-                    {isLoadingBalance && (
-                        <>
-                            <LoaderButton></LoaderButton>
-                        </>
-                    )}
-                </button>
-            </div>
-            <div>
-                <div className={styles.subTitle}>3: Make sure you have ADA Balance:</div>
-                <div>{formatTokenAmount(balance, ADA_UI)}</div>
-            </div>
-            <div>
-                <div className={styles.subTitle}>4: Create Dummy Datum Transaction</div>
-                <div className={styles.createContainer}>
+            {isLoading === false && lucid !== undefined && <WalletConnector lucid={lucid} />}
+            {walletStore.isConnected === true ? (
+                <>
                     <div>
-                        <div>Dummy value:</div>
-                        <div>
-                            <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
+                        <div className={styles.subTitle}>Address:</div>
+                        <div>{address}</div>
+                    </div>
+                    <div>
+                        <div className={styles.subTitle}>1: Faucet to get ADA</div>
+                        <button onClick={handleBtnFaucet} className={styles.buttonNormal}>
+                            Faucet
+                        </button>
+                    </div>
+                    <div>
+                        <div className={styles.subTitle}>2: Check Balance</div>
+                        <button onClick={handleBtnBalance} className={styles.buttonNormal}>
+                            Refresh Balance{' '}
+                            {isLoadingBalance && (
+                                <>
+                                    <LoaderButton />
+                                </>
+                            )}
+                        </button>
+                    </div>
+                    <div>
+                        <div className={styles.subTitle}>3: Make sure you have ADA Balance:</div>
+                        <div>{formatTokenAmount(balance, ADA_UI)}</div>
+                    </div>
+                    <div>
+                        <div className={styles.subTitle}>4: Create Dummy Datum Transaction</div>
+                        <div className={styles.createContainer}>
+                            <div>Dummy value:</div>
+
+                            <div>
+                                <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
+                            </div>
+                            <button onClick={handleBtnCreateTx} className={styles.buttonNormal}>
+                                Create{' '}
+                                {isLoadingTxCreate && (
+                                    <>
+                                        <LoaderButton />
+                                    </>
+                                )}
+                            </button>
                         </div>
-                    </div> 
-                    <button onClick={handleBtnCreateTx} className={styles.buttonNormal}>
-                        Create{' '}
-                        {isLoadingTxCreate && (
-                            <>
-                                <LoaderButton></LoaderButton>
-                            </>
-                        )}
-                    </button>
-                </div>
-            </div>
+                    </div>
+                </>
+            ) : (
+                <>Connect a Wallet to Continue...</>
+            )}
             <div>
                 <div className={styles.subTitle}>5: Sycn Database</div>
                 <button onClick={handleBtnSync} className={styles.buttonNormal}>
                     Sync{' '}
                     {isLoadingSync && (
                         <>
-                            <LoaderButton></LoaderButton>
+                            <LoaderButton />
                         </>
                     )}
                 </button>
@@ -566,7 +579,7 @@ export default function Home() {
                                             Save{' '}
                                             {item === selectedItem && isLoadingTxUpdate && (
                                                 <>
-                                                    <LoaderButton></LoaderButton>
+                                                    <LoaderButton />
                                                 </>
                                             )}
                                         </button>
@@ -579,7 +592,7 @@ export default function Home() {
                                             Claim
                                             {item === selectedItem && isLoadingTxClaim && (
                                                 <>
-                                                    <LoaderButton></LoaderButton>
+                                                    <LoaderButton />
                                                 </>
                                             )}
                                         </button>
@@ -600,26 +613,7 @@ export default function Home() {
             >
                 <h2>Transaction Status</h2>
                 <div>
-                    <textarea value={txMessage} style={{ resize: 'none' }}></textarea>
-                </div>
-                <div>
-                    Tx Hash: <div className={styles.txHash}>{txHash}</div>
-                </div>
-                <div>
-                    Status: <div className={styles.txStatus}>{txConfirmed ? 'Confirmed' : isTxError ? 'Error' : 'Waiting...'}</div>
-                </div>
-                <button onClick={() => setIsTxModalOpen(false)}>Close</button>
-            </Modal>
-            <Modal
-                isOpen={isWalletConnectorModalOpen}
-                onRequestClose={() => setIsWalletConnectorModalOpen(false)}
-                contentLabel="Connect Wallet"
-                className={styles.modal}
-                overlayClassName={styles.overlay}
-            >
-                <h2>Connect Wallet</h2>
-                <div>
-                    <textarea value={txMessage} style={{ resize: 'none' }}></textarea>
+                    <textarea value={txMessage} style={{ resize: 'none' }} readOnly={true}></textarea>
                 </div>
                 <div>
                     Tx Hash: <div className={styles.txHash}>{txHash}</div>
@@ -632,3 +626,5 @@ export default function Home() {
         </div>
     );
 }
+
+Modal.setAppElement('#__next');

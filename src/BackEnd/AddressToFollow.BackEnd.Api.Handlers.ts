@@ -1,17 +1,18 @@
 import { NextApiResponse } from 'next';
 import { User } from 'next-auth';
-import { OptionsGet, SmartDBEntitiesRegistry, isEmulator, sanitizeForDatabase, showData, yupValidateOptionsGet } from '../Commons';
-import { globalEmulator } from '../Commons/BackEnd/globalEmulator';
-import { console_error, console_log } from '../Commons/BackEnd/globalLogs';
-import { AddressToFollowEntity } from '../Entities/AddressToFollow.Entity';
-import { NextApiRequestAuthenticated } from '../lib/Auth/types';
-import { AddressToFollowBackEndApplied } from './AddressToFollow.BackEnd.Applied';
-import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers';
-import { BaseSmartDBBackEndMethods } from './Base/Base.SmartDB.BackEnd.Methods';
-import yup from '../Commons/yupLocale';
+import { BackEndApiHandlersFor, OptionsGet,  RegistryManager,  isEmulator, sanitizeForDatabase, showData, yupValidateOptionsGet } from '../Commons/index.js';
+import { globalEmulator } from '../Commons/BackEnd/globalEmulator.js';
+import { console_error, console_log } from '../Commons/BackEnd/globalLogs.js';
+import { AddressToFollowEntity } from '../Entities/AddressToFollow.Entity.js';
+import { NextApiRequestAuthenticated } from '../lib/Auth/types.js';
+import { AddressToFollowBackEndApplied } from './AddressToFollow.BackEnd.Applied.js';
+import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
+import { BaseSmartDBBackEndMethods } from './Base/Base.SmartDB.BackEnd.Methods.js';
+import yup from '../Commons/yupLocale.js';
 
 //BackEnd Api Handlers siempre llevan seteado la entidad y el backend methods
 
+@BackEndApiHandlersFor(AddressToFollowEntity)
 export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
     protected static _Entity = AddressToFollowEntity;
     protected static _BackEndApplied = AddressToFollowBackEndApplied;
@@ -179,11 +180,11 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
                 //--------------------------------------
                 if (isEmulator) {
                     // solo en emulator. Me aseguro de setear el emulador al tiempo real del server. Va a saltear los slots necesarios.
-                    // const TimeBackEnd = (await import('../../Time/backEnd')).TimeBackEnd;
+                    // const TimeBackEnd = (await import('../../Time/backEnd.js')).TimeBackEnd;
                     // await TimeBackEnd.syncBlockChainWithServerTime()
                 }
                 //--------------------------------------
-                const LucidToolsBackEnd = (await import('../lib/Lucid/LucidTools.BackEnd')).LucidToolsBackEnd;
+                const LucidToolsBackEnd = (await import('../lib/Lucid/LucidTools.BackEnd.js')).LucidToolsBackEnd;
                 //--------------------------------------
                 var { lucid } = await LucidToolsBackEnd.prepareLucidBackEndForTx(undefined);
                 //--------------------------------------
@@ -195,7 +196,7 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
                     //--------------------------------------
                     let datumType = addressToFollow.datumType;
                     // const EntityClass = this._SmartDBEntities[datumType];
-                    const EntityClass = SmartDBEntitiesRegistry.get(datumType);
+                    const EntityClass = RegistryManager.getFromSmartDBEntitiesRegistry(datumType);
                     if (EntityClass !== undefined) {
                         if (isEmulator === true && globalEmulator.emulatorDB === undefined) {
                             throw `globalEmulator emulatorDB current not found`;
@@ -224,13 +225,13 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
             try {
                 if (isEmulator) {
                     // solo en emulator. Me aseguro de setear el emulador al tiempo real del server. Va a saltear los slots necesarios.
-                    // const TimeBackEnd = (await import('../../Time/backEnd')).TimeBackEnd;
+                    // const TimeBackEnd = (await import('../../Time/backEnd.js')).TimeBackEnd;
                     // await TimeBackEnd.syncBlockChainWithServerTime()
                 }
                 //--------------------------------------
                 // // TODO: estoy usandod esde la libreria generica esto que usa entidades de MAYZ... deberia hacer este metodo en una clase de mayz directamente
-                // const ProtocolBackEndApplied = (await import('../../MayzSmartDB/backEnd')).ProtocolBackEndApplied;
-                // const FundBackEndApplied = (await import('../../MayzSmartDB/backEnd')).FundBackEndApplied;
+                // const ProtocolBackEndApplied = (await import('../../MayzSmartDB/backEnd.js')).ProtocolBackEndApplied;
+                // const FundBackEndApplied = (await import('../../MayzSmartDB/backEnd.js')).FundBackEndApplied;
                 // //--------------------------------------
                 // const protocols: ProtocolEntity[] = await ProtocolBackEndApplied.getAll_();
                 // const funds: FundEntity[] = await FundBackEndApplied.getAll_();

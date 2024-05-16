@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-// import { Convertible } from '../Commons/index';
-import { BaseEntity } from './Base/Base.Entity';
-import { Convertible } from '../Commons/Decorator.Convertible';
-import { LucidLUCID_NETWORK_MAINNET_NAME, asEntity } from '../Commons';
+// import { Convertible } from '../Commons/index.js';
+import { BaseEntity } from './Base/Base.Entity.js';
+import { Convertible } from '../Commons/Decorators/Decorator.Convertible.js';
+import { LucidLUCID_NETWORK_MAINNET_NAME, asEntity } from '../Commons/index.js';
 
 @asEntity()
 export class SiteSettingsEntity extends BaseEntity {

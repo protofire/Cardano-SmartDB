@@ -1,14 +1,14 @@
 import { Assets, Emulator, PrivateKey, addAssets } from 'lucid-cardano';
 import { NextApiResponse } from 'next';
-import { getAddressFromPrivateKey, isFrontEndEnvironment, sanitizeForDatabase, showData, strToHex } from '../Commons';
-import { BackEndAppliedFor } from '../Commons/Decorator.BackEndAppliedFor';
-import yup from '../Commons/yupLocale';
-import { EmulatorEntity } from '../Entities/Emulator.Entity';
-import { NextApiRequestAuthenticated } from '../lib/Auth/backEnd';
-import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers';
-import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied';
-import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods';
-import { console_error, console_log } from '../Commons/BackEnd/globalLogs';
+import { getAddressFromPrivateKey, isFrontEndEnvironment, sanitizeForDatabase, showData, strToHex } from '../Commons/index.js';
+import { BackEndApiHandlersFor, BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndAppliedFor.js';
+import yup from '../Commons/yupLocale.js';
+import { EmulatorEntity } from '../Entities/Emulator.Entity.js';
+import { NextApiRequestAuthenticated } from '../lib/Auth/backEnd.js';
+import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
+import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied.js';
+import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods.js';
+import { console_error, console_log } from '../Commons/BackEnd/globalLogs.js';
 
 @BackEndAppliedFor(EmulatorEntity)
 export class EmulatorBackEndApplied extends BaseBackEndApplied {
@@ -62,6 +62,7 @@ export class EmulatorBackEndApplied extends BaseBackEndApplied {
     }
 }
 
+@BackEndApiHandlersFor(EmulatorEntity)
 export class EmulatorBackEndApiHandlers extends BaseBackEndApiHandlers {
     protected static _Entity = EmulatorEntity;
     protected static _BackEndApplied = EmulatorBackEndApplied;

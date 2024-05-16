@@ -1,6 +1,6 @@
-import { WalletTxParams } from '../../../Commons';
-import { BaseSmartDBEntity } from '../../../Entities/Base/Base.SmartDB.Entity';
-import { BaseSmartDBFrontEndApiCalls } from './Base.SmartDB.FrontEnd.Api.Calls';
+import { WalletTxParams } from '../../../Commons/index.js';
+import { BaseSmartDBEntity } from '../../../Entities/Base/Base.SmartDB.Entity.js';
+import { BaseSmartDBFrontEndApiCalls } from './Base.SmartDB.FrontEnd.Api.Calls.js';
 
 // es generica, todos los metodos llevan instancia o entidad como parametro
 // todas las clases la pueden usar

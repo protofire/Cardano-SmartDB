@@ -1,9 +1,9 @@
-import { OptionsGet, isFrontEndEnvironment, isNullOrBlank } from '../Commons';
-import { BackEndAppliedFor } from '../Commons/Decorator.BackEndAppliedFor';
-import { console_log, tabs } from '../Commons/BackEnd/globalLogs';
-import { AddressToFollowEntity } from '../Entities/AddressToFollow.Entity';
-import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied';
-import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods';
+import { OptionsGet, isFrontEndEnvironment, isNullOrBlank } from '../Commons/index.js';
+import { BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndAppliedFor.js';
+import { console_log, tabs } from '../Commons/BackEnd/globalLogs.js';
+import { AddressToFollowEntity } from '../Entities/AddressToFollow.Entity.js';
+import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied.js';
+import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods.js';
 
 //BackEnd Methods de cada clase llevan seteado la entidad
 

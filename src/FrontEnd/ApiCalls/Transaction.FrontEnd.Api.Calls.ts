@@ -1,6 +1,7 @@
-import { createQueryURLString, isNullOrBlank, toJson } from '../../Commons';
-import { TransactionEntity } from '../../Entities/Transaction.Entity';
-import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls';
+import fetchWrapper from '../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
+import { createQueryURLString, isNullOrBlank, toJson } from '../../Commons/index.js';
+import { TransactionEntity } from '../../Entities/Transaction.Entity.js';
+import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls.js';
 
 export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
     protected static _Entity = TransactionEntity;
@@ -15,7 +16,7 @@ export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
             }
             //------------------
             const body = toJson({ error });
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/update-failed-transaction/${txHash}`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/update-failed-transaction/${txHash}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -44,7 +45,7 @@ export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
             //------------------
             const queryString = createQueryURLString({ swCheckAgainTxWithTimeOut });
             //------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/begin-status-updater${queryString}`);
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/begin-status-updater${queryString}`);
             //-------------------------
             if (response.status === 200) {
                 const data = await response.json();
@@ -69,7 +70,7 @@ export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
                 throw `txHash not defined`;
             }
             //-------------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/submit-and-begin-status-updater/${txHash}`);
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/submit-and-begin-status-updater/${txHash}`);
             //-------------------------
             if (response.status === 200) {
                 const data = await response.json();
@@ -94,7 +95,7 @@ export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
                 throw `txHash not defined`;
             }
             //-------------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/status-updater/${txHash}`);
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/status-updater/${txHash}`);
             //-------------------------
             if (response.status === 200) {
                 const data = await response.json();
@@ -119,7 +120,7 @@ export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
                 throw `txHash not defined`;
             }
             //-------------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/get-status/${txHash}`);
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/get-status/${txHash}`);
             //-------------------------
             if (response.status === 200) {
                 const data = await response.json();

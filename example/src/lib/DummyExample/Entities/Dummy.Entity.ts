@@ -1,6 +1,6 @@
 import { type PaymentKeyHash } from 'lucid-cardano';
 import 'reflect-metadata';
-import { BaseSmartDBEntity, Convertible, Maybe, StakeCredentialPubKeyHash, asSmartDBEntity } from 'smart-db/index';
+import { BaseSmartDBEntity, Convertible, Maybe, StakeCredentialPubKeyHash, asSmartDBEntity } from 'smart-db';
 
 @asSmartDBEntity()
 export class DummyEntity extends BaseSmartDBEntity {
@@ -28,4 +28,17 @@ export class DummyEntity extends BaseSmartDBEntity {
     ddValue!: BigInt;
 
     // #endregion datum
+
+    // #region  db
+
+    public static defaultFieldsWhenUndefined: Record<string, boolean> = {};
+
+    public static alwaysFieldsForSelect: Record<string, boolean> = {
+        ...super.alwaysFieldsForSelect,
+        ddPaymentPKH: true,
+        ddStakePKH: true,
+        ddValue: true,
+    };
+
+    // #endregion  db
 }

@@ -1,12 +1,11 @@
 import 'reflect-metadata';
 // import { Types } from 'mongoose';
-import { ConversionFunctions, Convertible, getCombinedConversionFunctions } from '../../Commons/Decorator.Convertible';
-import { MongoAppliedRegistry } from '../../Commons/Decorator.MongoAppliedFor';
-import { deserealizeBigInt } from '../../Commons/conversions';
-import { BaseConstructor } from './Base.Constructor';
-import { isEmptyObject, toJson, showData } from '../../Commons';
-// import { IBackendMethods } from '../../Commons/Interfaces';
-// import { BackEndMethodsRegistry } from '../../Commons/Decorator.BackEndRegistry';
+import { Convertible, getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
+import { deserealizeBigInt } from '../../Commons/conversions.js';
+import { BaseConstructor } from './Base.Constructor.js';
+import { isEmptyObject, toJson, showData, RegistryManager, ConversionFunctions } from '../../Commons/index.js';
+// import { IBackendMethods } from '../../Commons/Interfaces.js';
+// import { BackEndMethodsRegistry } from '../../Commons/Decorator.BackEndRegistry.js';
 
 export interface IEntityMongo {
     MongoModel(): any;
@@ -75,7 +74,7 @@ export class BaseEntity extends BaseConstructor {
     // #region internal class methods
 
     public static getMongo(): IEntityMongo {
-        const result = MongoAppliedRegistry.get(this);
+        const result = RegistryManager.getFromMongoAppliedRegistry(this);
         if (!result) {
             throw `Mongo Methods Applied for ${this} not found in registry.`;
         } else {
@@ -122,8 +121,6 @@ export class BaseEntity extends BaseConstructor {
     public static className(): string {
         return this._className;
     }
-
-    
 
     public apiRoute(): string {
         return this.getStatic()._apiRoute;

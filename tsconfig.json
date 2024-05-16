@@ -1,29 +1,38 @@
 {
     "compilerOptions": {
         "target": "ES2022",
-        "module": "ESNext",
+        "module": "node16",
         "lib": ["dom", "dom.iterable", "esnext"],
         "declaration": true,
-        "declarationMap": true , 
+        "declarationMap": true,
         //"emitDeclarationOnly": true,
+        //"declarationDir": "./dist/types",
+        //"allowImportingTsExtensions": true,
         "noEmit": false,
         "allowJs": true,
         "skipLibCheck": true,
         "strict": true,
         "forceConsistentCasingInFileNames": true,
         "esModuleInterop": true,
-        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true,
+        "moduleResolution": "node16",
         "resolveJsonModule": true,
         "isolatedModules": true, // Consider setting to false unless needed for transpilation reasons
         "jsx": "react", // Only if your library contains React components
-        "incremental": true,
+        "incremental": false,
         "outDir": "./dist", // Output directory for build files
         "rootDir": "./src", // Source directory for build files
         "sourceMap": true,
         "inlineSources": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
+        "useDefineForClassFields": false,
+        "plugins": [
+            { "transform": "typescript-transform-paths" },
+            { "transform": "typescript-transform-paths", "afterDeclarations": true }
+        ]
     },
+    "composite": true, // Enable project references
     "include": ["next-env.d.ts", "jest.config.js", "src/**/*.ts", "src/**/*.tsx", ".next/types/**/*.ts"],
     "exclude": ["node_modules", "_OLD", "example", "dist", "src/**/_OLD/*", "**/*.test.ts", "**/*.spec.ts", "**/__tests__/**", "jest.config.js", "jest.config.ts", "*.config.js"]
 }

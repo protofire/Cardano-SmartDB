@@ -1,6 +1,6 @@
 import { Constr, TxHash } from 'lucid-cardano';
-import { BaseConstructor } from '../Entities/Base/Base.Constructor';
-import { itemToLucidData } from './data';
+import { BaseConstructor } from '../Entities/Base/Base.Constructor.js';
+import { itemToLucidData } from './data.js';
 //lo uso como class a diferencia del resto, por que a la hora de convertir el datum y el redeemer a plutusData, el campo de Hash aqui no se convierte igual que un string y si no tengo clase no podria diferenciarlo de una string en ese momento.
 export class TxOutRef {
     _plutusDataIndex = 0;
@@ -74,7 +74,7 @@ export class Maybe<T> {
         throw `Maybe - Can't get from Datum`;
     }
 
-    public static fromPlutusData_Number = (lucidDataForDatum: any) => {
+    public static fromPlutusData_Number(lucidDataForDatum: any) {
         const maybeNumber = Maybe.fromPlutusData(lucidDataForDatum);
         if (maybeNumber.val !== undefined) {
             maybeNumber.val = Number(maybeNumber.val);
@@ -135,7 +135,7 @@ export class MinMaxDef<T> extends BaseConstructor {
         throw `MinMaxDef - Can't get from Datum`;
     }
 
-    public static fromPlutusData_Number = (lucidDataForDatum: any) => {
+    public static fromPlutusData_Number (lucidDataForDatum: any)  {
         const mmd = MinMaxDef.fromPlutusData(lucidDataForDatum);
         mmd.mmdDef = Number(mmd.mmdDef);
         mmd.mmdMin = Number(mmd.mmdMin);

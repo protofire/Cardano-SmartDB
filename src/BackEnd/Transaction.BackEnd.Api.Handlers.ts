@@ -1,12 +1,13 @@
-import { NextApiRequestAuthenticated } from '../lib/Auth/index';
+import { NextApiRequestAuthenticated } from '../lib/Auth/index.js';
 import { NextApiResponse } from 'next';
-import { sanitizeForDatabase, showData } from '../Commons';
-import { console_error, console_log } from '../Commons/BackEnd/globalLogs';
-import yup from '../Commons/yupLocale';
-import { TransactionEntity } from '../Entities/Transaction.Entity';
-import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers';
-import { TransactionBackEndApplied } from './Transaction.BackEnd.Applied';
+import { BackEndApiHandlersFor, sanitizeForDatabase, showData } from '../Commons/index.js';
+import { console_error, console_log } from '../Commons/BackEnd/globalLogs.js';
+import yup from '../Commons/yupLocale.js';
+import { TransactionEntity } from '../Entities/Transaction.Entity.js';
+import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
+import { TransactionBackEndApplied } from './Transaction.BackEnd.Applied.js';
 
+@BackEndApiHandlersFor(TransactionEntity)
 export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
     protected static _Entity = TransactionEntity;
     protected static _BackEndApplied = TransactionBackEndApplied;

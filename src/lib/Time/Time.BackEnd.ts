@@ -1,64 +1,12 @@
-import { SYNC_SERVER_TIME_10M_MS, SYNC_SERVER_TIME_2M_MS, VALID_TX_TIME_RANGE, convertMillisToTime, isEmulator } from '../../Commons';
-import { TimeApi } from './Time.FrontEnd';
-import { console_log } from '../../Commons/BackEnd/globalLogs';
-import { globalTime } from '../../Commons/BackEnd/globalBlockchainTime';
-import { globalEmulator } from '../../Commons/BackEnd/globalEmulator';
-import { globalLucid } from '../../Commons/BackEnd/globalLucid';
+import { getGlobalBlockchainTime, globalBlockChainTime } from '../../Commons/BackEnd/globalBlockchainTime.js';
+import { globalEmulator } from '../../Commons/BackEnd/globalEmulator.js';
+import { console_log } from '../../Commons/BackEnd/globalLogs.js';
+import { globalLucid } from '../../Commons/BackEnd/globalLucid.js';
+import { SYNC_SERVER_TIME_10M_MS, SYNC_SERVER_TIME_2M_MS, VALID_TX_TIME_RANGE, isEmulator } from '../../Commons/Constants/constants.js';
+import { convertMillisToTime } from '../../Commons/utils.js';
+
 
 export class TimeBackEnd {
-    //---------------------------------------------------------------
-
-    public static async getGlobalBlockchainTime(refresh: boolean = false): Promise<number | undefined> {
-        //----------------
-        console_log(1, `Time`, `getGlobalBlockchainTime - refresh: ${refresh} - Loaded already: ${globalTime.time !== undefined} - Init`);
-        //----------------
-        // si paso mas de 10 minutos desde la ultima vez del fetch, pido serverTime from blockchain de nuevo
-        // si no, devuelvo el mismo valor plus la diferencia de tiempo
-        //----------------
-        // este deberia ser el unico lugar donde se pide Date.now() que es la hora del server
-        // a partir de aca, se usa el globalTime.time, que es un calculo de la hora del server a partir de la hora de la blockchain
-        if (globalTime.time !== undefined && globalTime.lastFetch !== undefined) {
-            // si pasaron mas de 10 minutos refresca siempre
-            // si pasaron mas de 2 minutos refresca si refresh es true
-            // si no, no refresca
-            //----------------
-            const now = Date.now();
-            //----------------
-            const diff = now - globalTime.lastFetch;
-            const diffSeconds = diff / 1000;
-            const diffMinutes = Math.floor(diffSeconds / 60);
-            if (diffMinutes > SYNC_SERVER_TIME_10M_MS) {
-                refresh = true;
-            } else if (refresh === true && diffMinutes > SYNC_SERVER_TIME_2M_MS) {
-                refresh = true;
-            } else {
-                refresh = false;
-            }
-        }
-        //----------------
-        if (globalTime.time === undefined || globalTime.diffWithBlochain === undefined || globalTime.lastFetch === undefined || refresh === true) {
-            //--------------------------------------
-            const blockChainTime = await this.getBlockChainTime();
-            //----------------
-            const now = Date.now();
-            //----------------
-            globalTime.time = blockChainTime;
-            globalTime.lastFetch = now;
-            globalTime.diffWithBlochain = globalTime.time - now;
-            //--------------------------------------
-        } else {
-            //----------------
-            const now = Date.now();
-            //----------------
-            globalTime.time = now + globalTime.diffWithBlochain;
-            //--------------------------------------
-        }
-        //----------------
-        console_log(-1, `Time`, `getGlobalBlockchainTime - time: ${globalTime.time}  - time: ${convertMillisToTime(globalTime.time)} - OK`);
-        //----------------
-        return globalTime.time;
-    }
-
     //---------------------------------------------------------------
 
     public static async getServerTime(useBlockChainTime: boolean = true, refresh: boolean = false) {
@@ -69,7 +17,7 @@ export class TimeBackEnd {
         //--------------------------------------
         const now = Date.now();
         //----------------------------
-        const serverTime = useBlockChainTime ? await this.getGlobalBlockchainTime(refresh) : now;
+        const serverTime = useBlockChainTime ? await getGlobalBlockchainTime(refresh) : now;
         //----------------------------
         if (serverTime === undefined) {
             throw `serverTime not found`;
@@ -110,7 +58,7 @@ export class TimeBackEnd {
                 //--------------------------------------
                 if (globalEmulator.emulatorDB.emulator.slot !== emulatorSlot) {
                     //--------------------------------------
-                    const EmulatorBackEndApplied = (await import('../../BackEnd/Emulator.BackEnd.All')).EmulatorBackEndApplied;
+                    const EmulatorBackEndApplied = (await import('../../BackEnd/Emulator.BackEnd.All.js')).EmulatorBackEndApplied;
                     await EmulatorBackEndApplied.update(globalEmulator.emulatorDB);
                 }
             }
@@ -187,7 +135,11 @@ export class TimeBackEnd {
             blockchainTime = Date.now();
             //----------------
         } else {
-            var slot: number | undefined = await TimeApi.getSlotBlockfrostApi();
+            //----------------
+            const BlockFrostBackEnd = (await import('../../lib/BlockFrost/BlockFrost.BackEnd.js')).BlockFrostBackEnd;
+            //----------------
+            var slot: number | undefined = await BlockFrostBackEnd.getLatestSlot_Api();
+            //----------------
             if (slot === undefined) {
                 throw `Slot not found`;
             }

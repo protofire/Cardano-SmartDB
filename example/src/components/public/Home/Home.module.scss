@@ -4,20 +4,11 @@
     flex-direction: column;
     gap: 24px;
 
-    input {
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        width: 400px;
-    }
-
     .buttonNormal {
-        width: 100px;
-        cursor: pointer;
-        text-align: center;
         display: flex;
         flex-direction: row;
         gap: 6px;
+       justify-content: center;
     }
 
     .title {
@@ -37,6 +28,13 @@
         gap: 12px;
         flex-direction: column;
         width: 400px;
+
+        input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 235px;
+        }
     }
 
     .listContainer {
@@ -71,17 +69,13 @@
                 width: 50px;
             }
 
-            button {
-                width: 80px;
-                cursor: pointer;
-                text-align: center;
-                display: flex;
-                flex-direction: row;
-                gap: 6px;
-            }
+            
         }
     }
 }
+
+
+
 // ModalStyles.scss
 .modal {
     padding: 20px;

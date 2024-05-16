@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { Convertible, asEntity, formatHash, hexToStr, type CS, type TN } from '../Commons';
-import { BaseEntity } from './Base/Base.Entity';
+import { Convertible, asEntity, formatHash, hexToStr, type CS, type TN } from '../Commons/index.js';
+import { BaseEntity } from './Base/Base.Entity.js';
 import { type SignedMessage } from 'lucid-cardano';
 
 @asEntity()

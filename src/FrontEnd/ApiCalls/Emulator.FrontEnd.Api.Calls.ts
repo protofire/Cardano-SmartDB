@@ -1,6 +1,7 @@
-import { createQueryURLString } from '../../Commons';
-import { EmulatorEntity } from '../../Entities/Emulator.Entity';
-import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls';
+import fetchWrapper from '../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
+import { createQueryURLString } from '../../Commons/index.js';
+import { EmulatorEntity } from '../../Entities/Emulator.Entity.js';
+import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls.js';
 
 export class EmulatorDBFrontEndApiCalls extends BaseFrontEndApiCalls {
     protected static _Entity = EmulatorEntity;
@@ -12,7 +13,7 @@ export class EmulatorDBFrontEndApiCalls extends BaseFrontEndApiCalls {
             //------------------
             const queryString = createQueryURLString({ name, current });
             //------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/create-init${queryString}`);
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/create-init${queryString}`);
             //-------------------------
             if (response.status === 200) {
                 const data = await response.json();

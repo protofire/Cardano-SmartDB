@@ -1,12 +1,11 @@
 import { NextApiResponse } from 'next';
 import { User } from 'next-auth';
 import {
-    EntitiesRegistry,
     OptionsCreateOrUpdate,
     OptionsDelete,
     OptionsGet,
     OptionsGetOne,
-    SmartDBEntitiesRegistry,
+    RegistryManager,
     getCombinedConversionFunctions,
     sanitizeForDatabase,
     showData,
@@ -15,12 +14,12 @@ import {
     yupValidateOptionsGet,
     yupValidateOptionsGetOne,
     yupValidateOptionsUpdate,
-} from '../../Commons';
-import { console_errorLv2, console_logLv2, initApiRequestWithContext } from '../../Commons/index.BackEnd';
-import { BaseEntity } from '../../Entities/Base/Base.Entity';
-import { NextApiRequestAuthenticated } from '../../lib/Auth/types';
-import { BaseBackEndApplied } from './Base.BackEnd.Applied';
-import yup from '../../Commons/yupLocale';
+} from '../../Commons/index.js';
+import { console_errorLv2, console_logLv2, initApiRequestWithContext } from '../../Commons/index.BackEnd.js';
+import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
+import { NextApiRequestAuthenticated } from '../../lib/Auth/types.js';
+import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
+import yup from '../../Commons/yupLocale.js';
 
 // Api Handlers siempre llevan una Entity y el backend methods, es especifico para cada entidad
 // Se tiene entonces que crear uno por cada Entidad SI o SI
@@ -119,29 +118,29 @@ export class BaseBackEndApiHandlers {
 
     // #region api handlers
 
-    public static async mainApiHandler<T extends BaseEntity>(req: NextApiRequestAuthenticated, res: NextApiResponse) {
-        return await initApiRequestWithContext(2, this._Entity.className(), req, res, this.mainApiHandlerWithContext.bind(this));
-    }
+    // public static async mainApiHandler<T extends BaseEntity>(req: NextApiRequestAuthenticated, res: NextApiResponse) {
+    //     return await initApiRequestWithContext(2, this._Entity.className(), req, res, this.mainApiHandlerWithContext.bind(this));
+    // }
 
     protected static async mainApiHandlerWithContext<T extends BaseEntity>(req: NextApiRequestAuthenticated, res: NextApiResponse) {
         //--------------------
         const { query } = req.query;
         //--------------------
-        const AuthBackEnd = (await import('../../lib/Auth/Auth.BackEnd')).AuthBackEnd;
-        //--------------------------------------
-        try {
-            await AuthBackEnd.addCorsHeaders(req, res);
-        } catch (error) {
-            console_errorLv2(0, this._Entity.className(), `Api handler - Error: ${error}`);
-            return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
-        }
-        //--------------------
-        try {
-            await AuthBackEnd.authenticate(req, res);
-        } catch (error) {
-            console_errorLv2(0, this._Entity.className(), `Api handler - Error: ${error}`);
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
+        // const AuthBackEnd = (await import('../../lib/Auth/Auth.BackEnd.js')).AuthBackEnd;
+        // //--------------------------------------
+        // try {
+        //     await AuthBackEnd.addCorsHeaders(req, res);
+        // } catch (error) {
+        //     console_errorLv2(0, this._Entity.className(), `Api handler - Error: ${error}`);
+        //     return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
+        // }
+        // //--------------------
+        // try {
+        //     await AuthBackEnd.authenticate(req, res);
+        // } catch (error) {
+        //     console_errorLv2(0, this._Entity.className(), `Api handler - Error: ${error}`);
+        //     return res.status(401).json({ error: 'Unauthorized' });
+        // }
         //--------------------
         if (query === undefined || query.length === 0) {
             return await this.createApiHandlers(req, res);
@@ -577,9 +576,9 @@ export class BaseBackEndApiHandlers {
                         if (optionsGet !== undefined && optionsGet.lookUpFields !== undefined && optionsGet.lookUpFields.length > 0) {
                             for (let lookUpField of optionsGet.lookUpFields) {
                                 const EntityClass =
-                                    SmartDBEntitiesRegistry.get(lookUpField.from) !== undefined
-                                        ? SmartDBEntitiesRegistry.get(lookUpField.from)
-                                        : EntitiesRegistry.get(lookUpField.from);
+                                    RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from) !== undefined
+                                        ? RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from)
+                                        : RegistryManager.getFromEntitiesRegistry(lookUpField.from);
                                 if (EntityClass !== undefined) {
                                     const instancePlain_ = (instance[lookUpField.as as keyof typeof instance] as any).toPlainObject();
                                     if (instancePlain_ !== undefined) {

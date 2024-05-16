@@ -1,6 +1,6 @@
-import { Address, Lucid, PaymentKeyHash, SignedMessage, UTxO } from 'lucid-cardano';
+import { Address, Data, Lucid, PaymentKeyHash, SignedMessage, UTxO } from 'lucid-cardano';
 import { ISODateString } from 'next-auth';
-import yup from './yupLocale';
+import yup from './yupLocale.js';
 
 export type PaymentPubKey = string;
 export type StakeCredentialPubKeyHash = PaymentKeyHash;
@@ -243,7 +243,7 @@ export type Decimals = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
 
 export type Token = {
     CS: CS;
-    TN: TN;
+    TN_Hex: TN;
 };
 
 export type Token_With_Metadata = Token & {
@@ -335,12 +335,13 @@ declare module 'next-auth' {
 
 export interface ConnectedWalletInfo {
     network: string;
-    walletName: string;
+    walletNameOrSeedOrKey: string;
     address: Address;
     pkh: PaymentKeyHash;
     stakePkh: PaymentKeyHash | undefined;
     useBlockfrostToSubmit: boolean;
-    isWalletFromSeedOrKey: boolean;
+    isWalletFromSeed: boolean;
+    isWalletFromKey: boolean;
     isWalletValidatedWithSignedToken: boolean;
 }
 
@@ -397,3 +398,37 @@ export interface ListComponentProps {
     swShowBtnUpdateTx?: boolean;
     swShowBtnDeleteTx?: boolean;
 }
+//---------------------------------
+
+export interface CardanoWallet {
+    wallet: string;
+    name: string;
+    icon: URL;
+    link: string;
+    isInstalled?: boolean;
+}
+
+//---------------------------------
+
+export type ConversionFunctions<T> = {
+    type?: Function;
+    isArray?: boolean;
+    interfaceName?: string;
+    propertyToFill?: string;
+    relation?: string;
+    typeRelation?: Function;
+    cascadeLoad?: boolean;
+    cascadeSave?: boolean;
+    isDB_id?: boolean;
+    isUnique?: boolean;
+    isForDatum?: boolean;
+    optionsGet?: OptionsGet | OptionsGetOne;
+    optionsCreateOrUpdate?: OptionsCreateOrUpdate;
+    toMongoInterface?: (value: any | undefined) => T | undefined;
+    fromMongoInterface?: (value: T | undefined) => any | undefined;
+    toPlainObject?: (value: any | undefined) => Object | undefined;
+    fromPlainObject?: (value: Object | undefined) => any | undefined;
+    toPlutusData?: (value: any | undefined) => Data | undefined;
+    fromPlutusData?: (lucidDataForDatum: any) => any;
+};
+//---------------------------------

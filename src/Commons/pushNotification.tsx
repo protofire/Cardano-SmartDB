@@ -1,6 +1,6 @@
 import React from 'react';
-import { Store as StoreNotifications } from 'react-notifications-component';
-
+import pkg from 'react-notifications-component';
+const { Store } = pkg;
 //---------------------------------------------------------------
 
 const messageComponent = (message: string) => <div dangerouslySetInnerHTML={{ __html: message }} />;
@@ -14,7 +14,7 @@ export function pushSucessNotification(title: string, mesagge: string, swHash = 
         messageForNotification = 'Ok! ' + mesagge;
     }
 
-    StoreNotifications.addNotification({
+    Store.addNotification({
         title: `${title}`,
         message: messageComponent(`${messageForNotification}`),
         type: 'success',
@@ -33,7 +33,7 @@ export function pushSucessNotification(title: string, mesagge: string, swHash = 
 //---------------------------------------------------------------
 
 export function pushWarningNotification(title: string, error: any) {
-    StoreNotifications.addNotification({
+    Store.addNotification({
         title: `${title}`,
         message: messageComponent(`${error?.info || error?.message || error || ''}`),
         type: 'warning',

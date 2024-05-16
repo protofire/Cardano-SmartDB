@@ -1,11 +1,11 @@
 import 'reflect-metadata';
 import { C, Constr, Data, fromHex, type PaymentKeyHash } from 'lucid-cardano';
-import { itemToLucidData } from '../../Commons/data';
-import { ConversionFunctions, Convertible, getCombinedConversionFunctions, isNullOrBlank, showPtrInHex, strToHex } from '../../Commons';
-import { deserealizeBigInt } from '../../Commons/conversions';
-import { AddressToFollowEntity } from '../AddressToFollow.Entity';
-import { SmartUTxOEntity } from '../SmartUTxO.Entity';
-import { BaseEntity } from './Base.Entity';
+import { itemToLucidData } from '../../Commons/data.js';
+import { ConversionFunctions, Convertible, getCombinedConversionFunctions, isNullOrBlank, showPtrInHex, strToHex } from '../../Commons/index.js';
+import { deserealizeBigInt } from '../../Commons/conversions.js';
+import { AddressToFollowEntity } from '../AddressToFollow.Entity.js';
+import { SmartUTxOEntity } from '../SmartUTxO.Entity.js';
+import { BaseEntity } from './Base.Entity.js';
 
 // export abstract class SmartDBBaseEntity {
 //     @OneToOne(() => SmartUTxOPostgres)
@@ -29,6 +29,9 @@ export class BaseSmartDBEntity extends BaseEntity {
     protected static _isOnlyDatum = true;
     // si tiene id NFT en el datum o si es un FT
     protected static _is_NET_id_Unique = true;
+
+    protected static _className: string = 'BaseSmartDBEntity';
+
 
     // #region fields
 

@@ -1,7 +1,8 @@
-import BigNumber from 'bignumber.js';
-import { createHash } from 'crypto';
+import { BigNumber } from 'bignumber.js';
+import { createHash, randomBytes } from 'crypto';
 import { utcToZonedTime, format } from 'date-fns-tz';
-import { Decimals } from './types';
+import { Decimals } from './types.js';
+import { ADA_DECIMALS, ADA_UI } from './Constants/constants.js';
 
 //----------------------------------------------------------------------
 
@@ -10,8 +11,8 @@ export const isAllowedTask = (task: string, allowedTasks: string[]): boolean => 
 };
 //----------------------------------------------------------------------
 
-export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-export const sleep = delay
+export const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+export const sleep = delay;
 
 //----------------------------------------------------------------------
 
@@ -51,16 +52,43 @@ export function showData(data: any, swCut: boolean = true): string {
 
 export const sanitizeForDatabase = (input: any): any => {
     const allowedMongoDBOperators = new Set([
-        '$eq', '$gt', '$gte', '$in', '$lt', '$lte', '$ne', '$nin', '$or', '$and', '$not', '$nor',
-        '$exists', '$type', '$expr', '$jsonSchema', '$mod', '$regex', '$text', '$where', 
-        '$geoWithin', '$geoIntersects', '$near', '$nearSphere', '$all', '$elemMatch', '$size',
-        '$bitsAllClear', '$bitsAllSet', '$bitsAnyClear', '$bitsAnySet',
+        '$eq',
+        '$gt',
+        '$gte',
+        '$in',
+        '$lt',
+        '$lte',
+        '$ne',
+        '$nin',
+        '$or',
+        '$and',
+        '$not',
+        '$nor',
+        '$exists',
+        '$type',
+        '$expr',
+        '$jsonSchema',
+        '$mod',
+        '$regex',
+        '$text',
+        '$where',
+        '$geoWithin',
+        '$geoIntersects',
+        '$near',
+        '$nearSphere',
+        '$all',
+        '$elemMatch',
+        '$size',
+        '$bitsAllClear',
+        '$bitsAllSet',
+        '$bitsAnyClear',
+        '$bitsAnySet',
         // Add more operators as needed
     ]);
-    
+
     if (Array.isArray(input)) {
         // If input is an array, recursively sanitize its elements
-        return input.map(element => sanitizeForDatabase(element));
+        return input.map((element) => sanitizeForDatabase(element));
     } else if (typeof input === 'object' && input !== null) {
         // If input is an object and not null, recursively sanitize its properties
         const sanitizedObject: any = {};
@@ -114,7 +142,45 @@ export function getNumberx1e6(value: bigint | number | undefined): number | unde
     return value / 1_000_000;
 }
 
+export function getInputValueFromSmallUnitPriceLovelace1xe6(smallUnitPriceLovelace1xe6: bigint | number | undefined, decimals: Decimals): bigint | undefined {
+    if (smallUnitPriceLovelace1xe6 === undefined) return undefined;
+    if (typeof smallUnitPriceLovelace1xe6 !== 'number' && smallUnitPriceLovelace1xe6 !== undefined) {
+        smallUnitPriceLovelace1xe6 = Number(smallUnitPriceLovelace1xe6);
+    }
+    const extra1e6Decimales = 6;
+    const inputDecimales = extra1e6Decimales + ADA_DECIMALS - decimals;
+    // const reverseSmallUnitPriceLovelace = smallUnitPriceLovelace1xe6 / 10 ** extra1e6Decimales;
+    // console.log(`reverseSmallUnitPriceLovelace: ${reverseSmallUnitPriceLovelace}`);
+    // const reverseUnitPriceLovelace = reverseSmallUnitPriceLovelace * 10 ** decimals;
+    // console.log(`reverseUnitPriceLovelace: ${reverseUnitPriceLovelace}`);
+    // const reverseUnitPriceADA = reverseUnitPriceLovelace / 10 ** ADA_DECIMALS;
+    // console.log(`reverseUnitPriceADA: ${reverseUnitPriceADA}`);
+    // const reverseInputValue = reverseUnitPriceADA * 10 ** inputDecimales;
+    // console.log(`reverseInputValue: ${reverseInputValue}`);
+    const reverseInputValue1Step = BigInt(Math.floor(smallUnitPriceLovelace1xe6 * 10 ** (inputDecimales - ADA_DECIMALS + decimals - extra1e6Decimales)));
+    // console.log(`reverseInputValue1Step: ${reverseInputValue1Step}`);
+    return reverseInputValue1Step;
+}
 
+export function getSmallUnitPriceLovelace1xe6FromInputValue(inputValue: bigint | number | undefined, decimals: Decimals): bigint | undefined {
+    if (inputValue === undefined) return undefined;
+    if (typeof inputValue !== 'number' && inputValue !== undefined) {
+        inputValue = Number(inputValue);
+    }
+    const extra1e6Decimales = 6;
+    const inputDecimales = extra1e6Decimales + ADA_DECIMALS - decimals;
+    // const unitPriceADA = inputValue / 10 ** inputDecimales;
+    // console.log(`unitPriceADA: ${unitPriceADA}`);
+    // const unitPriceLovelace = unitPriceADA * 10 ** ADA_DECIMALS;
+    // console.log(`unitPriceLovelace: ${unitPriceLovelace}`);
+    // const smallUnitPriceLovelace = unitPriceLovelace / 10 ** decimals!;
+    // console.log(`smallUnitPriceLovelace: ${smallUnitPriceLovelace}`);
+    // const smallUnitPriceLovelace1xe6 = (Math.floor(smallUnitPriceLovelace * 10 **extra1e6Decimales));
+    // console.log(`smallUnitPriceLovelace1xe6: ${smallUnitPriceLovelace1xe6}`);
+    const smallUnitPriceLovelace1xe61Step = BigInt(Math.floor(inputValue * 10 ** (-inputDecimales + ADA_DECIMALS - decimals + extra1e6Decimales)));
+    // console.log(`smallUnitPriceLovelace1xe61Step: ${smallUnitPriceLovelace1xe61Step}`);
+    return smallUnitPriceLovelace1xe61Step;
+}
 
 //----------------------------------------------------------------------
 
@@ -175,7 +241,7 @@ export function isPromiseFunction(fn: Function): boolean {
 
 export function isFrontEndEnvironment() {
     if (typeof window !== 'undefined') {
-        console.log('This code is running in the browser (frontend)');
+        // console.log('This code is running in the browser (frontend)');
         return true;
     } else if (typeof process !== 'undefined') {
         // console.log('This code is running in Node.js (backend)');
@@ -210,6 +276,146 @@ export const generateRandomHash = () => {
 
 //----------------------------------------------------------------------
 
+export function formatTokenAmountMock(
+    amount: bigint | number | undefined,
+    CS: string,
+    TN_Hex?: string,
+    showDecimals: Decimals = 0,
+    swRoundWithLetter: boolean = false,
+    showAtLeastDecimals: Decimals = 0,
+    decimalsInBigUnit: Decimals = showDecimals
+): string {
+    return formatTokenAmount(amount, CS, TN_Hex, showDecimals, swRoundWithLetter, showAtLeastDecimals, decimalsInBigUnit);
+}
+
+export function formatTokenAmount(
+    amount: bigint | number | undefined,
+    CS: string,
+    TN_Hex?: string,
+    showDecimals: Decimals = 0,
+    swRoundWithLetter: boolean = false,
+    showAtLeastDecimals: Decimals = 0,
+    decimalsInBigUnit: Decimals = showDecimals
+): string {
+    if (typeof amount !== 'number' && amount !== undefined) {
+        amount = Number(amount);
+    }
+    if (CS === ADA_UI || CS === '' || CS === 'lovelace') {
+        if (amount === undefined) {
+            return `... ${ADA_UI}`;
+        }
+        return formatAmountWithUnit(amount, ADA_DECIMALS, ADA_UI, swRoundWithLetter, showAtLeastDecimals, ADA_DECIMALS);
+    } else if (TN_Hex !== undefined) {
+        if (amount === undefined) {
+            return `... ${hexToStr(TN_Hex)}`;
+        }
+        return formatAmountWithUnit(amount, showDecimals, hexToStr(TN_Hex), swRoundWithLetter, showAtLeastDecimals, decimalsInBigUnit);
+    }
+    return '';
+}
+
+export function formatAmountWithUnit(
+    amount: bigint | number,
+    showDecimals: Decimals = 0,
+    unit: string = '',
+    swRoundWithLetter: boolean = false,
+    showAtLeastDecimals: Decimals = 0,
+    decimalsInBigUnit: Decimals = showDecimals
+) {
+    //-------------
+    if (typeof amount !== 'number') {
+        amount = Number(amount);
+    }
+    //-------------
+    let roundedValueWithDecimals = amount;
+    //-------------
+    // if (showDecimals !== decimalsInBigUnit) {
+    //-------------
+    // si esta seteando estos valores diferentes, aqui calculo el valor real de la unidad grande
+    // y mas abajo, si no esta seteado rounbdWithLetter, lo vuelvo a multiplicar, esta vez por el valor de showDecimals, por que a su vez el formatAmount lo va a dividir por ese valor
+    const potDecimalsInBigUnit = Math.pow(10, decimalsInBigUnit);
+    const realValueInBiGUnit = amount / potDecimalsInBigUnit;
+    //-------------
+    roundedValueWithDecimals = realValueInBiGUnit;
+    // }
+    //-------------
+    if (swRoundWithLetter === true) {
+        //-------------
+        let decimals_: Decimals = showAtLeastDecimals;
+        //-------------
+        if (amount < Math.pow(10, decimalsInBigUnit - showAtLeastDecimals) && amount > 0) {
+            //-------------
+            if (unit !== '' && (unit === ADA_UI || decimalsInBigUnit === 6)) {
+                //-------------
+                // eso significa que el numero es menor que el menor valor que se va a mostrar con estos decimales
+                // resto dos, por que quiero igual seguir usando el otro valor, que
+                //-------------
+                if (unit === ADA_UI) {
+                    unit = 'love';
+                } else {
+                    if (decimalsInBigUnit === 6) {
+                        unit = 'μ' + unit;
+                    } else {
+                        // esto por ahora no entra nunca... en el futuro si, pero no es facil para el usuario
+                        unit = `x10-${decimalsInBigUnit}` + unit;
+                    }
+                }
+                //-------------
+                roundedValueWithDecimals = amount;
+                //-------------
+            } else {
+                decimals_ = showDecimals;
+            }
+        }
+        //-------------
+        if (!unit.startsWith(' ') && unit !== '') {
+            unit = ' ' + unit;
+        }
+        //-------------
+        if (roundedValueWithDecimals >= 1e18) {
+            roundedValueWithDecimals /= 1e18;
+            unit = 'QT' + unit;
+        } else if (roundedValueWithDecimals >= 1e15) {
+            roundedValueWithDecimals /= 1e15;
+            unit = 'Q' + unit;
+        } else if (roundedValueWithDecimals >= 1e12) {
+            roundedValueWithDecimals /= 1e12;
+            unit = 'T' + unit;
+        } else if (roundedValueWithDecimals >= 1e9) {
+            roundedValueWithDecimals /= 1e9;
+            unit = 'B' + unit;
+        } else if (roundedValueWithDecimals >= 1e6) {
+            roundedValueWithDecimals /= 1e6;
+            unit = 'M' + unit;
+        } else if (roundedValueWithDecimals >= 1e3) {
+            roundedValueWithDecimals /= 1e3;
+            unit = 'K' + unit;
+        }
+        //-------------
+        if (roundedValueWithDecimals === Math.floor(roundedValueWithDecimals)) {
+            decimals_ = 0;
+        }
+        //-------------
+        const potShowDecimals = Math.pow(10, decimals_);
+        //-------------
+        return formatAmount(roundedValueWithDecimals * potShowDecimals, decimals_, 0) + unit;
+        //-------------
+    } else {
+        //-------------
+        if (!unit.startsWith(' ') && unit !== '') {
+            unit = ' ' + unit;
+        }
+        //-------------
+        // if (showDecimals !== decimalsInBigUnit) {
+        const potShowDecimals = Math.pow(10, showDecimals);
+        roundedValueWithDecimals = roundedValueWithDecimals * potShowDecimals;
+        // }
+        //-------------
+        return formatAmount(roundedValueWithDecimals, showDecimals, showAtLeastDecimals) + unit;
+        //-------------
+    }
+}
+
 export function formatAmount(amount: BigInt | number, showDecimals: Decimals = 0, showAtLeastDecimals: Decimals = 0) {
     //-------------
     if (typeof amount !== 'number') {
@@ -241,6 +447,15 @@ export function formatAmount(amount: BigInt | number, showDecimals: Decimals = 0
     return strConDecimals;
 }
 
+export function formatPercentage(
+    amount: bigint | number,
+    showDecimals: Decimals = 0,
+    swRoundWithLetter: boolean = false,
+    showAtLeastDecimals: Decimals = 0,
+    decimalsInBigUnit: Decimals = showDecimals
+) {
+    return formatAmountWithUnit(amount, showDecimals, '', swRoundWithLetter, showAtLeastDecimals, decimalsInBigUnit) + '%';
+}
 
 //----------------------------------------------------------------------
 
@@ -602,9 +817,13 @@ export const isNullOrBlank = (value: string | undefined): boolean => {
 // not for instances
 // only for class constructors
 export function isSubclassOf(Derived: any, Base: any): boolean {
-    let proto = Object.getPrototypeOf(Derived);
+    let proto = Derived;
     while (proto) {
+        // console.log(`proto === Base: ${proto === Base} - proto.name ${proto.name} === Base.name ${Base.name}: ${proto.name === Base.name} && ${Object.getPrototypeOf(proto)?.name} === ${Object.getPrototypeOf(Base)?.name}: ${Object.getPrototypeOf(proto)?.name === Object.getPrototypeOf(Base)?.name}`);
         if (proto === Base) {
+            return true;
+        }
+        if (proto.name === Base.name && Object.getPrototypeOf(proto)?.name === Object.getPrototypeOf(Base)?.name) {
             return true;
         }
         proto = Object.getPrototypeOf(proto);
@@ -612,25 +831,3 @@ export function isSubclassOf(Derived: any, Base: any): boolean {
     return false;
 }
 //----------------------------------------------------------------------
-
-
-export function isValidUrl(url: string): boolean {
-    // Regular expression to check if the URL is absolute and starts with http://, https://, or ipfs://
-    const absoluteUrlPattern = /^(https?:\/\/|ipfs:\/\/).+/;
-    // Check if the URL is an absolute URL, starts with a leading slash, or is an IPFS URL
-    return absoluteUrlPattern.test(url) || url.startsWith('/');
-}
-
-export function getUrlForImage(url: string): string {
-    if (isValidUrl(url)) {
-        return url.startsWith('ipfs://') ? `https://ipfs.io/ipfs/${url.slice(7)}` : url;
-    } else {
-        return '';
-    }
-}
-
-export function isValidHexColor(color: string): boolean {
-    // Regular expression to validate hex color (3 or 6 digits, with or without '#')
-    const hexColorPattern = /^#?([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/;
-    return hexColorPattern.test(color);
-}

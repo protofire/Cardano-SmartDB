@@ -1,9 +1,9 @@
 import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
-import { MongoAppliedFor } from '../Commons/Decorator.MongoAppliedFor';
-import { WalletEntity } from './Wallet.Entity';
+import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
+import { WalletEntity } from './Wallet.Entity.js';
 import { PaymentKeyHash, StakeKeyHash } from 'lucid-cardano';
-import { BaseEntityMongo } from './Base/Base.Entity.Mongo';
+import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
 
 @MongoAppliedFor([WalletEntity])
 export class WalletEntityMongo extends BaseEntityMongo {

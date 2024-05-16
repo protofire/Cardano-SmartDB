@@ -1,12 +1,12 @@
 import { type PaymentKeyHash } from 'lucid-cardano';
 import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
-import { Maybe, MongoAppliedFor } from 'smart-db/index';
+import { Maybe, MongoAppliedFor } from 'smart-db';
 import { BaseSmartDBEntityMongo, IBaseSmartDBEntity } from 'smart-db/backEnd';
 import { DummyEntity } from './Dummy.Entity';
 
 @MongoAppliedFor([DummyEntity])
-export class DelegationEntityMongo extends BaseSmartDBEntityMongo {
+export class DummyEntityMongo extends BaseSmartDBEntityMongo {
     protected static Entity = DummyEntity;
     protected static _mongoTableName: string = DummyEntity.className();
 
@@ -16,12 +16,12 @@ export class DelegationEntityMongo extends BaseSmartDBEntityMongo {
 
     // #region internal class methods
 
-    public getMongoStatic(): typeof DelegationEntityMongo {
-        return this.constructor as typeof DelegationEntityMongo;
+    public getMongoStatic(): typeof DummyEntityMongo {
+        return this.constructor as typeof DummyEntityMongo;
     }
 
-    public static getMongoStatic(): typeof DelegationEntityMongo {
-        return this as typeof DelegationEntityMongo;
+    public static getMongoStatic(): typeof DummyEntityMongo {
+        return this as typeof DummyEntityMongo;
     }
 
     public getStatic(): typeof DummyEntity {

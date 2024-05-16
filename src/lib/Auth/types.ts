@@ -4,9 +4,10 @@ import { User } from 'next-auth';
 
 export interface Credentials {
     address: string;
-    walletName: string;
+    walletNameOrSeedOrKey: string;
     useBlockfrostToSubmit: string;
-    isWalletFromSeedOrKey: string;
+    isWalletFromSeed: string;
+    isWalletFromKey: string;
 }
 
 export interface CredentialsAuthenticated extends Credentials {

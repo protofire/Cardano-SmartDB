@@ -1,7 +1,8 @@
-import { OptionsGet, OptionsGetOne, isEqual, isNullOrBlank, optionsGetDefault, optionsGetOneDefault, toJson } from '../../Commons';
-import { formatUTxO } from '../../Commons/helpers';
-import { SmartUTxOEntity } from '../../Entities/SmartUTxO.Entity';
-import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls';
+import { OptionsGet, OptionsGetOne, isEqual, isNullOrBlank, optionsGetDefault, optionsGetOneDefault, toJson } from '../../Commons/index.js';
+import { formatUTxO } from '../../Commons/helpers.js';
+import { SmartUTxOEntity } from '../../Entities/SmartUTxO.Entity.js';
+import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls.js';
+import fetchWrapper from '../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
 
 export class SmartUTxOFrontEndApiCalls extends BaseFrontEndApiCalls {
     protected static _Entity = SmartUTxOEntity;
@@ -16,10 +17,10 @@ export class SmartUTxOFrontEndApiCalls extends BaseFrontEndApiCalls {
             //------------------
             let response;
             if (isEqual(optionsGet, optionsGetDefault)) {
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/by-address/${address}`);
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/by-address/${address}`);
             } else {
                 const body = toJson(optionsGet);
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/by-address/${address}`, {
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/by-address/${address}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -53,11 +54,11 @@ export class SmartUTxOFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
             let response;
             if (isEqual(optionsGet, optionsGetOneDefault)) {
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/by-txhash-idx/${txHash}/${outputIndex}`);
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/by-txhash-idx/${txHash}/${outputIndex}`);
             } else {
                 const body = toJson(optionsGet);
                 //-------------------------
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/by-txhash-idx/${txHash}/${outputIndex}`, {
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/by-txhash-idx/${txHash}/${outputIndex}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -28,7 +28,6 @@ export const connectMongoDB = (): Promise<void> => {
 
         const opts = {
             bufferCommands: true,
-            useNewUrlParser: true,
             serverSelectionTimeoutMS: serverSelectionTimeoutMS,
             // ... other options
         };
@@ -65,28 +64,28 @@ export const disconnect = async () => {
     await Mongoose.disconnect();
 };
 
-export function convertParamsForAggregation(query: any, prefix: string): any {
-    const excludedKeywords = ['$and', '$or', '$nor', '$not'];
+// export function convertParamsForAggregation(query: any, prefix: string): any {
+//     const excludedKeywords = ['$and', '$or', '$nor', '$not'];
 
-    const convertedQuery: any = {};
+//     const convertedQuery: any = {};
 
-    for (const key in query) {
-        if (Object.prototype.hasOwnProperty.call(query, key)) {
-            const value = query[key];
+//     for (const key in query) {
+//         if (Object.prototype.hasOwnProperty.call(query, key)) {
+//             const value = query[key];
 
-            if (excludedKeywords.includes(key)) {
-                convertedQuery[key] = value.map((subQuery: any) => convertParamsForAggregation(subQuery, prefix));
-            } else {
-                const updatedKey = prefix ? `${prefix}.${key}` : key;
+//             if (excludedKeywords.includes(key)) {
+//                 convertedQuery[key] = value.map((subQuery: any) => convertParamsForAggregation(subQuery, prefix));
+//             } else {
+//                 const updatedKey = prefix ? `${prefix}.${key}` : key;
 
-                if (typeof value === 'object' && !Array.isArray(value)) {
-                    convertedQuery[updatedKey] = convertParamsForAggregation(value, updatedKey);
-                } else {
-                    convertedQuery[updatedKey] = value;
-                }
-            }
-        }
-    }
+//                 if (typeof value === 'object' && !Array.isArray(value)) {
+//                     convertedQuery[updatedKey] = convertParamsForAggregation(value, updatedKey);
+//                 } else {
+//                     convertedQuery[updatedKey] = value;
+//                 }
+//             }
+//         }
+//     }
 
-    return convertedQuery;
-}
+//     return convertedQuery;
+// }

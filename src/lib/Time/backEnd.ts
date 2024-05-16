@@ -1,1 +1,1 @@
-export * from './Time.BackEnd';
+export * from './Time.BackEnd.js';

@@ -1,15 +1,15 @@
 import { NextApiResponse } from 'next';
-import { OptionsCreateOrUpdate, OptionsGet, isEmulator, sanitizeForDatabase, showData, yupValidateOptionsCreate, yupValidateOptionsGet } from '../../Commons';
-import { globalEmulator } from '../../Commons/BackEnd/globalEmulator';
-import { console_errorLv1, console_logLv1, initApiRequestWithContext } from '../../Commons/index.BackEnd';
-import { BaseEntity } from '../../Entities/Base/Base.Entity';
-import { BaseSmartDBEntity } from '../../Entities/Base/Base.SmartDB.Entity';
-import { NextApiRequestAuthenticated } from '../../lib/Auth/types';
-import { AddressToFollowBackEndApplied } from '../AddressToFollow.BackEnd.Applied';
-import { BaseBackEndApiHandlers } from './Base.BackEnd.Api.Handlers';
-import { BaseSmartDBBackEndApplied } from './Base.SmartDB.BackEnd.Applied';
+import { OptionsCreateOrUpdate, OptionsGet, isEmulator, sanitizeForDatabase, showData, yupValidateOptionsCreate, yupValidateOptionsGet } from '../../Commons/index.js';
+import { globalEmulator } from '../../Commons/BackEnd/globalEmulator.js';
+import { console_errorLv1, console_logLv1, initApiRequestWithContext } from '../../Commons/index.BackEnd.js';
+import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
+import { BaseSmartDBEntity } from '../../Entities/Base/Base.SmartDB.Entity.js';
+import { NextApiRequestAuthenticated } from '../../lib/Auth/types.js';
+import { AddressToFollowBackEndApplied } from '../AddressToFollow.BackEnd.Applied.js';
+import { BaseBackEndApiHandlers } from './Base.BackEnd.Api.Handlers.js';
+import { BaseSmartDBBackEndApplied } from './Base.SmartDB.BackEnd.Applied.js';
 import { User } from 'next-auth';
-import yup from '../../Commons/yupLocale';
+import yup from '../../Commons/yupLocale.js';
 
 // Api Handlers siempre llevan una Entity y el backend methods, es especifico para cada entidad
 // Se tiene entonces que crear uno por cada Entidad SI o SI
@@ -124,29 +124,29 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
 
     // #region api handlers
 
-    public static async mainApiHandler<T extends BaseEntity>(req: NextApiRequestAuthenticated, res: NextApiResponse) {
-        return await initApiRequestWithContext(1, this._Entity.className(), req, res, this.mainApiHandlerWithContext.bind(this));
-    }
+    // public static async mainApiHandler<T extends BaseEntity>(req: NextApiRequestAuthenticated, res: NextApiResponse) {
+    //     return await initApiRequestWithContext(1, this._Entity.className(), req, res, this.mainApiHandlerWithContext.bind(this));
+    // }
 
     protected static async mainApiHandlerWithContext<T extends BaseEntity>(req: NextApiRequestAuthenticated, res: NextApiResponse) {
         //--------------------------------------
         const { query } = req.query;
         //--------------------
-        const AuthBackEnd = (await import('../../lib/Auth/Auth.BackEnd')).AuthBackEnd;
-        //--------------------------------------
-        try {
-            await AuthBackEnd.addCorsHeaders(req, res);
-        } catch (error) {
-            console_errorLv1(0, this._Entity.className(), `Api handler - Error: ${error}`);
-            return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
-        }
-        //--------------------
-        try {
-            await AuthBackEnd.authenticate(req, res);
-        } catch (error) {
-            console_errorLv1(0, this._Entity.className(), `Api handler - Error: ${error}`);
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
+        // const AuthBackEnd = (await import('../../lib/Auth/Auth.BackEnd.js')).AuthBackEnd;
+        // //--------------------------------------
+        // try {
+        //     await AuthBackEnd.addCorsHeaders(req, res);
+        // } catch (error) {
+        //     console_errorLv1(0, this._Entity.className(), `Api handler - Error: ${error}`);
+        //     return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
+        // }
+        // //--------------------
+        // try {
+        //     await AuthBackEnd.authenticate(req, res);
+        // } catch (error) {
+        //     console_errorLv1(0, this._Entity.className(), `Api handler - Error: ${error}`);
+        //     return res.status(401).json({ error: 'Unauthorized' });
+        // }
 
         //--------------------
         if (query === undefined || query.length === 0) {
@@ -349,11 +349,11 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
                 //--------------------------------------
                 if (isEmulator) {
                     // solo en emulator. Me aseguro de setear el emulador al tiempo real del server. Va a saltear los slots necesarios.
-                    // const TimeBackEnd = (await import('../../../Time/backEnd')).TimeBackEnd;
+                    // const TimeBackEnd = (await import('../../../Time/backEnd.js')).TimeBackEnd;
                     // await TimeBackEnd.syncBlockChainWithServerTime();
                 }
                 //--------------------------------------
-                const LucidToolsBackEnd = (await import('../../lib/Lucid/backEnd')).LucidToolsBackEnd;
+                const LucidToolsBackEnd = (await import('../../lib/Lucid/backEnd.js')).LucidToolsBackEnd;
                 var { lucid } = await LucidToolsBackEnd.prepareLucidBackEndForTx(undefined);
                 //--------------------------------------
                 console_logLv1(0, this._Entity.className(), `syncWithAddressApiHandlers - address: ${address} - event: ${showData(event)}`);
@@ -402,11 +402,11 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
                 //--------------------------------------
                 if (isEmulator) {
                     // solo en emulator. Me aseguro de setear el emulador al tiempo real del server. Va a saltear los slots necesarios.
-                    // const TimeBackEnd = (await import('../../../Time/backEnd')).TimeBackEnd;
+                    // const TimeBackEnd = (await import('../../../Time/backEnd.js')).TimeBackEnd;
                     // await TimeBackEnd.syncBlockChainWithServerTime();
                 }
                 //--------------------------------------
-                const LucidToolsBackEnd = (await import('../../lib/Lucid/backEnd')).LucidToolsBackEnd;
+                const LucidToolsBackEnd = (await import('../../lib/Lucid/backEnd.js')).LucidToolsBackEnd;
                 var { lucid } = await LucidToolsBackEnd.prepareLucidBackEndForTx(undefined);
                 //--------------------------------------
                 console_logLv1(0, this._Entity.className(), `syncWithAddressApiHandlers - address: ${address}`);

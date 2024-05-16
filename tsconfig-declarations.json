@@ -1,0 +1,35 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "None",
+        "lib": ["dom", "dom.iterable", "esnext"],
+        "declaration": true,
+        "declarationMap": true , 
+        "emitDeclarationOnly": true,
+        "declarationDir": "./dist/types",
+        "allowImportingTsExtensions": true,
+        "noEmit": false,
+        "allowJs": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "esModuleInterop": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": true, // Consider setting to false unless needed for transpilation reasons
+        "jsx": "react", // Only if your library contains React components
+        "incremental": false,
+        "outDir": "./dist/types", // Output directory for build files
+        "rootDir": "./src", // Source directory for build files
+        "baseUrl" : "./dist/types",
+        "paths": {
+            "smart-db/*": ["*"] // Map imports starting with 'smart-db/' to the root of the 'dist' directory
+        },
+        "sourceMap": true,
+        "inlineSources": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+    },
+    "include": ["next-env.d.ts", "jest.config.js", "src/**/*.ts", "src/**/*.tsx", ".next/types/**/*.ts"],
+    "exclude": ["node_modules", "_OLD", "example", "dist", "src/**/_OLD/*", "**/*.test.ts", "**/*.spec.ts", "**/__tests__/**", "jest.config.js", "jest.config.ts", "*.config.js"]
+}

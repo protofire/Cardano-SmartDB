@@ -1,11 +1,12 @@
-import { ConnectedWalletInfo, TX_CHECK_INTERVAL, isEmulator, isObject, toJson } from '../../Commons';
+import { ConnectedWalletInfo, TX_CHECK_INTERVAL, isEmulator, isObject, toJson } from '../../Commons/index.js';
 import { Blockfrost, ExternalWallet, Lucid, PrivateKey, TxSigned, WalletApi } from 'lucid-cardano';
-import { TRANSACTION_STATUS_CONFIRMED, TRANSACTION_STATUS_FAILED, TRANSACTION_STATUS_TIMEOUT, WalletTxParams } from '../../Commons';
-import { EmulatorEntity } from '../../Entities/Emulator.Entity';
-import { TransactionEntity } from '../../Entities/Transaction.Entity';
-import { BaseSmartDBFrontEndApiCalls } from '../../FrontEnd/ApiCalls/Base/Base.SmartDB.FrontEnd.Api.Calls';
-import { TransactionFrontEndApiCalls } from '../../FrontEnd/ApiCalls/Transaction.FrontEnd.Api.Calls';
-import { TimeApi } from '../Time/index';
+import { TRANSACTION_STATUS_CONFIRMED, TRANSACTION_STATUS_FAILED, TRANSACTION_STATUS_TIMEOUT, WalletTxParams } from '../../Commons/index.js';
+import { EmulatorEntity } from '../../Entities/Emulator.Entity.js';
+import { TransactionEntity } from '../../Entities/Transaction.Entity.js';
+import { BaseSmartDBFrontEndApiCalls } from '../../FrontEnd/ApiCalls/Base/Base.SmartDB.FrontEnd.Api.Calls.js';
+import { TransactionFrontEndApiCalls } from '../../FrontEnd/ApiCalls/Transaction.FrontEnd.Api.Calls.js';
+import { TimeApi } from '../Time/index.js';
+import { BlockfrostCustomProviderFrontEnd } from '../BlockFrost/BlockFrost.FrontEnd.js';
 
 //--------------------------------------
 
@@ -15,7 +16,7 @@ export class LucidToolsFrontEnd {
     public static initializeLucidWithBlockfrost = async () => {
         console.log(`[Lucid] - initializeLucidWithBlockfrost`);
         try {
-            const lucid = await Lucid.new(new Blockfrost(process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost', 'xxxx'), process.env.NEXT_PUBLIC_CARDANO_NET! as any);
+            const lucid = await Lucid.new(new BlockfrostCustomProviderFrontEnd(process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost', 'xxxx'), process.env.NEXT_PUBLIC_CARDANO_NET! as any);
             return lucid;
         } catch (error) {
             console.log(`[Lucid] - initializeLucidWithBlockfrost - Error: ${error}`);
@@ -148,12 +149,12 @@ export class LucidToolsFrontEnd {
 
     // #region use lucid in front end
 
-    public static async prepareLucidForUseAsUtils() {
+    public static async prepareLucidForUseAsUtils(emulatorDB?: EmulatorEntity) {
         let lucid: Lucid;
         try {
             console.log(`[Lucid] - prepareLucidForUseAsUtils`);
             if (isEmulator) {
-                let emulatorDB = await BaseSmartDBFrontEndApiCalls.getOneByParamsApi<EmulatorEntity>(EmulatorEntity, { current: true });
+                emulatorDB = emulatorDB ?? (await BaseSmartDBFrontEndApiCalls.getOneByParamsApi<EmulatorEntity>(EmulatorEntity, { current: true }));
                 if (emulatorDB === undefined) {
                     throw 'emulatorDB current not defined';
                 } else {

@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 import { PaymentKeyHash } from "lucid-cardano";
 import { Schema, Types } from 'mongoose';
-import { MongoAppliedFor } from '../../Commons/Decorator.MongoAppliedFor';
-import { BaseSmartDBEntity } from './Base.SmartDB.Entity';
-import { BaseEntityMongo } from './Base.Entity.Mongo';
+import { MongoAppliedFor } from '../../Commons/Decorators/Decorator.MongoAppliedFor.js';
+import { BaseSmartDBEntity } from './Base.SmartDB.Entity.js';
+import { BaseEntityMongo } from './Base.Entity.Mongo.js';
 
 export interface IBaseSmartDBEntity {
     _creator: PaymentKeyHash;

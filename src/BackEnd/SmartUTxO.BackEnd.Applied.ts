@@ -1,9 +1,9 @@
-import { OptionsGet, OptionsGetOne, isFrontEndEnvironment, isNullOrBlank } from '../Commons';
-import { console_log } from '../Commons/BackEnd/globalLogs';
-import { BackEndAppliedFor } from '../Commons/Decorator.BackEndAppliedFor';
-import { SmartUTxOEntity } from '../Entities/SmartUTxO.Entity';
-import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied';
-import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods';
+import { OptionsGet, OptionsGetOne, isFrontEndEnvironment, isNullOrBlank } from '../Commons/index.js';
+import { console_log } from '../Commons/BackEnd/globalLogs.js';
+import { BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndAppliedFor.js';
+import { SmartUTxOEntity } from '../Entities/SmartUTxO.Entity.js';
+import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied.js';
+import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods.js';
 
 @BackEndAppliedFor(SmartUTxOEntity)
 export class SmartUTxOBackEndApplied extends BaseBackEndApplied {

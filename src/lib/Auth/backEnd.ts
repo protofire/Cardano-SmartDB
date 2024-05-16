@@ -1,2 +1,2 @@
-export * from './Auth.BackEnd'
-export * from './types'
+export * from './Auth.BackEnd.js'
+export * from './types.js'

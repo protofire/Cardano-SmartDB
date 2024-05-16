@@ -1,11 +1,11 @@
-import { TRANSACTION_STATUS_FAILED, TRANSACTION_STATUS_SUBMITTED, createQueryURLString, isFrontEndEnvironment, isNullOrBlank } from '../Commons';
-import { console_error, console_log } from '../Commons/BackEnd/globalLogs';
-import { getGlobalTransactionStatusUpdater } from '../Commons/BackEnd/globalTransactionStatusUpdater';
-import { BackEndAppliedFor } from '../Commons/Decorator.BackEndAppliedFor';
-import { SmartUTxOEntity } from '../Entities/SmartUTxO.Entity';
-import { TransactionEntity } from '../Entities/Transaction.Entity';
-import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied';
-import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods';
+import { console_error } from '../Commons/BackEnd/globalLogs.js';
+import { getGlobalTransactionStatusUpdater } from '../Commons/BackEnd/globalTransactionStatusUpdater.js';
+import { BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndAppliedFor.js';
+import { TRANSACTION_STATUS_FAILED, TRANSACTION_STATUS_SUBMITTED, isFrontEndEnvironment, isNullOrBlank } from '../Commons/index.js';
+import { SmartUTxOEntity } from '../Entities/SmartUTxO.Entity.js';
+import { TransactionEntity } from '../Entities/Transaction.Entity.js';
+import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied.js';
+import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods.js';
 
 @BackEndAppliedFor(TransactionEntity)
 export class TransactionBackEndApplied extends BaseBackEndApplied {
@@ -33,7 +33,7 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
         submittedTransaction.error = error;
         await this.update(submittedTransaction);
         //-------------------------
-        const SmartUTxOBackEndApplied = (await import('./SmartUTxO.BackEnd.Applied')).SmartUTxOBackEndApplied;
+        const SmartUTxOBackEndApplied = (await import('./SmartUTxO.BackEnd.Applied.js')).SmartUTxOBackEndApplied;
         //-------------------------
         const consuming_UTxOs = submittedTransaction.consuming_UTxOs;
         for (let consuming_UTxO of consuming_UTxOs) {
@@ -74,7 +74,7 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
         submittedTransaction.status = TRANSACTION_STATUS_SUBMITTED;
         await this.update(submittedTransaction);
         //-------------------------
-        const SmartUTxOBackEndApplied = (await import('./SmartUTxO.BackEnd.Applied')).SmartUTxOBackEndApplied;
+        const SmartUTxOBackEndApplied = (await import('./SmartUTxO.BackEnd.Applied.js')).SmartUTxOBackEndApplied;
         //-------------------------
         const consuming_UTxOs = submittedTransaction.consuming_UTxOs;
         for (let consuming_UTxO of consuming_UTxOs) {
@@ -138,7 +138,7 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
         //             isConfirmed = await this.getTxIsConfirmedBlockfrostApi(txHash);
         //         }
         //         if (isConfirmed) {
-        //             const LucidToolsBackEnd = (await import('@/src/lib/Lucid/backEnd')).LucidToolsBackEnd;
+        //             const LucidToolsBackEnd = (await import('@/src/lib/Lucid/backEnd.js')).LucidToolsBackEnd;
         //             var { lucid } = await LucidToolsBackEnd.prepareLucidBackEndForTx(undefined);
         //             //--------------------------------------
         //             if (process.env.NEXT_PUBLIC_CARDANO_NET !== 'Emulator') {
@@ -222,175 +222,4 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
     }
 
     // #endregion class methods
-
-    // #region class methods for parse blockchain transactions
-
-    public static async get_Transactions_From_BlockfrostApi(address: string, block?: number): Promise<Record<string, any>[] | undefined> {
-        //----------------------------
-        //transactions?count=100&page=1&order=asc&from=8929261&to=9999269:10
-        //------------------
-        const queryString = createQueryURLString({ from: block });
-        //------------------
-        const urlApi = process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost/addresses/' + address + '/transactions?order=asc' + queryString;
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                project_id: 'xxxxx',
-            },
-        };
-        try {
-            //----------------------------
-            const response = await fetch(urlApi, requestOptions);
-            //----------------------------
-            switch (response.status) {
-                case 200: {
-                    const transactions = await response.json();
-                    console_log(0, this._Entity.className(), ` get_Transactions_From_BlockfrostApi - Transactions len: ${transactions.length} - reponse OK`);
-                    return transactions;
-                }
-                case 404: {
-                    console_log(0, this._Entity.className(), ` get_Transactions_From_BlockfrostApi - Metadata not found`);
-                    return undefined;
-                }
-                default: {
-                    const errorData = await response.json();
-                    //throw `Received status code ${response.status} with message: ${errorData.error.message ? errorData.error.message : errorData.error}`;
-                    throw `${errorData.error.message ? errorData.error.message : errorData.error}`;
-                }
-            }
-            //----------------------------
-        } catch (error) {
-            console_error(0, this._Entity.className(), ` get_Transactions_From_BlockfrostApi - Error: ${error}`);
-            throw `${error}`;
-        }
-    }
-
-    public static async get_TransactionsUTxOs_From_BlockfrostApi(txHash: string): Promise<Record<string, Record<string, any>[]> | undefined> {
-        //-------------------------
-        if (isNullOrBlank(txHash)) {
-            throw `txHash not defined`;
-        }
-        //----------------------------
-        //transactions?count=100&page=1&order=asc&from=8929261&to=9999269:10
-        const urlApi = process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost/txs/' + txHash + '/utxos';
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                project_id: 'xxxxx',
-            },
-        };
-        try {
-            //----------------------------
-            const response = await fetch(urlApi, requestOptions);
-            //----------------------------
-            switch (response.status) {
-                case 200: {
-                    const uTxOs = await response.json();
-                    const inputs = uTxOs.inputs;
-                    const outputs = uTxOs.outputs;
-                    console_log(
-                        0,
-                        this._Entity.className(),
-                        ` get_TransactionsUTxOs_From_BlockfrostApi - inputs len: ${inputs.length} - outputs len: ${outputs.length} - reponse OK`
-                    );
-                    return { inputs, outputs };
-                }
-                case 404: {
-                    console_log(0, this._Entity.className(), ` get_TransactionsUTxOs_From_BlockfrostApi - Metadata not found`);
-                    return undefined;
-                }
-                default: {
-                    const errorData = await response.json();
-                    //throw `Received status code ${response.status} with message: ${errorData.error.message ? errorData.error.message : errorData.error}`;
-                    throw `${errorData.error.message ? errorData.error.message : errorData.error}`;
-                }
-            }
-            //----------------------------
-        } catch (error) {
-            console_error(0, this._Entity.className(), ` get_TransactionsUTxOs_From_BlockfrostApi - Error: ${error}`);
-            throw `${error}`;
-        }
-    }
-
-    public static async get_TransactionsRedeemers_From_BlockfrostApi(txHash: string): Promise<Record<string, any>[] | undefined> {
-        //-------------------------
-        if (isNullOrBlank(txHash)) {
-            throw `txHash not defined`;
-        }
-        //----------------------------
-        //transactions?count=100&page=1&order=asc&from=8929261&to=9999269:10
-        const urlApi = process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost/txs/' + txHash + '/redeemers';
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                project_id: 'xxxxx',
-            },
-        };
-        try {
-            //----------------------------
-            const response = await fetch(urlApi, requestOptions);
-            //----------------------------
-            switch (response.status) {
-                case 200: {
-                    const redeemers = await response.json();
-                    console_log(0, this._Entity.className(), ` get_TransactionsRedeemers_From_BlockfrostApi - Redeemers len: ${redeemers.length} - reponse OK`);
-                    return redeemers;
-                }
-                case 404: {
-                    console_log(0, this._Entity.className(), ` get_TransactionsRedeemers_From_BlockfrostApi - Metadata not found`);
-                    return undefined;
-                }
-                default: {
-                    const errorData = await response.json();
-                    //throw `Received status code ${response.status} with message: ${errorData.error.message ? errorData.error.message : errorData.error}`;
-                    throw `${errorData.error.message ? errorData.error.message : errorData.error}`;
-                }
-            }
-            //----------------------------
-        } catch (error) {
-            console_error(0, this._Entity.className(), ` get_TransactionsRedeemers_From_BlockfrostApi - Error: ${error}`);
-            throw `${error}`;
-        }
-    }
-
-    public static async get_TransactionsRedeemers_CborFormHash_From_BlockfrostApi(dataHash: string): Promise<string | undefined> {
-        //-------------------------
-        if (isNullOrBlank(dataHash)) {
-            throw `dataHash not defined`;
-        }
-        //----------------------------
-        const urlApi = process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost/scripts/datum/' + dataHash + '/cbor';
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                project_id: 'xxxxx',
-            },
-        };
-        try {
-            //----------------------------
-            const response = await fetch(urlApi, requestOptions);
-            //----------------------------
-            switch (response.status) {
-                case 200: {
-                    const redeemers = await response.json();
-                    console_log(0, this._Entity.className(), ` get_TransactionsDataFromHash_From_BlockfrostApi - Redeemers len: ${redeemers.cbor} - reponse OK`);
-                    return redeemers.cbor;
-                }
-                case 404: {
-                    console_log(0, this._Entity.className(), ` get_TransactionsDataFromHash_From_BlockfrostApi - Metadata not found`);
-                    return undefined;
-                }
-                default: {
-                    const errorData = await response.json();
-                    //throw `Received status code ${response.status} with message: ${errorData.error.message ? errorData.error.message : errorData.error}`;
-                    throw `${errorData.error.message ? errorData.error.message : errorData.error}`;
-                }
-            }
-            //----------------------------
-        } catch (error) {
-            console_error(0, this._Entity.className(), ` get_TransactionsDataFromHash_From_BlockfrostApi - Error: ${error}`);
-            throw `${error}`;
-        }
-    }
-    // #endregion class methods for parse blockchain transactions
 }

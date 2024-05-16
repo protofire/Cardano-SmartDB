@@ -1,5 +1,6 @@
-import { SiteSettingsEntity } from '../../Entities/SiteSettings.Entity';
-import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls';
+import fetchWrapper from '../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
+import { SiteSettingsEntity } from '../../Entities/SiteSettings.Entity.js';
+import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls.js';
 
 export class SiteSettingsFrontEndApiCalls extends BaseFrontEndApiCalls {
     protected static _Entity = SiteSettingsEntity;
@@ -10,7 +11,7 @@ export class SiteSettingsFrontEndApiCalls extends BaseFrontEndApiCalls {
         try {
             // tambien se crea en AuthBackEnd
             //-------------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/create-init`);
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/create-init`);
             //-------------------------
             if (response.status === 200) {
                 const data = await response.json();
@@ -34,7 +35,7 @@ export class SiteSettingsFrontEndApiCalls extends BaseFrontEndApiCalls {
         try {
             // tambien se crea en AuthBackEnd
             //-------------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/refresh-server`);
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/refresh-server`);
             //-------------------------
             if (response.status === 200) {
                 const data = await response.json();

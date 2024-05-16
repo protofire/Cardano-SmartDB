@@ -1,14 +1,14 @@
 // import { pushSucessNotification, pushWarningNotification } from '@/src/utils/commons/pushNotification';
-// import { BaseSmartDBEntity } from '../../../Entities/Base/Base.SmartDB.Entity';
-// import { AddressToFollowFrontEndApiCalls } from '../../ApiCalls/AddressToFollow.FrontEnd.Api.Calls';
-// import { BaseSmartDBFrontEndApiCalls } from '../../ApiCalls/Base/Base.SmartDB.FrontEnd.Api.Calls';
+// import { BaseSmartDBEntity } from '../../../Entities/Base/Base.SmartDB.Entity.js';
+// import { AddressToFollowFrontEndApiCalls } from '../../ApiCalls/AddressToFollow.FrontEnd.Api.Calls.js';
+// import { BaseSmartDBFrontEndApiCalls } from '../../ApiCalls/Base/Base.SmartDB.FrontEnd.Api.Calls.js';
 // import { IUseWalletStore } from '@/src/store/types';
 // import { ProtocolEntity } from '@/src/lib/MayzSmartDB/Entities/Protocol.Entity';
 // import { LucidToolsFrontEnd } from '@/src/lib/Lucid/LucidTools.FrontEnd';
 // import { explainErrorTx } from '@/src/utils/specific/explainError';
-// import { WalletTxParams } from '../../../Commons';
+// import { WalletTxParams } from '../../../Commons/index.js';
 // import { Lucid } from 'lucid-cardano';
-// import { EmulatorEntity } from '../../../Entities/Emulator.Entity';
+// import { EmulatorEntity } from '../../../Entities/Emulator.Entity.js';
 
 // // es generica, todos los metodos llevan instancia o entidad como parametro
 // // todas las clases la pueden usar

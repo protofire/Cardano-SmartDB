@@ -1,14 +1,13 @@
-import { Assets, C, PaymentKeyHash, Script, UTxO, fromHex, toHex } from 'lucid-cardano';
-
-import { AC, CS, Decimals, PaymentAndStakePubKeyHash, StakeCredentialPubKeyHash, Token_With_Metadata_And_Amount } from './types';
-import { formatAmount, hexToStr, isNullOrBlank, searchValueInArray } from './utils';
-import { ADA_DECIMALS, ADA_TX_FEE_MARGIN, ADA_UI, LUCID_NETWORK_MAINNET_INT, LUCID_NETWORK_TESTNET_INT, LucidLUCID_NETWORK_MAINNET_NAME } from './constants';
-import { TxOutRef } from './classes';
+import { Assets, C, Lucid, PaymentKeyHash, Script, SignedMessage, UTxO, fromHex, toHex } from 'lucid-cardano';
+import { AC, CS, Decimals, PaymentAndStakePubKeyHash, StakeCredentialPubKeyHash, Token_With_Metadata_And_Amount } from './types.js';
+import { formatAmount, hexToStr, isNullOrBlank, searchValueInArray, strToHex } from './utils.js';
+import { ADA_DECIMALS, ADA_TX_FEE_MARGIN, ADA_UI, LUCID_NETWORK_MAINNET_INT, LUCID_NETWORK_TESTNET_INT, LucidLUCID_NETWORK_MAINNET_NAME } from './Constants/constants.js';
+import { TxOutRef } from './classes.js';
 
 //---------------------------------------------------------------
 
-export function isTokenADA(CS: string, TN: string) {
-    return (CS === '' || CS === 'lovelace') && TN === '';
+export function isTokenADA(CS: string, TN_Hex: string) {
+    return (CS === '' || CS === 'lovelace') && TN_Hex === '';
 }
 
 export function isToken_CS_And_TN_Valid(CS: string | undefined, TN_Hex: string | undefined) {
@@ -34,17 +33,22 @@ export function formatHash(txHash: string) {
     return isNullOrBlank(txHash) ? '' : txHash.slice(0, 4) + '...' + txHash.slice(txHash.length - 4);
 }
 
-export function formatCurrencySymbol(cs: string) {
-    if (cs === '' || cs === 'lovelace') return 'ADA';
-    return cs.slice(0, 4) + '...' + cs.slice(cs.length - 4);
+export function formatCurrencySymbol(CS: string) {
+    if (CS === '' || CS === 'lovelace') return 'ADA';
+    return CS.slice(0, 4) + '...' + CS.slice(CS.length - 4);
 }
 
-export function formatTokenName(tn: string) {
-    if (tn === '') return ADA_UI;
-    if (tn.length > 30) {
-        return tn.slice(0, 30) + '...';
+export function formatTokenName(TN_Str: string) {
+    if (TN_Str === '') return ADA_UI;
+    if (TN_Str.length > 30) {
+        return TN_Str.slice(0, 30) + '...';
     }
-    return tn;
+    return TN_Str;
+}
+
+export function formatTokenNameHexToStr(TN_Hex: string) {
+    const TN_Str = hexToStr(TN_Hex);
+    return formatTokenName(TN_Str);
 }
 
 export function formatAddress(address: string, isSmall: boolean = true) {
@@ -59,162 +63,21 @@ export function formatUTxO(txHash: string, outputIndex: number) {
     return `${formatHash(txHash)}#${outputIndex}`;
 }
 
-
-export function formatTokenAmount(
-    amount: bigint | number | undefined,
-    CS: string,
-    TN_Hex?: string,
-    showDecimals: Decimals = 0,
-    swRoundWithLetter: boolean = false,
-    showAtLeastDecimals: Decimals = 0,
-    decimalsInBigUnit: Decimals = showDecimals
-): string {
-    if (typeof amount !== 'number' && amount !== undefined) {
-        amount = Number(amount);
-    }
-    if (CS === ADA_UI || CS === '' || CS === 'lovelace') {
-        if (amount === undefined) {
-            return `... ${ADA_UI}`;
-        }
-        return formatAmountWithUnit(amount, ADA_DECIMALS, ADA_UI, swRoundWithLetter, showAtLeastDecimals, ADA_DECIMALS);
-    } else if (TN_Hex !== undefined) {
-        if (amount === undefined) {
-            return `... ${hexToStr(TN_Hex)}`;
-        }
-        return formatAmountWithUnit(amount, showDecimals, hexToStr(TN_Hex), swRoundWithLetter, showAtLeastDecimals, decimalsInBigUnit);
-    }
-    return '';
-}
-
-export function formatAmountWithUnit(
-    amount: bigint | number,
-    showDecimals: Decimals = 0,
-    unit: string = '',
-    swRoundWithLetter: boolean = false,
-    showAtLeastDecimals: Decimals = 0,
-    decimalsInBigUnit: Decimals = showDecimals
-) {
-    //-------------
-    if (typeof amount !== 'number') {
-        amount = Number(amount);
-    }
-    //-------------
-    let roundedValueWithDecimals = amount;
-    //-------------
-    // if (showDecimals !== decimalsInBigUnit) {
-    //-------------
-    // si esta seteando estos valores diferentes, aqui calculo el valor real de la unidad grande
-    // y mas abajo, si no esta seteado rounbdWithLetter, lo vuelvo a multiplicar, esta vez por el valor de showDecimals, por que a su vez el formatAmount lo va a dividir por ese valor
-    const potDecimalsInBigUnit = Math.pow(10, decimalsInBigUnit);
-    const realValueInBiGUnit = amount / potDecimalsInBigUnit;
-    //-------------
-    roundedValueWithDecimals = realValueInBiGUnit;
-    // }
-    //-------------
-    if (swRoundWithLetter === true) {
-        //-------------
-        let decimals_: Decimals = showAtLeastDecimals;
-        //-------------
-        if (amount < Math.pow(10, decimalsInBigUnit - showAtLeastDecimals) && amount > 0) {
-            //-------------
-            if (unit !== '' && (unit === ADA_UI || decimalsInBigUnit === 6)) {
-                //-------------
-                // eso significa que el numero es menor que el menor valor que se va a mostrar con estos decimales
-                // resto dos, por que quiero igual seguir usando el otro valor, que
-                //-------------
-                if (unit === ADA_UI) {
-                    unit = 'lovelace';
-                } else {
-                    if (decimalsInBigUnit === 6) {
-                        unit = 'μ' + unit;
-                    } else {
-                        // esto por ahora no entra nunca... en el futuro si, pero no es facil para el usuario
-                        unit = `x10-${decimalsInBigUnit}` + unit;
-                    }
-                }
-                //-------------
-                roundedValueWithDecimals = amount;
-                //-------------
-            } else {
-                decimals_ = showDecimals;
-            }
-        }
-        //-------------
-        if (!unit.startsWith(' ') && unit !== '') {
-            unit = ' ' + unit;
-        }
-        //-------------
-        if (roundedValueWithDecimals >= 1e18) {
-            roundedValueWithDecimals /= 1e18;
-            unit = 'QT' + unit;
-        } else if (roundedValueWithDecimals >= 1e15) {
-            roundedValueWithDecimals /= 1e15;
-            unit = 'Q' + unit;
-        } else if (roundedValueWithDecimals >= 1e12) {
-            roundedValueWithDecimals /= 1e12;
-            unit = 'T' + unit;
-        } else if (roundedValueWithDecimals >= 1e9) {
-            roundedValueWithDecimals /= 1e9;
-            unit = 'B' + unit;
-        } else if (roundedValueWithDecimals >= 1e6) {
-            roundedValueWithDecimals /= 1e6;
-            unit = 'M' + unit;
-        } else if (roundedValueWithDecimals >= 1e3) {
-            roundedValueWithDecimals /= 1e3;
-            unit = 'K' + unit;
-        }
-        //-------------
-        if (roundedValueWithDecimals === Math.floor(roundedValueWithDecimals)) {
-            decimals_ = 0;
-        }
-        //-------------
-        const potShowDecimals = Math.pow(10, decimals_);
-        //-------------
-        return formatAmount(roundedValueWithDecimals * potShowDecimals, decimals_, 0) + unit;
-        //-------------
-    } else {
-        //-------------
-        if (!unit.startsWith(' ') && unit !== '') {
-            unit = ' ' + unit;
-        }
-        //-------------
-        // if (showDecimals !== decimalsInBigUnit) {
-        const potShowDecimals = Math.pow(10, showDecimals);
-        roundedValueWithDecimals = roundedValueWithDecimals * potShowDecimals;
-        // }
-        //-------------
-        return formatAmount(roundedValueWithDecimals, showDecimals, showAtLeastDecimals) + unit;
-        //-------------
-    }
-}
-
 //---------------------------------------------------------------
 
-export function formatPercentage(
-    amount: bigint | number,
-    showDecimals: Decimals = 0,
-    swRoundWithLetter: boolean = false,
-    showAtLeastDecimals: Decimals = 0,
-    decimalsInBigUnit: Decimals = showDecimals
-) {
-    return formatAmountWithUnit(amount, showDecimals, '', swRoundWithLetter, showAtLeastDecimals, decimalsInBigUnit) + '%';
-}
-
-//---------------------------------------------------------------
-
-export function createToken_With_Amount(CS: string, TN: string, amount: bigint): Token_With_Metadata_And_Amount {
-    return { CS, TN, amount };
+export function createToken_With_Amount(CS: string, TN_Hex: string, amount: bigint): Token_With_Metadata_And_Amount {
+    return { CS, TN_Hex, amount };
 }
 
 export function createToken_ADA_With_Amount(amount: bigint): Token_With_Metadata_And_Amount {
-    return { CS: '', TN: '', amount };
+    return { CS: '', TN_Hex: '', amount };
 }
 
 //---------------------------------------------------------------
 
 export function convert_Tokens_To_Assets(Token_With_Metadata_And_Amount: Token_With_Metadata_And_Amount[]): Assets {
     const assets: Assets = Token_With_Metadata_And_Amount.reduce((acc: Assets, t) => {
-        const key = isTokenADA(t.CS, t.TN) ? 'lovelace' : t.CS + t.TN;
+        const key = isTokenADA(t.CS, t.TN_Hex) ? 'lovelace' : t.CS + t.TN_Hex;
         if (acc[key]) {
             acc[key] += t.amount;
         } else {
@@ -230,21 +93,44 @@ export function convert_Tokens_To_Assets(Token_With_Metadata_And_Amount: Token_W
 export function convert_Assets_To_Tokens(assets: Assets): Token_With_Metadata_And_Amount[] {
     return Object.entries(assets).map(([key, amount]) => {
         if (key === 'lovelace') {
-            return { CS: '', TN: '', amount };
+            return { CS: '', TN_Hex: '', amount };
         } else {
-            const [CS, TN] = splitTokenKey(key);
-            return { CS, TN, amount };
+            const [CS, TN_Hex] = splitTokenLucidKey(key);
+            return { CS, TN_Hex, amount };
         }
     });
 }
 
-function splitTokenKey(key: string): [string, string] {
-    // Assuming the key is formed by concatenating CS and TN for non-ADA tokens
-    // You need to provide a way to split the key back into CS and TN
+export function splitTokenLucidKey(key: string): [string, string] {
+    // Assuming the key is formed by concatenating CS and TN_Hex for non-ADA tokens
+    // You need to provide a way to split the key back into CS and TN_Hex
     // Placeholder implementation:
     const CS = key.slice(0, 56);
-    const TN = key.slice(56);
-    return [CS, TN];
+    const TN_Hex = key.slice(56);
+    return [CS, TN_Hex];
+}
+
+//---------------------------------------------------------------
+
+export function isValidUrl(url: string): boolean {
+    // Regular expression to check if the URL is absolute and starts with http://, https://, or ipfs://
+    const absoluteUrlPattern = /^(https?:\/\/|ipfs:\/\/).+/;
+    // Check if the URL is an absolute URL, starts with a leading slash, or is an IPFS URL
+    return absoluteUrlPattern.test(url) || url.startsWith('/');
+}
+
+export function getUrlForImage(url: string): string {
+    if (isValidUrl(url)) {
+        return url.startsWith('ipfs://') ? `https://ipfs.io/ipfs/${url.slice(7)}` : url;
+    } else {
+        return '';
+    }
+}
+
+export function isValidHexColor(color: string): boolean {
+    // Regular expression to validate hex color (3 or 6 digits, with or without '#')
+    const hexColorPattern = /^#?([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/;
+    return hexColorPattern.test(color);
 }
 
 //---------------------------------------------------------------
@@ -318,6 +204,14 @@ function addressFromHexOrBech32(address: any) {
             throw `Could not deserialize address.`;
         }
     }
+}
+
+export function getAddressFromKeyCborHex(publicKeyCborHex: string) {
+    const publicKeyBytes = Buffer.from(publicKeyCborHex, 'hex');
+    const publicKey = C.PublicKey.from_bytes(publicKeyBytes);
+    const publicKeyHash = publicKey.hash();
+    const address = Ed25519KeyHashToAddress(LUCID_NETWORK_MAINNET_INT, publicKeyHash);
+    return address;
 }
 
 /** Address can be in Bech32 or Hex. */
@@ -566,13 +460,13 @@ export const pubKeyHashesToAddresses = (pkhs: string): string => {
 export function pubKeyHashToAddress(network: number, pkh: PaymentKeyHash, stakePkh?: PaymentKeyHash) {
     console.log('pubKeyHashToAddress - pkh: ' + pkh);
     const keyHash = C.Ed25519KeyHash.from_bytes(fromHex(pkh));
-    let stekeKeyHash;
+    let stakeKeyHash;
     if (stakePkh !== undefined && stakePkh !== '') {
-        stekeKeyHash = C.Ed25519KeyHash.from_bytes(fromHex(stakePkh));
+        stakeKeyHash = C.Ed25519KeyHash.from_bytes(fromHex(stakePkh));
     } else {
-        stekeKeyHash = undefined;
+        stakeKeyHash = undefined;
     }
-    const bech32 = Ed25519KeyHashToAddress(network, keyHash, stekeKeyHash);
+    const bech32 = Ed25519KeyHashToAddress(network, keyHash, stakeKeyHash);
     return bech32;
 }
 
@@ -748,7 +642,7 @@ export function isIncludeValue(find: Assets, where: Assets) {
 export function sumTokensAmt_From_CS(assets: Assets, token_CS: CS): bigint {
     let total: bigint = 0n;
     for (const [key, value] of Object.entries(assets)) {
-        const CS_ = key.slice(0, 56);
+        const [CS_, TN_Hex_] = splitTokenLucidKey(key);
         if (token_CS === CS_) {
             total += value;
         }
@@ -774,11 +668,10 @@ export function sumTokensAmt_From_AC_Lucid(assets: Assets, token_AC_Lucid: AC): 
 export function createValue_Adding_Tokens_Of_AC_Lucid(uTxOsAtWallet: UTxO[], aC_Lucid: AC, amount: bigint) {
     // console.log("storeWallet - createValue_Adding_Tokens_Of_AC_Lucid - unit: " + unit + " - amount: " + amount)
 
-    const CS = aC_Lucid.slice(0, 56);
-    const TN = aC_Lucid.slice(56);
+    const [CS, TN_Hex] = splitTokenLucidKey(aC_Lucid);
 
     const isADA = aC_Lucid === 'lovelace';
-    const isWithoutTokenName = !isADA && TN === '';
+    const isWithoutTokenName = !isADA && TN_Hex === '';
 
     const assets: Assets = {};
 
@@ -791,8 +684,7 @@ export function createValue_Adding_Tokens_Of_AC_Lucid(uTxOsAtWallet: UTxO[], aC_
             if (total < amount) {
                 for (const [key, value] of Object.entries(u.assets)) {
                     if (total < amount) {
-                        const CS_ = key.slice(0, 56);
-
+                        const [CS_, TN_Hex_] = splitTokenLucidKey(key);
                         if (CS === CS_) {
                             //console.log("storeWallet - createValue_Adding_Tokens_Of_AC_Lucid - CS: " + CS + " - CS_: " + CS_ + " - value: " + value)
 
@@ -829,12 +721,10 @@ export function getTotalOfUnitInUTxOList(aC_Lucid: AC, uTxOsAtWallet: UTxO[], sw
     //swOnlyAvailable: available for spending
 
     //console.log("storeWallet - getTotalOfUnit - unit: " + aC_Lucid)
-
-    const CS = aC_Lucid.slice(0, 56);
-    const TN = aC_Lucid.slice(56);
+    const [CS, TN_Hex] = splitTokenLucidKey(aC_Lucid);
 
     const isADA = aC_Lucid === 'lovelace';
-    const isWithoutTokenName = !isADA && TN === '';
+    const isWithoutTokenName = !isADA && TN_Hex === '';
 
     //console.log("storeWallet - getTotalOfUnit - isADA: " + isADA + " - isWithoutTokenName: " + isWithoutTokenName)
     let total: bigint = 0n;
@@ -848,7 +738,7 @@ export function getTotalOfUnitInUTxOList(aC_Lucid: AC, uTxOsAtWallet: UTxO[], sw
             total += u.assets[aC_Lucid] as bigint;
         } else if (isWithoutTokenName) {
             for (const [key, value] of Object.entries(u.assets)) {
-                const CS_ = key.slice(0, 56);
+                const [CS_, TN_Hex_] = splitTokenLucidKey(key);
                 if (CS === CS_) {
                     total += value;
                 }
@@ -863,7 +753,7 @@ export function getTotalOfUnitInUTxOList(aC_Lucid: AC, uTxOsAtWallet: UTxO[], sw
     if (isADA && swOnlyAvailable) {
         // Subtract the required ADA for tokens and the fee margin from the total ADA
         total = total - requiredAdaForTokens - ADA_TX_FEE_MARGIN;
-        if(total < 0n) total = 0n;
+        if (total < 0n) total = 0n;
     }
 
     //console.log("storeWallet - getTotalOfUnit - total: " + total)
@@ -875,7 +765,7 @@ export function getTotalOfUnitInUTxOList(aC_Lucid: AC, uTxOsAtWallet: UTxO[], sw
 export function getAssetsFromCS(assets: Assets, token_CS: CS): Assets {
     const assetsRes: Assets = {};
     for (const [key, value] of Object.entries(assets)) {
-        const CS_ = key.slice(0, 56);
+        const [CS_, TN_Hex_] = splitTokenLucidKey(key);
         if (token_CS === CS_) {
             assetsRes[key] = value;
         }
@@ -1041,13 +931,12 @@ export function calculateNumAssetsAndPIDS(assets: Assets) {
     let swADA: boolean = false;
     for (const [key, value] of Object.entries(assets)) {
         if (key !== 'lovelace') {
-            const pId = key.slice(0, 56);
-            const tn = key.slice(56);
-            if (!searchValueInArray(pIds, pId)) {
-                pIds.push(pId);
+            const [CS, TN_Hex] = splitTokenLucidKey(key);
+            if (!searchValueInArray(pIds, CS)) {
+                pIds.push(CS);
                 numPIDs++;
             }
-            sumAssetNameLengths += tn.length / 2;
+            sumAssetNameLengths += TN_Hex.length / 2;
         } else {
             swADA = true;
         }
@@ -1135,43 +1024,34 @@ export function calculateMinAdaOfAssets_OLD(assets: Assets, isHash: boolean): bi
 
 //---------------------------------------------------------------
 
-
-export function getInputValueFromSmallUnitPriceLovelace1xe6(smallUnitPriceLovelace1xe6: bigint | number | undefined, decimals: Decimals): bigint  | undefined{
-    if (smallUnitPriceLovelace1xe6 === undefined) return undefined;
-    if (typeof smallUnitPriceLovelace1xe6 !== 'number' && smallUnitPriceLovelace1xe6 !== undefined) {
-        smallUnitPriceLovelace1xe6 = Number(smallUnitPriceLovelace1xe6);
-    }
-    const extra1e6Decimales = 6
-    const inputDecimales = extra1e6Decimales + ADA_DECIMALS - decimals
-    // const reverseSmallUnitPriceLovelace = smallUnitPriceLovelace1xe6 / 10 ** extra1e6Decimales;
-    // console.log(`reverseSmallUnitPriceLovelace: ${reverseSmallUnitPriceLovelace}`);
-    // const reverseUnitPriceLovelace = reverseSmallUnitPriceLovelace * 10 ** decimals;
-    // console.log(`reverseUnitPriceLovelace: ${reverseUnitPriceLovelace}`);
-    // const reverseUnitPriceADA = reverseUnitPriceLovelace / 10 ** ADA_DECIMALS;
-    // console.log(`reverseUnitPriceADA: ${reverseUnitPriceADA}`);
-    // const reverseInputValue = reverseUnitPriceADA * 10 ** inputDecimales;
-    // console.log(`reverseInputValue: ${reverseInputValue}`);
-    const reverseInputValue1Step = BigInt(Math.floor(smallUnitPriceLovelace1xe6 * 10 ** (inputDecimales-ADA_DECIMALS+decimals-extra1e6Decimales)));
-    // console.log(`reverseInputValue1Step: ${reverseInputValue1Step}`);
-    return reverseInputValue1Step
+export async function signMessage(lucid: Lucid, privateKeyCborHex: string, dataStr: string) {
+    //--------------------------------------
+    dataStr = dataStr.replace(/:/g, ': ').replace(/,/g, ', ').replace(/\"/g, "'");
+    //--------------------------------------
+    const dataHex = strToHex(dataStr);
+    //--------------------------------------
+    const privateKeyBytes = Buffer.from(privateKeyCborHex, 'hex');
+    const privateKey = C.PrivateKey.from_bytes(privateKeyBytes);
+    const privateKeyBench32 = privateKey.to_bech32();
+    lucid.selectWalletFromPrivateKey(privateKeyBench32);
+    const address = await lucid.wallet.address();
+    //--------------------------------------
+    const signature = await lucid.wallet.signMessage(address, dataHex);
+    //--------------------------------------
+    return signature;
 }
 
-export function getSmallUnitPriceLovelace1xe6FromInputValue(inputValue: bigint | number | undefined, decimals: Decimals): bigint  | undefined{
-    if (inputValue === undefined) return undefined;
-    if (typeof inputValue !== 'number' && inputValue !== undefined) {
-        inputValue = Number(inputValue);
-    }
-    const extra1e6Decimales = 6
-    const inputDecimales = extra1e6Decimales + ADA_DECIMALS - decimals
-    // const unitPriceADA = inputValue / 10 ** inputDecimales;
-    // console.log(`unitPriceADA: ${unitPriceADA}`);
-    // const unitPriceLovelace = unitPriceADA * 10 ** ADA_DECIMALS;
-    // console.log(`unitPriceLovelace: ${unitPriceLovelace}`);
-    // const smallUnitPriceLovelace = unitPriceLovelace / 10 ** decimals!;
-    // console.log(`smallUnitPriceLovelace: ${smallUnitPriceLovelace}`);
-    // const smallUnitPriceLovelace1xe6 = (Math.floor(smallUnitPriceLovelace * 10 **extra1e6Decimales));
-    // console.log(`smallUnitPriceLovelace1xe6: ${smallUnitPriceLovelace1xe6}`);
-    const smallUnitPriceLovelace1xe61Step = BigInt(Math.floor(inputValue * 10 **(-inputDecimales+ADA_DECIMALS-decimals+extra1e6Decimales)));
-    // console.log(`smallUnitPriceLovelace1xe61Step: ${smallUnitPriceLovelace1xe61Step}`);
-    return smallUnitPriceLovelace1xe61Step
+export function verifyMessage(lucid: Lucid, publicKeyCborHex: string, dataStr: string, signature: SignedMessage) {
+    //--------------------------------------
+    const address = getAddressFromKeyCborHex(publicKeyCborHex);
+    //--------------------------------------
+    dataStr = dataStr.replace(/:/g, ': ').replace(/,/g, ', ').replace(/\"/g, "'");
+    // console.log(`dataStr = ${dataStr}\n`);
+    const dataHex = strToHex(dataStr);
+    // console.log(`dataHex = ${dataHex}\n`);
+    //--------------------------------------
+    return lucid.verifyMessage(address, dataHex, signature);
+    //--------------------------------------
 }
+
+//---------------------------------------------------------------

@@ -1,16 +1,14 @@
-import { NextApiRequestAuthenticated } from '../Auth/index';
-import { console_error, console_log, enhanceResWithLogFlushing, initApiRequestWithContext, initGlobals, requestContext } from '../../Commons/index.BackEnd';
 import { NextApiResponse } from 'next';
-import { TimeBackEnd } from './Time.BackEnd';
-import { showData } from '../../Commons';
-import { v4 } from 'uuid';
+import { NextApiRequestAuthenticated } from '../Auth/index.js';
+import { TimeBackEnd } from './Time.BackEnd.js';
+import { console_error, console_log } from '../../Commons/BackEnd/globalLogs.js';
+import { initApiRequestWithContext } from '../../Commons/BackEnd/apiHandlers/initApiRequestWithContext.js';
 
 export class TimeBackEndApiHandlers {
     //---------------------------------------------------------------
 
-    public static async getServerTimeApiHandler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
-        return await initApiRequestWithContext(0, `Time`, req, res, this.getServerTimeApiHandlerWithContext.bind(this));
-    }
+    // public static async getServerTimeApiHandler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
+    // }
 
     public static async getServerTimeApiHandlerWithContext(req: NextApiRequestAuthenticated, res: NextApiResponse) {
         if (req.method === 'GET') {
@@ -36,9 +34,9 @@ export class TimeBackEndApiHandlers {
 
     //---------------------------------------------------------------
 
-    public static async syncEmulatorBlockChainWithServerTimeApiHandler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
-        return await initApiRequestWithContext(0, `Auth`, req, res, this.syncEmulatorBlockChainWithServerTimeApiHandlerWithContext.bind(this));
-    }
+    // public static async syncEmulatorBlockChainWithServerTimeApiHandler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
+    //     return await initApiRequestWithContext(0, `Auth`, req, res, this.syncEmulatorBlockChainWithServerTimeApiHandlerWithContext.bind(this));
+    // }
 
     public static async syncEmulatorBlockChainWithServerTimeApiHandlerWithContext(req: NextApiRequestAuthenticated, res: NextApiResponse) {
         if (req.method === 'GET') {

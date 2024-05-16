@@ -3,11 +3,7 @@
     "version": "1.0.0",
     "private": true,
     "engines": {
-        "node": "^18"
-    },
-    "eslintConfig": {
-        "root": true,
-        "extends": "./.eslintrc"
+        "node": ">=18"
     },
     "scripts": {
         "dev": "node --max-old-space-size=8192 node_modules/.bin/next dev -p 3000",
@@ -18,7 +14,8 @@
         "cleanAll": "rm -fr ./node_modules ./.next",
         "lint": "next lint",
         "test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js",
-        "standalone": "TS_NODE_PROJECT='tsconfig-for-standalone.json' ts-node ./src/__standalone__/minADA.ts"
+        "standalone": "TS_NODE_PROJECT='tsconfig-for-standalone.json' ts-node ./src/__standalone__/minADA.ts",
+        "watchInstall": "chokidar \"../smart-db.tgz\" -c \"npm install ../smart-db.tgz --force\""
     },
     "dependencies": {
         "easy-peasy": "^5.0.4",
@@ -32,7 +29,7 @@
         "react-dom": "18.2.0",
         "react-modal": "^3.16.1",
         "react-notifications-component": "^4.0.1",
-        "smart-db": "file:../dist"
+        "smart-db": "file:../smart-db.tgz"
     },
     "devDependencies": {
         "@next/eslint-plugin-next": "^13.4.12",
@@ -49,6 +46,7 @@
         "@types/uuid": "^9.0.8",
         "@typescript-eslint/eslint-plugin": "^5.61.0",
         "@typescript-eslint/parser": "^5.61.0",
+        "chokidar-cli": "^3.0.0",
         "cross-env": "^7.0.3",
         "eslint": "8.48.0",
         "eslint-config-next": "13.4.19",
@@ -56,6 +54,7 @@
         "prettier": "^2.5.1",
         "reflect-metadata": "^0.1.13",
         "sass": "^1.72.0",
+        "terser": "^5.31.0",
         "ts-jest": "^29.1.1",
         "typescript": "5.2.2"
     }

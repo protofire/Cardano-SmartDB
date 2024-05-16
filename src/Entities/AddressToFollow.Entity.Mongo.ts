@@ -1,8 +1,8 @@
 import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
-import { MongoAppliedFor } from '../Commons/Decorator.MongoAppliedFor';
-import { AddressToFollowEntity } from './AddressToFollow.Entity';
-import { BaseEntityMongo } from './Base/Base.Entity.Mongo';
+import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
+import { AddressToFollowEntity } from './AddressToFollow.Entity.js';
+import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
 
 @MongoAppliedFor([AddressToFollowEntity])
 export class AddressToFollowEntityMongo extends BaseEntityMongo {

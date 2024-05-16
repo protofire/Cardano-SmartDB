@@ -1,8 +1,8 @@
 import { Datum, DatumHash, Script, UTxO, type Address, type Assets, type TxHash } from "lucid-cardano";
 import 'reflect-metadata';
-import { Convertible, TxOutRef, asEntity, toJson } from '../Commons';
-import { deserealizeAssets } from '../Commons/conversions';
-import { BaseEntity } from './Base/Base.Entity';
+import { Convertible, TxOutRef, asEntity, toJson } from '../Commons/index.js';
+import { deserealizeAssets } from '../Commons/conversions.js';
+import { BaseEntity } from './Base/Base.Entity.js';
 
 @asEntity()
 export class SmartUTxOEntity extends BaseEntity {

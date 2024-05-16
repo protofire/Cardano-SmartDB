@@ -1,5 +1,5 @@
-import { SiteSettingsEntity } from '../../Entities/SiteSettings.Entity';
-import { console_log } from './globalLogs';
+import { SiteSettingsEntity } from '../../Entities/SiteSettings.Entity.js';
+import { console_log } from './globalLogs.js';
 
 export interface GlobalSettings {
     siteSettings: SiteSettingsEntity | undefined;
@@ -11,7 +11,7 @@ export const globalSettings = {
 export async function getGlobalSettings(refresh: boolean = false) {
     console_log(0, `Global Settings`, `getGlobalSettings - refresh: ${refresh} - Loaded already: ${globalSettings.siteSettings !== undefined}`);
     if (globalSettings.siteSettings === undefined || refresh === true) {
-        const SiteSettingsBackEndApplied = (await import('../../BackEnd/SiteSettings.BackEnd.Applied')).SiteSettingsBackEndApplied;
+        const SiteSettingsBackEndApplied = (await import('../../BackEnd/SiteSettings.BackEnd.Applied.js')).SiteSettingsBackEndApplied;
         let siteSettings: SiteSettingsEntity | undefined = await SiteSettingsBackEndApplied.getOneByParams_({ name: 'Init' });
         if (siteSettings === undefined) {
             console_log(0, `Global Settings`, `Site Settings Init does not exists, creating it...`);

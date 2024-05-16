@@ -9,7 +9,7 @@ const nextConfig = {
     // reactStrictMode: true,
     //-------------
     // DEV
-    swcMinify: false,
+    swcMinify: true,
     reactStrictMode: false,
     //-------------
     images: {
@@ -24,7 +24,7 @@ const nextConfig = {
     experimental: {
         // appDir: true,
         // serverActions: true, // <-- add this for mongoose and next13
-        // esmExternals: "loose", // <-- add this for mongoose and next13
+        esmExternals: true, // <-- add this for mongoose and next13
         // serverComponentsExternalPackages:['mongoose'] // <-- add this for mongoose and next13 '@typegoose/typegoose'
     },
     webpack: (config, { isServer }) => {
@@ -35,13 +35,16 @@ const nextConfig = {
             topLevelAwait: true,
             layers: true, // optional, with some bundlers/frameworks it doesn't work without
         };
-        config.resolve.fullySpecified = false ; // This allows you to omit extensions when importing ES modules
+        config.resolve.fullySpecified = false; // This allows you to omit extensions when importing ES modules
         //config.resolve.alias['aws-crt'] = path.resolve(__dirname, 'node_modules/aws-crt');
         config.resolve.alias['@example'] = path.resolve(__dirname, './');
         if (isServer) {
             config.externals.push('formidable');
         }
-        config.resolve.alias['lucid-cardano'] = path.resolve(__dirname, 'node_modules/lucid-cardano');
+        // config.resolve.alias['lucid-cardano'] = path.resolve(__dirname, 'node_modules/lucid-cardano');
+        // config.resolve.alias['easy-peasy'] = path.resolve(__dirname, 'node_modules/easy-peasy');
+        // config.resolve.alias['react-notifications-component'] = path.resolve(__dirname, 'node_modules/react-notifications-component');
+        // config.resolve.alias['mongosee'] = path.resolve(__dirname, 'node_modules/mongosee');
         return config;
     },
     async headers() {
@@ -75,7 +78,7 @@ const nextConfig = {
                     { key: 'X-Content-Type-Options', value: 'nosniff' },
                     // You could add more specific headers here if needed
                 ],
-            },
+            }
         ];
     },
 };

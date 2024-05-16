@@ -1,32 +1,11 @@
-import { BackEndAppliedRegistry } from '../../Commons/Decorator.BackEndAppliedFor';
-import {
-    CascadeUpdate,
-    ConversionFunctions,
-    EntitiesRegistry,
-    OptionsCreateOrUpdate,
-    OptionsDelete,
-    OptionsGet,
-    OptionsGetOne,
-    SmartDBEntitiesRegistry,
-    console_error,
-    console_errorLv2,
-    console_logLv2,
-    getCombinedConversionFunctions,
-    isEmptyObject,
-    isEqual,
-    isFrontEndEnvironment,
-    isNullOrBlank,
-    isObject,
-    isString,
-    isSubclassOf,
-    optionsCreateOrUpdateDefault,
-    optionsDeleteDefault,
-    optionsGetDefault,
-    showData,
-    toJson,
-} from '../../Commons/index.BackEnd';
-import { BaseEntity } from '../../Entities/Base/Base.Entity';
-import { MongoDatabaseService } from '../DatabaseService/Mongo.Database.Service';
+
+import { console_error, console_errorLv2, console_logLv2 } from '../../Commons/BackEnd/globalLogs.js';
+import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
+import { RegistryManager } from '../../Commons/Decorators/registerManager.js';
+import { CascadeUpdate, ConversionFunctions, OptionsCreateOrUpdate, OptionsDelete, OptionsGet, OptionsGetOne, optionsCreateOrUpdateDefault, optionsDeleteDefault, optionsGetDefault } from '../../Commons/types.js';
+import { isEmptyObject, isEqual, isFrontEndEnvironment, isNullOrBlank, isObject, isString, isSubclassOf, showData, toJson } from '../../Commons/utils.js';
+import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
+import { MongoDatabaseService } from '../DatabaseService/Mongo.Database.Service.js';
 
 // BaseBackEndMethods es generico
 // Todos los metodos reciben o instancia o entidad
@@ -44,7 +23,7 @@ export class BaseBackEndMethods {
     }
 
     public static getBack(entity: any): any {
-        const result = BackEndAppliedRegistry.get(entity);
+        const result = RegistryManager.getFromBackEndAppliedRegistry(entity);
         if (!result) {
             throw `BackEnd Methods Applied for ${entity} not found in registry.`;
         } else {
@@ -711,12 +690,19 @@ export class BaseBackEndMethods {
                 //----------------------------
                 let index = 0;
                 //----------------------------
-                for (const doc of documents) {
+                for (let doc of documents) {
                     //-----------------------
                     index++;
                     //-----------------------
                     if (documents.length > 1 && documents.length < 10) {
                         console_logLv2(1, Entity.className(), `getByParams - ${index}/${documents.length} - Processing document`);
+                    }
+                    //----------------------------
+                    if (doc._doc !== undefined) {
+                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS _DOC`);
+                        doc = doc._doc;
+                    }else{
+                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS NO _DOC`);
                     }
                     //----------------------------
                     console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields: ${showData(Object.keys(doc), false)}`);
@@ -727,9 +713,9 @@ export class BaseBackEndMethods {
                     if (useOptionGet.lookUpFields !== undefined && useOptionGet.lookUpFields.length > 0) {
                         for (let lookUpField of useOptionGet.lookUpFields) {
                             const EntityClass =
-                                SmartDBEntitiesRegistry.get(lookUpField.from) !== undefined
-                                    ? SmartDBEntitiesRegistry.get(lookUpField.from)
-                                    : EntitiesRegistry.get(lookUpField.from);
+                                RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from) !== undefined
+                                    ? RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from)
+                                    : RegistryManager.getFromEntitiesRegistry(lookUpField.from);
                             if (EntityClass !== undefined) {
                                 console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - LookUpField: ${lookUpField.from} - Loading...`);
                                 const instance_ = await EntityClass.getMongo().fromMongoInterface(doc[lookUpField.as]);

@@ -1,9 +1,11 @@
 import { PaymentKeyHash } from "lucid-cardano";
-import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods';
-import { console_log, isFrontEndEnvironment, isNullOrBlank, tabs } from '../Commons/index.BackEnd';
-import { WalletEntity } from '../Entities/Wallet.Entity';
-import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied';
-import { BackEndAppliedFor } from '../Commons/Decorator.BackEndAppliedFor';
+import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods.js';
+import { WalletEntity } from '../Entities/Wallet.Entity.js';
+import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied.js';
+import { BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndAppliedFor.js';
+import { isFrontEndEnvironment, isNullOrBlank } from "../Commons/utils.js";
+import { console_log } from "../Commons/BackEnd/globalLogs.js";
+
 
 @BackEndAppliedFor(WalletEntity)
 export class WalletBackEndApplied extends BaseBackEndApplied {

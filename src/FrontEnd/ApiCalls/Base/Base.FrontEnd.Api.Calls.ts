@@ -1,5 +1,6 @@
-import { EntitiesRegistry, ITEMS_PER_PAGE, OptionsCreateOrUpdate, OptionsDelete, OptionsGet, OptionsGetOne, SmartDBEntitiesRegistry, createQueryURLString, getCombinedConversionFunctions, isEmptyObject, isEqual, isNullOrBlank, isObject, isString, optionsGetDefault, optionsGetOneDefault, showData, toJson } from '../../../Commons';
-import { BaseEntity } from '../../../Entities/Base/Base.Entity';
+import fetchWrapper from '../../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
+import { ITEMS_PER_PAGE, OptionsCreateOrUpdate, OptionsDelete, OptionsGet, OptionsGetOne, RegistryManager, createQueryURLString, getCombinedConversionFunctions, isEmptyObject, isEqual, isNullOrBlank, isObject, isString, optionsGetDefault, optionsGetOneDefault, showData, toJson } from '../../../Commons/index.js';
+import { BaseEntity } from '../../../Entities/Base/Base.Entity.js';
 
 // es generica, todos los metodos llevan instancia o entidad como parametro
 // todas las clases la pueden usar
@@ -62,7 +63,7 @@ export class BaseFrontEndApiCalls {
     public static async callGenericPOSTApi<T extends BaseEntity>(Entity: typeof BaseEntity, apiRoute: string, params: Record<string, any>): Promise<any> {
         try {
             const body = toJson(params);
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/${apiRoute}`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/${apiRoute}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -88,7 +89,7 @@ export class BaseFrontEndApiCalls {
             //------------------
             const queryString = createQueryURLString(params);
             //------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/${apiRoute}${queryString}`);
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/${apiRoute}${queryString}`);
             if (response.status === 200) {
                 const data = await response.json();
                 console.log(`[${Entity.apiRoute()}] - callGeneriGETApi - OK`);
@@ -108,7 +109,7 @@ export class BaseFrontEndApiCalls {
             //const createFields = instance.toPlainObject();
             const createFields = instance;
             const body = toJson({ createFields, ...optionsCreate });
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -191,7 +192,7 @@ export class BaseFrontEndApiCalls {
                 throw `id not defined`;
             }
             const body = toJson({ updateFields, ...optionsUpdate });
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}/update/${instance._DB_id}`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}/update/${instance._DB_id}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -229,10 +230,10 @@ export class BaseFrontEndApiCalls {
             }
             let response;
             if (isString(paramsFilterOrID)) {
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/exists/${paramsFilterOrID}`);
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/exists/${paramsFilterOrID}`);
             } else {
                 const body = toJson({ paramsFilter: paramsFilterOrID });
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/exists`, {
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/exists`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -262,10 +263,10 @@ export class BaseFrontEndApiCalls {
             }
             let response;
             if (isEqual(optionsGet, optionsGetOneDefault)) {
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/${id}`);
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/${id}`);
             } else {
                 const body = toJson(optionsGet);
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/${id}`, {
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/${id}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -311,7 +312,7 @@ export class BaseFrontEndApiCalls {
     public static async getByParamsApi<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter?: Record<string, any>, optionsGet?: OptionsGet): Promise<T[]> {
         try {
             const body = toJson({ paramsFilter, ...optionsGet });
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/by-params`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/by-params`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -327,7 +328,7 @@ export class BaseFrontEndApiCalls {
                     //-----------------------
                     if (optionsGet !== undefined && optionsGet.lookUpFields !== undefined && optionsGet.lookUpFields.length > 0) {
                         for (let lookUpField of optionsGet.lookUpFields) {
-                            const EntityClass = SmartDBEntitiesRegistry.get(lookUpField.from) !== undefined ? SmartDBEntitiesRegistry.get(lookUpField.from) : EntitiesRegistry.get(lookUpField.from);
+                            const EntityClass = RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from) !== undefined ? RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from) : RegistryManager.getFromEntitiesRegistry(lookUpField.from);
                             if (EntityClass !== undefined) {
                                 console.log(`[${Entity.className()}] - getByParams - getByParamsApi- LookUpField: ${lookUpField.from} - Loading...`);
                                 const instance_ = await EntityClass.fromPlainObject(data[lookUpField.as as keyof typeof data]);
@@ -363,10 +364,10 @@ export class BaseFrontEndApiCalls {
         try {
             let response;
             if (isEqual(optionsGet, optionsGetDefault)) {
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/all`);
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/all`);
             } else {
                 const body = toJson(optionsGet);
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/all`, {
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/all`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -394,7 +395,7 @@ export class BaseFrontEndApiCalls {
     public static async getCountApi<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter?: Record<string, any>): Promise<number> {
         try {
             const body = toJson({ paramsFilter });
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/count`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/count`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -430,7 +431,7 @@ export class BaseFrontEndApiCalls {
             //------------------
             const queryString = createQueryURLString(optionsDelete);
             //------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/${id}${queryString}`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/${id}${queryString}`, {
                 method: 'DELETE',
             });
             if (response.status === 200) {
@@ -458,7 +459,7 @@ export class BaseFrontEndApiCalls {
             //------------------
             const queryString = createQueryURLString(optionsDelete);
             //------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}/${instance._DB_id}${queryString}`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}/${instance._DB_id}${queryString}`, {
                 method: 'DELETE',
             });
             if (response.status === 200) {
@@ -539,10 +540,10 @@ export class BaseFrontEndApiCalls {
             //--------------------------------------
             let response;
             if (isEqual(optionsGet, optionsGetDefault)) {
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}/loadRelationMany/${instance._DB_id}/${relation}`);
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}/loadRelationMany/${instance._DB_id}/${relation}`);
             } else {
                 const body = toJson(optionsGet);
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}/loadRelationMany/${instance._DB_id}/${relation}`, {
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}/loadRelationMany/${instance._DB_id}/${relation}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -588,10 +589,10 @@ export class BaseFrontEndApiCalls {
             //--------------------------------------
             let response;
             if (isEqual(optionsGet, optionsGetDefault)) {
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}/loadRelationOne/${instance._DB_id}/${relation}`);
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}/loadRelationOne/${instance._DB_id}/${relation}`);
             } else {
                 const body = toJson(optionsGet);
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}/loadRelationOne/${instance._DB_id}/${relation}`, {
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${instance.apiRoute()}/loadRelationOne/${instance._DB_id}/${relation}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

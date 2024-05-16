@@ -1,10 +1,10 @@
 import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
-import { MongoAppliedFor } from '../Commons/Decorator.MongoAppliedFor';
-import { PriceEntity } from './Price.Entity';
+import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
+import { PriceEntity } from './Price.Entity.js';
 import { SignedMessage } from "lucid-cardano";
-import { CS, TN } from '../Commons';
-import { BaseEntityMongo } from './Base/Base.Entity.Mongo';
+import { CS, TN } from '../Commons/index.js';
+import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
 
 @MongoAppliedFor([PriceEntity])
 export class PriceEntityMongo extends BaseEntityMongo {

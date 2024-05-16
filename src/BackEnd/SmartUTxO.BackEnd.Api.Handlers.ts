@@ -1,12 +1,13 @@
 import { NextApiResponse } from 'next';
-import { OptionsGet, OptionsGetOne, sanitizeForDatabase, showData, yupValidateOptionsGet, yupValidateOptionsGetOne } from '../Commons';
-import { console_error, console_log } from '../Commons/BackEnd/globalLogs';
-import yup from '../Commons/yupLocale';
-import { SmartUTxOEntity } from '../Entities/SmartUTxO.Entity';
-import { NextApiRequestAuthenticated } from '../lib/Auth/types';
-import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers';
-import { SmartUTxOBackEndApplied } from './SmartUTxO.BackEnd.Applied';
+import { BackEndApiHandlersFor, OptionsGet, OptionsGetOne, sanitizeForDatabase, showData, yupValidateOptionsGet, yupValidateOptionsGetOne } from '../Commons/index.js';
+import { console_error, console_log } from '../Commons/BackEnd/globalLogs.js';
+import yup from '../Commons/yupLocale.js';
+import { SmartUTxOEntity } from '../Entities/SmartUTxO.Entity.js';
+import { NextApiRequestAuthenticated } from '../lib/Auth/types.js';
+import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
+import { SmartUTxOBackEndApplied } from './SmartUTxO.BackEnd.Applied.js';
 
+@BackEndApiHandlersFor(SmartUTxOEntity)
 export class SmartUTxOBackEndApiHandlers extends BaseBackEndApiHandlers {
     protected static _Entity = SmartUTxOEntity;
     protected static _BackEndApplied = SmartUTxOBackEndApplied;

@@ -1,7 +1,8 @@
 import { PaymentKeyHash } from "lucid-cardano";
-import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls';
-import { isNullOrBlank } from '../../Commons';
-import { WalletEntity } from '../../Entities/Wallet.Entity';
+import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls.js';
+import { isNullOrBlank } from '../../Commons/index.js';
+import { WalletEntity } from '../../Entities/Wallet.Entity.js';
+import fetchWrapper from "../../lib/FetchWrapper/FetchWrapper.FrontEnd.js";
 
 export class WalletFrontEndApiCalls extends BaseFrontEndApiCalls {
     protected static _Entity = WalletEntity;
@@ -15,7 +16,7 @@ export class WalletFrontEndApiCalls extends BaseFrontEndApiCalls {
                 throw `pkh not defined`;
             }
             //-------------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/is-core-team/${pkh}`);
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/is-core-team/${pkh}`);
             //-------------------------
             if (response.status === 200) {
                 const data = await response.json();

@@ -1,6 +1,7 @@
-import { OptionsGet, isEqual, isNullOrBlank, optionsGetDefault, toJson } from '../../Commons';
-import { AddressToFollowEntity } from '../../Entities/AddressToFollow.Entity';
-import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls';
+import fetchWrapper from '../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
+import { OptionsGet, isEqual, isNullOrBlank, optionsGetDefault, toJson } from '../../Commons/index.js';
+import { AddressToFollowEntity } from '../../Entities/AddressToFollow.Entity.js';
+import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls.js';
 
 export class AddressToFollowFrontEndApiCalls extends BaseFrontEndApiCalls {
     protected static _Entity = AddressToFollowEntity;
@@ -16,7 +17,7 @@ export class AddressToFollowFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
             const body = toJson({ event: 'sync', force, tryCountAgain: false });
             //-------------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${addressToFollow.apiRouteToCall}/${addressToFollow.address}`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${addressToFollow.apiRouteToCall}/${addressToFollow.address}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -43,7 +44,7 @@ export class AddressToFollowFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
             const body = toJson({ event: 'sync', force });
             //-------------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/sync-all`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/sync-all`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -68,7 +69,7 @@ export class AddressToFollowFrontEndApiCalls extends BaseFrontEndApiCalls {
     public static async cleanApi(force: boolean = false): Promise<boolean> {
         try {
             //-------------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/clean`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/clean`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -98,11 +99,11 @@ export class AddressToFollowFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
             let response;
             if (isEqual(optionsGet, optionsGetDefault)) {
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/by-address/${address}`);
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/by-address/${address}`);
             } else {
                 const body = toJson(optionsGet);
                 //-------------------------
-                response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/by-address/${address}`, {
+                response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/by-address/${address}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

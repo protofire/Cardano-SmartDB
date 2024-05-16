@@ -1,7 +1,9 @@
-import { CascadeUpdate, OptionsCreateOrUpdate, OptionsDelete, OptionsGet, OptionsGetOne, console_logLv2, getCombinedConversionFunctions, tabs } from '../../Commons/index.BackEnd';
-import { BackEndAppliedFor } from '../../Commons/Decorator.BackEndAppliedFor';
-import { BaseEntity } from '../../Entities/Base/Base.Entity';
-import { BaseBackEndMethods } from './Base.BackEnd.Methods';
+import { console_logLv2 } from '../../Commons/BackEnd/globalLogs.js';
+import { BackEndAppliedFor } from '../../Commons/Decorators/Decorator.BackEndAppliedFor.js';
+import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
+import { CascadeUpdate, OptionsCreateOrUpdate, OptionsDelete, OptionsGet, OptionsGetOne } from '../../Commons/types.js';
+import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
+import { BaseBackEndMethods } from './Base.BackEnd.Methods.js';
 
 @BackEndAppliedFor(BaseEntity)
 export class BaseBackEndApplied {

@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { Convertible, asEntity, type CS, type TN } from '../Commons';
-import { BaseEntity } from './Base/Base.Entity';
+import { Convertible, asEntity, type CS, type TN } from '../Commons/index.js';
+import { BaseEntity } from './Base/Base.Entity.js';
 
 @asEntity()
 export class AddressToFollowEntity extends BaseEntity {

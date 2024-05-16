@@ -1,3 +1,4 @@
+import { useAppStore } from 'smart-db';
 import styles from './Layout.module.scss';
 import { useState, useEffect } from 'react';
 
@@ -8,5 +9,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         setIsRefreshing(false);
     }, []);
     //-------------------------------------
-    return <div>{children}</div>;
+    const appStore = useAppStore();
+    //--------------------------------------
+    return <div>{appStore.swInitApiCompleted && children}</div>;
 }

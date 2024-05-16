@@ -1,9 +1,9 @@
 import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
-import { MongoAppliedFor } from '../Commons/Decorator.MongoAppliedFor';
-import { EmulatorEntity } from './Emulator.Entity';
+import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
+import { EmulatorEntity } from './Emulator.Entity.js';
 import { PrivateKey } from "lucid-cardano";
-import { BaseEntityMongo } from './Base/Base.Entity.Mongo';
+import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
 
 @MongoAppliedFor([EmulatorEntity])
 export class EmulatorEntityMongo extends BaseEntityMongo {

@@ -1,12 +1,17 @@
 //----------------------------------------------------------------------
 
-// import { NextApiRequest, NextApiResponse } from 'next';
-// import { v4 as uuidv4 } from 'uuid';
-
-// export function requestId(req: NextApiRequest, res: NextApiResponse, next: () => void) {
-//     req.requestId = uuidv4(); // Attach a unique ID to each request
-//     next();
-// }
+import { v4 } from 'uuid';
 
 import { createNamespace } from 'cls-hooked';
 export const requestContext = createNamespace('requestContext');
+
+//----------------------------------------------------------------------
+
+export function requestId() {
+    //--------------------------------------
+    const requestId = v4();
+    //--------------------------------------
+    requestContext.set('requestId', requestId);
+}
+
+//----------------------------------------------------------------------

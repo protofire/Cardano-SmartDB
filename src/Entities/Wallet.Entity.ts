@@ -1,7 +1,7 @@
 import { type StakeKeyHash, type PaymentKeyHash } from "lucid-cardano";
 import 'reflect-metadata';
-import { Convertible, asEntity } from '../Commons';
-import { BaseEntity } from './Base/Base.Entity';
+import { Convertible, asEntity } from '../Commons/index.js';
+import { BaseEntity } from './Base/Base.Entity.js';
 
 //FIXME no puede derivar normalMayz por que normal MAYZ usa WalletEntity para controlar y se arma dependencia circular
 
@@ -42,11 +42,16 @@ export class WalletEntity extends BaseEntity {
     @Convertible()
     isCoreTeam!: boolean;
 
+    isCoreTeam2!: boolean;
+
+    isCoreTeam3?: boolean;
+
     @Convertible()
     testnet_address!: string;
 
     @Convertible()
     mainnet_address!: string;
+
 
     // #endregion fields
 }

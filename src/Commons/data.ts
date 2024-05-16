@@ -1,7 +1,7 @@
 // #region Lucid Data & Cbor Hex serialize and deserialize
 
 import { Data, C, fromHex, Constr } from "lucid-cardano";
-import { showPtrInHex, showData } from "./utils";
+import { showPtrInHex, showData } from "./utils.js";
 
 export function objToCborHex(data: any, propertyKey?: string) {
     try {

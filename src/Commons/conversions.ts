@@ -1,6 +1,6 @@
 import { Assets, Emulator } from "lucid-cardano";
-import { Token_With_Metadata_And_Amount, Token_With_Price_And_Date } from './types';
-import { concatUint8Arrays, stringHexToUint8Array, intToUint8Array } from "./utils";
+import { Token_With_Metadata_And_Amount, Token_With_Price_And_Date } from './types.js';
+import { concatUint8Arrays, intToUint8Array, stringHexToUint8Array } from "./utils.js";
 
 //--------------------------------------------------------
 
@@ -44,7 +44,7 @@ export const deserealizeTokenWithMetadataAndAmount = (value: any | undefined): T
     if (value === undefined) return undefined;
     const assetDetails: Token_With_Metadata_And_Amount = {
         CS: (value as any).CS,
-        TN: (value as any).TN,
+        TN_Hex: (value as any).TN,
         amount: BigInt((value as any).amount),
         decimals: (value as any).decimals,
         image: (value as any).image,
@@ -83,7 +83,7 @@ export const deserealizeEmulator = (serialized: any | undefined): Emulator | und
 export function tokenWithDetailsToUint8Array(data: Token_With_Price_And_Date): Uint8Array {
     return concatUint8Arrays([
         stringHexToUint8Array(data.CS),
-        stringHexToUint8Array(data.TN),
+        stringHexToUint8Array(data.TN_Hex),
         data.priceADAx1e6 !== undefined ? intToUint8Array(data.priceADAx1e6) : new Uint8Array([]),
         data.date !== undefined ? intToUint8Array(data.date) : new Uint8Array([]),
     ]);

@@ -1,7 +1,7 @@
 
 //---------------------------------------------------------------
 
-import { toJson } from "./utils";
+import { toJson } from "./utils.js";
 
 export function explainErrorTx(errorIn: any): string {
     //search if substring 'ScriptFailures' is in error
