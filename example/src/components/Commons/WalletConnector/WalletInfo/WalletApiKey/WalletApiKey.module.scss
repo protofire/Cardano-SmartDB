@@ -1,29 +1,12 @@
 @use '@example/styles/shared.module.scss';
 
-.walletConnectorContainer {
+.walletApiKeyContainer {
     overflow-y: auto;
     height: 330px;
     display: flex;
     flex-direction: column;
     gap: 10px;
     align-items: center;
-
-    .walletKey {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-
-        .subTitle {
-            font-size: small;
-        }
-
-        input {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            width: 235px;
-        }
-    }
 }
 
 // ModalStyles.scss

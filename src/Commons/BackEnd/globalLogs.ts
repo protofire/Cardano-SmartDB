@@ -39,7 +39,6 @@ export function tabs(change: number = 0) {
 }
 
 export function enhanceResWithLogFlushing(res: NextApiResponse): NextApiResponse {
-    // if ((waitForFLush as any) === true) {
     const originalJson = res.json.bind(res);
     const originalStatus = res.status.bind(res);
     res.json = (body) => {
@@ -57,9 +56,6 @@ export function enhanceResWithLogFlushing(res: NextApiResponse): NextApiResponse
         return responseWithFlush;
     };
     return res;
-    // } else {
-    //     return res;
-    // }
 }
 
 export function flushLogs() {

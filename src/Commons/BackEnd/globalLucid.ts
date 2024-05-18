@@ -4,12 +4,27 @@ import { globalEmulator } from './globalEmulator.js';
 import { console_log } from './globalLogs.js';
 import { BlockfrostCustomProviderBackEnd } from '../../lib/BlockFrost/BlockFrost.BackEnd.js';
 
-export interface GlobalLucid {
+interface GlobalLucid {
     lucid: Lucid | undefined;
 }
-export const globalLucid = {
-    lucid: undefined as Lucid | undefined,
-} as GlobalLucid;
+
+let globalState: any;
+
+if (typeof window !== 'undefined') {
+    // Client-side environment
+    globalState = window;
+} else {
+    // Server-side environment (Node.js)
+    globalState = global;
+}
+
+if (!globalState.globalLucid) {
+    globalState.globalLucid ={
+        lucid: undefined as Lucid | undefined,
+    } as GlobalLucid;
+}
+
+export const globalLucid = globalState.globalLucid;
 
 export async function getGlobalLucid(refresh: boolean = false): Promise<Lucid> {
     //-----------------

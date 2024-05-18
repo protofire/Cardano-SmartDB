@@ -1,3 +1,5 @@
+@use '@example/styles/shared.module.scss';
+
 .walletList {
     display: flex;
     flex-direction: column;
@@ -11,18 +13,18 @@
         align-items: center;
         justify-content: space-between;
 
-        .walletLeft{
+        .walletLeft {
             display: flex;
             flex-direction: row;
             gap: 10px;
             align-items: center;
         }
-        .walletImg{
+        .walletImg {
             width: 30px;
             height: 30px;
         }
-        
-        .walletInstall{
+
+        .walletInstall {
             width: 100px;
         }
     }

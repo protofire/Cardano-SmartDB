@@ -4,18 +4,72 @@ import { LucidLUCID_NETWORK_MAINNET_NAME, LucidLUCID_NETWORK_PREPROD_NAME, Lucid
 import { showData } from '../../utils.js';
 import { console_error, console_log } from '../globalLogs.js';
 import { globalSettings } from '../globalSettings.js';
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ * tags:
+ *   name: Blockfrost Proxy
+ *   description: Proxies requests to the Blockfrost API
+ */
+
+/**
+ * @swagger
+ * /api/blockfrost/{path*}:
+ *   get:
+ *     summary: Proxy request to Blockfrost API
+ *     tags: [Blockfrost Proxy]
+ *     description: This endpoint proxies requests to the Blockfrost API. For detailed information on the Blockfrost API endpoints, refer to the [Blockfrost API documentation](https://docs.blockfrost.io/).
+ *     parameters:
+ *       - in: path
+ *         name: path*
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The path of the Blockfrost API endpoint to proxy.
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response from Blockfrost API
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *                   example: Invalid target or project id
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *                   example: Internal server error
+ */
+
 
 // This is generally not recommended but can be a temporary workaround
 const httpProxyMiddleware = require('next-http-proxy-middleware/build/index').default;
 
-// export const blockfrostProxyApiHandler = async (req: NextApiRequestAuthenticated, res: NextApiResponse) => {
-//     if (isEmulator) {
-//         console_error(0, `Blockfrost proxy`, `Blockfrost proxy not available in emulator`);
-//         return res.status(400).json({ error: 'Blockfrost proxy not available in emulator' });
-//     } else {
-//         return await initApiRequestWithContext(0, `Blockfrost proxy`, req, res, blockfrostProxyWithContext, true, false, false, false, false);
-//     }
-// };
 
 export const blockfrostProxyApiHandlerWithContext = async (req: NextApiRequestAuthenticated, res: NextApiResponse) => {
     //--------------------

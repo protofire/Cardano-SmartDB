@@ -11,11 +11,6 @@ export const initApiRequestWithContext = async (
     req: NextApiRequestAuthenticated,
     res: NextApiResponse,
     apiHandler: (req: NextApiRequestAuthenticated, res: NextApiResponse) => Promise<void>
-    // swUseGlobalSettings: boolean = true,
-    // swUseGlobalEmulator: boolean = true,
-    // swUseGlobalLucid: boolean = true,
-    // swUseGlobalBlockchainTime: boolean = true,
-    // swUseGlobalTransactionStatusUpdater: boolean = true
 ) => {
     return new Promise<void>((resolve) => {
         requestContext.run(async () => {
@@ -35,6 +30,22 @@ export const initApiRequestWithContext = async (
                 console_logLv2(0, name, `Api handler - ${showData({ query: req.query, body: req.body }, false)} - Init`);
             }
             //--------------------
+            await apiHandler(req, res);
+            //--------------------------------------
+            resolve();
+        });
+    });
+};
+
+
+export const warpApiRequestWithContext = async (
+    req: NextApiRequestAuthenticated,
+    res: NextApiResponse,
+    apiHandler: (req: NextApiRequestAuthenticated, res: NextApiResponse) => Promise<void>
+) => {
+    return new Promise<void>((resolve) => {
+        requestContext.run(async () => {
+            //--------------------------------------
             await apiHandler(req, res);
             //--------------------------------------
             resolve();

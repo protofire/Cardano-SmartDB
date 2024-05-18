@@ -15,10 +15,13 @@
         "lint": "next lint",
         "test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js",
         "standalone": "TS_NODE_PROJECT='tsconfig-for-standalone.json' ts-node ./src/__standalone__/minADA.ts",
-        "watchInstall": "chokidar \"../smart-db.tgz\" -c \"npm install ../smart-db.tgz --force\""
+        "watchInstall": "chokidar \"../smart-db.tgz\" -c \"npm install ../smart-db.tgz --force\"",
+        "swagger-dev": "ts-node -P tsconfig.server.json ./_swagger/server.ts",
+        "swagger-start": "NODE_ENV=production ts-node -P tsconfig.server.json ./_swagger/server.ts"
     },
     "dependencies": {
         "easy-peasy": "^5.0.4",
+        "esm": "^3.2.25",
         "lucid-cardano": "^0.10.7",
         "next": "^12.1.6",
         "next-auth": "^4.22.1",
@@ -29,7 +32,10 @@
         "react-dom": "18.2.0",
         "react-modal": "^3.16.1",
         "react-notifications-component": "^4.0.1",
-        "smart-db": "file:../smart-db.tgz"
+        "smart-db": "file:../smart-db.tgz",
+        "swagger-jsdoc": "^6.2.8",
+        "swagger-ui-express": "^5.0.0",
+        "tsx": "^4.10.4"
     },
     "devDependencies": {
         "@next/eslint-plugin-next": "^13.4.12",
@@ -43,6 +49,7 @@
         "@types/react": "18.2.21",
         "@types/react-dom": "18.2.7",
         "@types/react-modal": "^3.16.3",
+        "@types/swagger-ui-express": "^4.1.6",
         "@types/uuid": "^9.0.8",
         "@typescript-eslint/eslint-plugin": "^5.61.0",
         "@typescript-eslint/parser": "^5.61.0",

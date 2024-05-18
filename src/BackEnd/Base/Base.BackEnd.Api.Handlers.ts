@@ -15,11 +15,596 @@ import {
     yupValidateOptionsGetOne,
     yupValidateOptionsUpdate,
 } from '../../Commons/index.js';
-import { console_errorLv2, console_logLv2, initApiRequestWithContext } from '../../Commons/index.BackEnd.js';
+import { console_errorLv2, console_logLv2 } from '../../Commons/BackEnd/globalLogs.js';
+import yup from '../../Commons/yupLocale.js';
 import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
 import { NextApiRequestAuthenticated } from '../../lib/Auth/types.js';
 import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
-import yup from '../../Commons/yupLocale.js';
+
+// #region api swagger
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ * tags:
+ *   name: Normal Entities
+ *   description: Operations related to normal entities (not linked to Blockchain Datums)
+ */
+/**
+ * @swagger
+ * /api/{entity}:
+ *   post:
+ *     summary: Create an entity
+ *     tags: [Normal Entities]
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               createFields:
+ *                 type: object
+ *                 description: Fields required to create the entity
+ *     responses:
+ *       200:
+ *         description: Entity created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+
+/**
+ * @swagger
+ * /api/{entity}/update/{id}:
+ *   post:
+ *     summary: Update an entity by ID
+ *     tags: [Normal Entities]
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               updateFields:
+ *                 type: object
+ *                 description: Fields required to update the entity
+ *     responses:
+ *       200:
+ *         description: Entity updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{entity}/exists/{id}:
+ *   get:
+ *     summary: Check if an entity exists by ID
+ *     tags: [Normal Entities]
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Entity exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 swExists:
+ *                   type: boolean
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{entity}/exists:
+ *   post:
+ *     summary: Check if an entity exists by parameters
+ *     tags: [Normal Entities]
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               paramsFilter:
+ *                 type: object
+ *                 description: Parameters to filter the entity
+ *     responses:
+ *       200:
+ *         description: Entity exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 swExists:
+ *                   type: boolean
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+/**
+ * @swagger
+ * /api/{entity}/{id}:
+ *   get:
+ *     summary: Get an entity by ID
+ *     tags: [Normal Entities]
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Entity retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{entity}/{id}:
+ *   delete:
+ *     summary: Delete an entity by ID
+ *     tags: [Normal Entities]
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Entity deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity not found
+ *       500:
+ *         description: Internal server error
+ */
+
+
+/**
+ * @swagger
+ * /api/{entity}/all:
+ *   get:
+ *     summary: Get all entities
+ *     tags: [Normal Entities]
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Entities retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{entity}/by-params:
+ *   post:
+ *     summary: Get entities by parameters
+ *     tags: [Normal Entities]
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               paramsFilter:
+ *                 type: object
+ *                 description: Parameters to filter the entities
+ *     responses:
+ *       200:
+ *         description: Entities retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{entity}/count:
+ *   post:
+ *     summary: Get the count of entities by parameters
+ *     tags: 
+ *       - Normal Entities
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               paramsFilter:
+ *                 type: object
+ *                 description: Parameters to filter the entities
+ *     responses:
+ *       200:
+ *         description: Count retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: number
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+
+/**
+ * @swagger
+ * /api/{entity}/loadRelationMany/{id}/{relation}:
+ *   get:
+ *     summary: Load many relations for an entity
+ *     tags: [Normal Entities]
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *       - in: path
+ *         name: relation
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the relation
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Relations loaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{entity}/loadRelationMany/{id}/{relation}:
+ *   post:
+ *     summary: Load many relations for an entity with options
+ *     tags: [Normal Entities]
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *       - in: path
+ *         name: relation
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the relation
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               optionsGet:
+ *                 type: object
+ *                 description: Options to filter the relations
+ *     responses:
+ *       200:
+ *         description: Relations loaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{entity}/loadRelationOne/{id}/{relation}:
+ *   get:
+ *     summary: Load one relation for an entity
+ *     tags: [Normal Entities]
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *       - in: path
+ *         name: relation
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the relation
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Relation loaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity or relation not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{entity}/loadRelationOne/{id}/{relation}:
+ *   post:
+ *     summary: Load one relation for an entity with options
+ *     tags: [Normal Entities]
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *       - in: path
+ *         name: relation
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the relation
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               optionsGet:
+ *                 type: object
+ *                 description: Options to filter the relation
+ *     responses:
+ *       200:
+ *         description: Relation loaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity or relation not found
+ *       500:
+ *         description: Internal server error
+ */
+// #endregion api swagger
 
 // Api Handlers siempre llevan una Entity y el backend methods, es especifico para cada entidad
 // Se tiene entonces que crear uno por cada Entidad SI o SI
@@ -118,29 +703,9 @@ export class BaseBackEndApiHandlers {
 
     // #region api handlers
 
-    // public static async mainApiHandler<T extends BaseEntity>(req: NextApiRequestAuthenticated, res: NextApiResponse) {
-    //     return await initApiRequestWithContext(2, this._Entity.className(), req, res, this.mainApiHandlerWithContext.bind(this));
-    // }
-
     protected static async mainApiHandlerWithContext<T extends BaseEntity>(req: NextApiRequestAuthenticated, res: NextApiResponse) {
-        //--------------------
+        //--------------------------------------
         const { query } = req.query;
-        //--------------------
-        // const AuthBackEnd = (await import('../../lib/Auth/Auth.BackEnd.js')).AuthBackEnd;
-        // //--------------------------------------
-        // try {
-        //     await AuthBackEnd.addCorsHeaders(req, res);
-        // } catch (error) {
-        //     console_errorLv2(0, this._Entity.className(), `Api handler - Error: ${error}`);
-        //     return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
-        // }
-        // //--------------------
-        // try {
-        //     await AuthBackEnd.authenticate(req, res);
-        // } catch (error) {
-        //     console_errorLv2(0, this._Entity.className(), `Api handler - Error: ${error}`);
-        //     return res.status(401).json({ error: 'Unauthorized' });
-        // }
         //--------------------
         if (query === undefined || query.length === 0) {
             return await this.createApiHandlers(req, res);

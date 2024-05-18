@@ -1,11 +1,10 @@
-import { initAllDecoratorsExample } from '@example/src/lib/DummyExample/backEnd';
+import { initBackEnd } from '@example/src/lib/DummyExample/backEnd';
 import { smartDBMainApiHandler } from 'smart-db/backEnd';
-initAllDecoratorsExample();
+initBackEnd();
 
 export const config = {
     api: {
         bodyParser: false,
-        // externalResolver: true,
     },
 };
 

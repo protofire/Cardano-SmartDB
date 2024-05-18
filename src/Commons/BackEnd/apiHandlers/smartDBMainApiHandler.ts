@@ -1,15 +1,36 @@
 import { NextApiResponse } from 'next';
-import { AuthBackEnd } from '../../../lib/Auth/Auth.BackEnd.js';
+import { NextAuthOptions } from 'next-auth';
+import qs from 'qs';
+import getRawBody from 'raw-body';
+import { AuthBackEnd, authOptionsBase, credentialProviderConfig } from '../../../lib/Auth/Auth.BackEnd.js';
 import { TimeBackEndApiHandlers } from '../../../lib/Time/Time.BackEnd.Api.Handlers.js';
 import { NextApiRequestAuthenticated } from '../../../lib/index.js';
 import { RegistryManager } from '../../Decorators/registerManager.js';
-import { console_error, console_log } from '../globalLogs.js';
+import { console_error, console_log, enhanceResWithLogFlushing, flushLogs } from '../globalLogs.js';
 import { initGlobals } from '../initGlobals.js';
 import { blockfrostProxyApiHandlerWithContext } from './blockFrostApiHandler.js';
 import { healthApiHandlerWithContext } from './healthApiHandler.js';
 import { initApiHandlerWithContext } from './initApiHandler.js';
 import { initApiRequestWithContext } from './initApiRequestWithContext.js';
-import getRawBody from 'raw-body';
+import { requestContext, requestId } from '../globalContext.js';
+const CredentialsProvider = require('next-auth/providers/credentials').default;
+const NextAuth = require('next-auth').default;
+
+export async function parseBody(req: NextApiRequestAuthenticated) {
+    const rawBody = await getRawBody(req);
+    if (rawBody.length === 0) {
+        return {}; // Handle empty body case
+    }
+    const contentType = req.headers['content-type'];
+    if (contentType === 'application/json') {
+        return JSON.parse(rawBody.toString('utf8'));
+    } else if (contentType === 'application/x-www-form-urlencoded') {
+        return qs.parse(rawBody.toString('utf8'));
+    } else {
+        throw new Error(`Unsupported content type: ${contentType}`);
+    }
+}
+
 
 // entrada de todas las llamadas api. Llama al metodo mainApiHandler del backendApiHandler correspondiente
 
@@ -19,56 +40,95 @@ export async function smartDBMainApiHandler(req: NextApiRequestAuthenticated, re
 
 async function smartDBMainApiHandlerWithContext(req: NextApiRequestAuthenticated, res: NextApiResponse) {
     try {
-        // initAllDecorators();
         //--------------------
-        const { query } = req.query;
+        console_log(1, `Api handler`, `Requested API URL: ${req.url}`);
         //--------------------
-        if (query !== undefined && query.length > 0) {
+        // Extract the full API route path
+        const fullApiRoute =
+            req.url
+                ?.split('?')[0]
+                .replace(/^\/api\//, '')
+                .split('/') || [];
+        //--------------------
+        if (fullApiRoute.length > 0) {
             //--------------------
-            const requestedApiRoute = (query as string[]).shift(); // Assuming API route is at index 0
+            // Extract the requested API route
+            const requestedApiRoute = fullApiRoute.shift();
             //--------------------
-            console_log(1, `Api handler`, `Requested API Route: ${requestedApiRoute}`);
+            // Adjust the query object
+            req.query.query = fullApiRoute;
+            //--------------------
+            console_log(0, `Api handler`, `Requested API Route: ${requestedApiRoute}`);
             //--------------------
             if (requestedApiRoute !== 'blockfrost') {
+                //--------------------------------------
                 // Manually parse the body for all routes except blockfrost
+                //--------------------------------------
                 try {
-                    const rawBody = await getRawBody(req);
-                    if (rawBody.length > 0) {
-                        req.body = JSON.parse(rawBody.toString('utf8'));
-                    } else {
-                        req.body = {}; // Handle empty body case
-                    }
+                    console_log(0, `Api handler`, `Parsing Body...`);
+                    req.body = await parseBody(req);
                 } catch (error) {
-                    console.error('Error parsing body:', error);
+                    console_error(-1, `Api handler`, `Error parsing body: ${error}`);
                     return res.status(400).json({ error: 'Invalid Body input' });
                 }
             }
             //--------------------------------------
             if (requestedApiRoute === 'init') {
+                //--------------------------------------
                 // Handle Init Route
                 //--------------------------------------
+                console_log(0, `Api handler`, `Handle Init Route`);
+                //--------------------
                 await initGlobals(true, false, false, false, false);
                 //--------------------------------------
-                // await initApiRequestWithContext(0, `Api handler`, req, res, initApiHandlerWithContext);
+                try {
+                    await AuthBackEnd.addCorsHeaders(req, res);
+                } catch (error) {
+                    console_error(-1, `Api handler`, `Error: ${error}`);
+                    return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
+                }
                 //--------------------------------------
-
                 await initApiHandlerWithContext(req, res);
                 //--------------------------------------
                 return;
             } else if (requestedApiRoute === 'health') {
+                //--------------------------------------
                 // Handle Health Route
                 //--------------------------------------
-                // await initApiRequestWithContext(0, `Api handler`, req, res, healthApiHandlerWithContext);
+                console_log(0, `Api handler`, `Handle Health Route`);
+                //--------------------
+                await initGlobals(true, false, false, false, false);
+                //--------------------------------------
+                try {
+                    await AuthBackEnd.addCorsHeaders(req, res);
+                } catch (error) {
+                    console_error(-1, `Api handler`, `Error: ${error}`);
+                    return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
+                }
                 //--------------------------------------
                 await healthApiHandlerWithContext(req, res);
                 //--------------------------------------
                 return;
-            } else if (requestedApiRoute === 'time') {
+            } else if (requestedApiRoute === 'time' && fullApiRoute.length > 0) {
                 //--------------------------------------
-                const requestedApiRouteTime = (query as string[]).shift(); // Assuming API route is at index 0
+                // Handle Time Route
                 //--------------------------------------
+                console_log(0, `Api handler`, `Handle Time Route`);
+                //--------------------
                 await initGlobals();
                 //--------------------------------------
+                try {
+                    await AuthBackEnd.addCorsHeaders(req, res);
+                } catch (error) {
+                    console_error(-1, `Api handler`, `Error: ${error}`);
+                    return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
+                }
+                //--------------------------------------
+                const requestedApiRouteTime = fullApiRoute.shift();
+                //--------------------
+                // Adjust the query object
+                req.query.query = fullApiRoute;
+                //--------------------
                 if (requestedApiRouteTime === 'get') {
                     await TimeBackEndApiHandlers.getServerTimeApiHandlerWithContext(req, res);
                     return;
@@ -77,50 +137,89 @@ async function smartDBMainApiHandlerWithContext(req: NextApiRequestAuthenticated
                     return;
                 }
                 //--------------------------------------
-            } else if (requestedApiRoute === 'smart-db-auth' && query.length > 0) {
+            } else if (requestedApiRoute === 'auth') {
                 //--------------------------------------
-                const requestedApiRouteNextAuth = (query as string[]).shift(); // Assuming API route is at index 0
+                // Handle nexth-auth routes
                 //--------------------------------------
-                if (requestedApiRouteNextAuth === 'get-challengue') {
-                    // Handle NextAuth routes
-                    //--------------------------------------
-                    await initGlobals();
-                    //--------------------------------------
-                    // await initApiRequestWithContext(0, `Api handler`, req, res, AuthBackEnd.getChallengueTokenApiHandlerWithContext.bind(AuthBackEnd));
-                    await AuthBackEnd.getChallengueTokenApiHandlerWithContext(req, res);
-                    //--------------------------------------
-                    return;
-                } else if (requestedApiRouteNextAuth === 'get-token') {
-                    // Handle NextAuth routes
-                    //--------------------------------------
-                    await initGlobals();
-                    //--------------------------------------
-                    // await initApiRequestWithContext(0, `Api handler`, req, res, AuthBackEnd.getJWTTokenWithCredentialsApiHandlerWithContext.bind(AuthBackEnd));
-                    await AuthBackEnd.getJWTTokenWithCredentialsApiHandlerWithContext(req, res);
-                    //--------------------------------------
-                    return;
-                }
-            } else if (requestedApiRoute === 'blockfrost') {
-                // Handle Blockfrost routes
-                //--------------------------------------
+                console_log(0, `Api handler`, `Handle nexth-auth Route`);
+                //--------------------
                 await initGlobals(true, false, false, false, false);
                 //--------------------------------------
                 try {
                     await AuthBackEnd.addCorsHeaders(req, res);
                 } catch (error) {
-                    console_error(0, `Api handler`, `Error: ${error}`);
+                    console_error(-1, `Api handler`, `Error: ${error}`);
+                    return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
+                }
+                //--------------------------------------
+                const authOptions: NextAuthOptions = {
+                    ...authOptionsBase,
+                    providers: [CredentialsProvider(credentialProviderConfig)],
+                };
+                //--------------------------------------
+                await NextAuth(req, res, authOptions);
+                //--------------------------------------
+                flushLogs();
+                //--------------------------------------
+                return;
+                //--------------------------------------
+            } else if (requestedApiRoute === 'smart-db-auth' && fullApiRoute.length > 0) {
+                //--------------------------------------
+                // Handle smart-db-auth routes
+                //--------------------------------------
+                console_log(0, `Api handler`, `Handle smart-db-auth Route`);
+                //--------------------
+                await initGlobals();
+                //--------------------------------------
+                try {
+                    await AuthBackEnd.addCorsHeaders(req, res);
+                } catch (error) {
+                    console_error(-1, `Api handler`, `Error: ${error}`);
+                    return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
+                }
+                //--------------------------------------
+                const requestedApiRouteNextAuth = fullApiRoute.shift();
+                //--------------------
+                // Adjust the query object
+                req.query.query = fullApiRoute;
+                //--------------------
+                if (requestedApiRouteNextAuth === 'get-challengue') {
+                    //--------------------------------------
+                    await AuthBackEnd.getChallengueTokenApiHandlerWithContext(req, res);
+                    //--------------------------------------
+                    return;
+                } else if (requestedApiRouteNextAuth === 'get-token') {
+                    //--------------------------------------
+                    await AuthBackEnd.getJWTTokenWithCredentialsApiHandlerWithContext(req, res);
+                    //--------------------------------------
+                    return;
+                }
+            } else if (requestedApiRoute === 'blockfrost') {
+                //--------------------------------------
+                // Handle Blockfrost routes
+                //--------------------------------------
+                console_log(0, `Api handler`, `Handle Blockfrost Route`);
+                //--------------------
+                await initGlobals(true, false, false, false, false);
+                //--------------------------------------
+                try {
+                    await AuthBackEnd.addCorsHeaders(req, res);
+                } catch (error) {
+                    console_error(-1, `Api handler`, `Error: ${error}`);
                     return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
                 }
                 //--------------------
                 try {
                     await AuthBackEnd.authenticate(req, res);
                 } catch (error) {
-                    console_error(0, `Api handler`, `Error: ${error}`);
+                    console_error(-1, `Api handler`, `Error: ${error}`);
                     return res.status(401).json({ error: 'Unauthorized' });
                 }
                 //-------------------------
-                // await initApiRequestWithContext(0, `Api handler`, req, res, blockfrostProxyApiHandlerWithContext);
                 await blockfrostProxyApiHandlerWithContext(req, res);
+                //-------------------------
+                flushLogs();
+                //-------------------------
                 return;
             }
             //--------------------------------------
@@ -167,20 +266,21 @@ async function smartDBMainApiHandlerWithContext(req: NextApiRequestAuthenticated
                     try {
                         await AuthBackEnd.addCorsHeaders(req, res);
                     } catch (error) {
-                        console_error(0, `Api handler`, `Error: ${error}`);
+                        console_error(-1, `Api handler`, `Error: ${error}`);
                         return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
                     }
                     //--------------------
                     try {
                         await AuthBackEnd.authenticate(req, res);
                     } catch (error) {
-                        console_error(0, `Api handler`, `Error: ${error}`);
+                        console_error(-1, `Api handler`, `Error: ${error}`);
                         return res.status(401).json({ error: 'Unauthorized' });
                     }
-                    //-------------------------
-                    // await initApiRequestWithContext(0, `Api handler`, req, res, backendApiHandlers.mainApiHandler(req, res).bind(entitiesRegistryEntity));
-                    await backendApiHandlers.mainApiHandlerWithContext(req, res);
+                    //--------------------------------------
+                    console_log(0, `Api handler`, `Handle Entity Route`);
                     //--------------------
+                    await backendApiHandlers.mainApiHandlerWithContext(req, res);
+                    //--------------------------------------
                     return;
                 } else {
                     console_error(-1, `Api handler`, `No API handler found for entity: ${entitiesRegistryEntity._className}`);
@@ -188,8 +288,8 @@ async function smartDBMainApiHandlerWithContext(req: NextApiRequestAuthenticated
                     return;
                 }
             } else {
-                console_error(-1, `Api handler`, `No entity found for API route: ${requestedApiRoute}`);
-                res.status(404).json({ error: `No entity found for API route: ${requestedApiRoute}` });
+                console_error(-1, `Api handler`, `No API handler found for route: ${requestedApiRoute}`);
+                res.status(404).json({ error: `No API handler found for route: ${requestedApiRoute}` });
                 return;
             }
         } else {

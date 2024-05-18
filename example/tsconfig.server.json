@@ -1,0 +1,19 @@
+
+{
+    "compilerOptions": {
+        "target": "ES2021",
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "baseUrl": "./",
+        "paths": {
+            "*": ["node_modules/*", "src/types/*"]
+        }
+    },
+    "include": ["_swagger/**/*"],
+    "exclude": ["node_modules", "dist"]
+}

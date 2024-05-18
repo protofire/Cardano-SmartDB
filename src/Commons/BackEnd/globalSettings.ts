@@ -1,12 +1,27 @@
 import { SiteSettingsEntity } from '../../Entities/SiteSettings.Entity.js';
 import { console_log } from './globalLogs.js';
 
-export interface GlobalSettings {
+interface GlobalSettings {
     siteSettings: SiteSettingsEntity | undefined;
 }
-export const globalSettings = {
-    siteSettings: undefined as SiteSettingsEntity | undefined,
-} as GlobalSettings;
+
+let globalState: any;
+
+if (typeof window !== 'undefined') {
+    // Client-side environment
+    globalState = window;
+} else {
+    // Server-side environment (Node.js)
+    globalState = global;
+}
+
+if (!globalState.globalSettings) {
+    globalState.globalSettings ={
+        siteSettings: undefined as SiteSettingsEntity | undefined,
+    } as GlobalSettings
+}
+
+export const globalSettings = globalState.globalSettings;
 
 export async function getGlobalSettings(refresh: boolean = false) {
     console_log(0, `Global Settings`, `getGlobalSettings - refresh: ${refresh} - Loaded already: ${globalSettings.siteSettings !== undefined}`);

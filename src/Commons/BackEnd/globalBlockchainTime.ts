@@ -2,16 +2,31 @@ import { SYNC_SERVER_TIME_10M_MS, SYNC_SERVER_TIME_2M_MS } from '../Constants/co
 import { convertMillisToTime } from '../utils.js';
 import { console_log } from './globalLogs.js';
 
-export interface GlobalBlockChainTime {
+interface GlobalBlockChainTime {
     time: number | undefined;
     diffWithBlochain: number | undefined;
     lastFetch: number | undefined;
 }
-export const globalBlockChainTime = {
-    time: undefined,
-    diffWithBlochain: undefined,
-    lastFetch: undefined,
-} as GlobalBlockChainTime;
+
+let globalState: any;
+
+if (typeof window !== 'undefined') {
+    // Client-side environment
+    globalState = window;
+} else {
+    // Server-side environment (Node.js)
+    globalState = global;
+}
+
+if (!globalState.globalBlockChainTime) {
+    globalState.globalBlockChainTime = {
+        time: undefined,
+        diffWithBlochain: undefined,
+        lastFetch: undefined,
+    } as GlobalBlockChainTime;
+}
+
+export const globalBlockChainTime = globalState.globalBlockChainTime
 
 export async function getGlobalBlockchainTime(refresh: boolean = false): Promise<number | undefined> {
     //----------------ó

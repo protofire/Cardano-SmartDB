@@ -56,7 +56,7 @@ const WalletConnector: React.FC<Props> = ({ lucid }) => {
                 onClick={() => {
                     if (walletStore.isGettingWalletsDone === true) handleBtnConnectWallet();
                 }}
-                className={styles.buttonNormal}
+                className={styles.buttonCenterWithLoading}
             >
                 {walletStore.isConnected === false ? <>Connect Wallet</> : <>Wallet Info</>}
                 {status === 'loading' || walletStore.isGettingWalletsDone === false || walletStore.isConnecting || walletStore.isLoadingAnyData ? <LoaderButton /> : null}
@@ -78,7 +78,7 @@ const WalletConnector: React.FC<Props> = ({ lucid }) => {
                                     <input name="privateKey" value={privateKey ?? ''} onChange={(e) => setPrivateKey(e.target.value)} />
                                 </div>
                                 <button
-                                    className={styles.walletKeyBtn}
+                                    className={styles.buttonCenterWithLoading}
                                     onClick={async () => {
                                         if (privateKey !== undefined) {
                                             await walletFromKeyConnect(privateKey, createSignedSession, true, false);
@@ -103,9 +103,7 @@ const WalletConnector: React.FC<Props> = ({ lucid }) => {
                             <WalletInfo walletStore={walletStore} walletDisconnect={walletDisconnect} />
                         </>
                     )}
-                    <button className={styles.walletCloseBtn} onClick={() => setIsWalletConnectorModalOpen(false)}>
-                        Close
-                    </button>
+                    <button onClick={() => setIsWalletConnectorModalOpen(false)}>Close</button>
                 </div>
             </Modal>
         </>

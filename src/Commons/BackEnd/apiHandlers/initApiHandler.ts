@@ -2,9 +2,40 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { generateChallengueToken, generateCsrfToken } from '../../../lib/Auth/Auth.utils.js';
 import { console_error, console_log } from '../globalLogs.js';
 
-// export default async function initApiHandler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
-//     return await initApiRequestWithContext(0, `APP`, req, res, handlerWithContext);
-// }
+
+/**
+ * @swagger
+ * tags:
+ *   name: Init
+ *   description: Init endpoints
+ */
+
+/**
+ * @swagger
+ * /api/init:
+ *   post:
+ *     summary: Initialize the application
+ *     tags: [Init]
+ *     responses:
+ *       200:
+ *         description: Initialization complete
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: Initialization complete
+ *                 token:
+ *                   type: string
+ *                   example: YOUR_TOKEN
+ *                 csrfToken:
+ *                   type: string
+ *                   example: YOUR_CSRF_TOKEN
+ *       500:
+ *         description: Initialization failed
+ */
 
 export async function initApiHandlerWithContext(req: NextApiRequest, res: NextApiResponse) {
     try {
@@ -57,7 +88,7 @@ export async function initApiHandlerWithContext(req: NextApiRequest, res: NextAp
         res.status(200).json({ status: 'Initialization complete', token, csrfToken });
         //--------------------------------------
     } catch (error) {
-        console_error(0, `APP`, `${error}`);
+        console_error(-1, `APP`, `${error}`);
         return res.status(500).json({ error: `An error occurred while initializeing site: ${error}` });
     }
 }

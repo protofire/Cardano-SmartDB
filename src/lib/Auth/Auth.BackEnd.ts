@@ -28,6 +28,217 @@ import { generateChallengueToken, isValidChallengueToken, isValidCsrfToken, vali
 import { ChallengueJWTPayload, CredentialsAuthenticated, NextApiRequestAuthenticated, TokenJWTPayload } from './types.js';
 import { getGlobalBlockchainTime } from '../../Commons/BackEnd/globalBlockchainTime.js';
 
+
+/**
+ * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Authentication endpoints
+ */
+
+/**
+ * @swagger
+ * /api/auth/csrf:
+ *   get:
+ *     summary: Get CSRF token
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: CSRF token retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 csrfToken:
+ *                   type: string
+ *                   description: CSRF token
+ *                   example: YOUR_CSRF_TOKEN
+ */
+
+/**
+ * @swagger
+ * /api/auth/callback/credentials:
+ *   post:
+ *     summary: Authenticate user with credentials
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               csrfToken:
+ *                 type: string
+ *                 description: CSRF token
+ *                 example: YOUR_CSRF_TOKEN
+ *               token:
+ *                 type: string
+ *                 description: JWT token
+ *                 example: YOUR_JWT_TOKEN
+ *     responses:
+ *       200:
+ *         description: Authentication successful
+ *       401:
+ *         description: Authentication failed
+ */
+
+/**
+ * @swagger
+ * /api/auth/signout:
+ *   post:
+ *     summary: Sign out the user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               csrfToken:
+ *                 type: string
+ *                 description: CSRF token
+ *                 example: YOUR_CSRF_TOKEN
+ *     responses:
+ *       200:
+ *         description: Sign out successful
+ *       401:
+ *         description: Sign out failed
+ */
+
+
+/**
+ * @swagger
+ * tags:
+ *   name: Smart DB Auth
+ *   description: Authentication endpoints for Smart DB
+ */
+
+/**
+ * @swagger
+ * /api/smart-db-auth/get-challengue:
+ *   get:
+ *     summary: Get a challengue token
+ *     tags: [Smart DB Auth]
+ *     responses:
+ *       200:
+ *         description: Challengue token generated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: Challengue token
+ *       405:
+ *         description: Method not allowed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ */
+
+/**
+ * @swagger
+ * /api/smart-db-auth/get-token:
+ *   post:
+ *     summary: Get a JWT token
+ *     tags: [Smart DB Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               address:
+ *                 type: string
+ *                 description: Wallet address
+ *               walletNameOrSeedOrKey:
+ *                 type: string
+ *                 description: Wallet name or seed or key
+ *               useBlockfrostToSubmit:
+ *                 type: string
+ *                 description: Whether to use Blockfrost to submit
+ *               isWalletFromSeed:
+ *                 type: string
+ *                 description: Whether the wallet is from a seed
+ *               isWalletFromKey:
+ *                 type: string
+ *                 description: Whether the wallet is from a key
+ *               challengue:
+ *                 type: string
+ *                 description: Challengue string
+ *               signedChallengue:
+ *                 type: string
+ *                 description: Signed challengue string
+ *     responses:
+ *       200:
+ *         description: JWT token generated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: JWT token
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *       405:
+ *         description: Method not allowed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ */
+
+
+
+
+// For more information on each option (and a full list of options) go to
+// https://next-auth.js.org/configuration/options
+
+
 // import CredentialsProvider from "next-auth/providers/credentials";
 // import Auth0Provider from "next-auth/providers/auth0"
 // import FacebookProvider from "next-auth/providers/facebook"
@@ -140,11 +351,6 @@ export const credentialProviderConfig = {
                                 mainnet_address,
                             });
                             //--------------------
-                            console.log(0, `NextAuth`, `Authorize - wallet5 ${showData(wallet.paymentPKH, false)}`);
-                            console.log(0, `NextAuth`, `Authorize - wallet5 ${showData(wallet, false)}`);
-
-                            console_log(0, `NextAuth`, `Authorize - wallet ${showData(wallet, false)}`);
-                            //--------------------
                             await WalletBackEndApplied.create(wallet);
                         }
                     } else {
@@ -160,14 +366,15 @@ export const credentialProviderConfig = {
                     }
                     console_log(0, `NextAuth`, `Authorize - User: ${showData(user, false)} - OK`);
                     //--------------------
-                    flushLogs();
+                    // flushLogs();
                     //--------------------
                     resolve(user);
+                    //--------------------
                 } catch (error: any) {
                     //--------------------
                     console_error(-1, `NextAuth`, `Authorize - Error: ${error}`);
                     //--------------------
-                    flushLogs();
+                    // flushLogs();
                     //--------------------
                     reject(new Error(error));
                 }
@@ -549,9 +756,6 @@ export class AuthBackEnd {
     // #endregion generic methods
     // #region api handlers
 
-    // public static async getJWTTokenWithCredentialsApiHandler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
-    //     return await initApiRequestWithContext(0, `Auth`, req, res, this.getJWTTokenWithCredentialsApiHandlerWithContext.bind(this));
-    // }
 
     public static async getJWTTokenWithCredentialsApiHandlerWithContext(req: NextApiRequest, res: NextApiResponse) {
         //--------------------------------------
@@ -660,9 +864,6 @@ export class AuthBackEnd {
         }
     }
 
-    // public static async getChallengueTokenApiHandler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
-    //     return await initApiRequestWithContext(0, `Auth`, req, res, this.getChallengueTokenApiHandlerWithContext.bind(this));
-    // }
 
     public static async getChallengueTokenApiHandlerWithContext(req: NextApiRequest, res: NextApiResponse) {
         //--------------------------------------

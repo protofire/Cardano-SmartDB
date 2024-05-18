@@ -1,15 +1,772 @@
 import { NextApiResponse } from 'next';
-import { OptionsCreateOrUpdate, OptionsGet, isEmulator, sanitizeForDatabase, showData, yupValidateOptionsCreate, yupValidateOptionsGet } from '../../Commons/index.js';
+import { User } from 'next-auth';
 import { globalEmulator } from '../../Commons/BackEnd/globalEmulator.js';
-import { console_errorLv1, console_logLv1, initApiRequestWithContext } from '../../Commons/index.BackEnd.js';
+import { console_errorLv1, console_logLv1 } from '../../Commons/BackEnd/globalLogs.js';
+import { OptionsCreateOrUpdate, OptionsGet, isEmulator, sanitizeForDatabase, showData, yupValidateOptionsCreate, yupValidateOptionsGet } from '../../Commons/index.js';
+import yup from '../../Commons/yupLocale.js';
 import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
 import { BaseSmartDBEntity } from '../../Entities/Base/Base.SmartDB.Entity.js';
 import { NextApiRequestAuthenticated } from '../../lib/Auth/types.js';
 import { AddressToFollowBackEndApplied } from '../AddressToFollow.BackEnd.Applied.js';
 import { BaseBackEndApiHandlers } from './Base.BackEnd.Api.Handlers.js';
 import { BaseSmartDBBackEndApplied } from './Base.SmartDB.BackEnd.Applied.js';
-import { User } from 'next-auth';
-import yup from '../../Commons/yupLocale.js';
+
+
+// #region api swagger
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ * tags:
+ *   name: SmartDB Entities
+ *   description: Operations related to SmartDB entities (linked with Blockchain Datums)
+ */
+/**
+ * @swagger
+ * /api/{smartdb-entity}:
+ *   post:
+ *     summary: Create a SmartDB entity
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the SmartDB entity
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               createFields:
+ *                 type: object
+ *                 description: Fields required to create the SmartDB entity
+ *     responses:
+ *       200:
+ *         description: SmartDB entity created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/update/{id}:
+ *   post:
+ *     summary: Update a SmartDB entity by ID
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               updateFields:
+ *                 type: object
+ *                 description: Fields required to update the entity
+ *     responses:
+ *       200:
+ *         description: Entity updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/exists/{id}:
+ *   get:
+ *     summary: Check if a SmartDB entity exists by ID
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Entity exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 swExists:
+ *                   type: boolean
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/exists:
+ *   post:
+ *     summary: Check if a SmartDB entity exists by parameters
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               paramsFilter:
+ *                 type: object
+ *                 description: Parameters to filter the entity
+ *     responses:
+ *       200:
+ *         description: Entity exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 swExists:
+ *                   type: boolean
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+/**
+ * @swagger
+ * /api/{smartdb-entity}/{id}:
+ *   get:
+ *     summary: Get a SmartDB entity by ID
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the SmartDB entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the SmartDB entity
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: SmartDB entity retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: SmartDB entity not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/{id}:
+ *   delete:
+ *     summary: Delete a SmartDB entity by ID
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the SmartDB entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the SmartDB entity
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: SmartDB entity deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: SmartDB entity not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/all:
+ *   get:
+ *     summary: Get all SmartDB entities
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Entities retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/by-params:
+ *   post:
+ *     summary: Get SmartDB entities by parameters
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               paramsFilter:
+ *                 type: object
+ *                 description: Parameters to filter the entities
+ *     responses:
+ *       200:
+ *         description: Entities retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/count:
+ *   post:
+ *     summary: Get the count of SmartDB entities by parameters
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               paramsFilter:
+ *                 type: object
+ *                 description: Parameters to filter the entities
+ *     responses:
+ *       200:
+ *         description: Count retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: number
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/loadRelationMany/{id}/{relation}:
+ *   get:
+ *     summary: Load many relations for a SmartDB entity
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *       - in: path
+ *         name: relation
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the relation
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Relations loaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/loadRelationMany/{id}/{relation}:
+ *   post:
+ *     summary: Load many relations for a SmartDB entity with options
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *       - in: path
+ *         name: relation
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the relation
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               optionsGet:
+ *                 type: object
+ *                 description: Options to filter the relations
+ *     responses:
+ *       200:
+ *         description: Relations loaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/loadRelationOne/{id}/{relation}:
+ *   get:
+ *     summary: Load one relation for a SmartDB entity
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *       - in: path
+ *         name: relation
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the relation
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Relation loaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity or relation not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/loadRelationOne/{id}/{relation}:
+ *   post:
+ *     summary: Load one relation for a SmartDB entity with options
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the entity
+ *       - in: path
+ *         name: relation
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the relation
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               optionsGet:
+ *                 type: object
+ *                 description: Options to filter the relation
+ *     responses:
+ *       200:
+ *         description: Relation loaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Entity or relation not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/deployed:
+ *   get:
+ *     summary: Get all deployed SmartDB entities
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Deployed entities retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/deployed:
+ *   post:
+ *     summary: Get deployed SmartDB entities with options
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               optionsGet:
+ *                 type: object
+ *                 description: Options to filter the entities
+ *     responses:
+ *       200:
+ *         description: Deployed entities retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/sync/{address}:
+ *   get:
+ *     summary: Synchronize a SmartDB entity with blockchain data by address
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: address
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The blockchain address to sync
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Entity synchronized successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Address not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/{smartdb-entity}/sync/{address}:
+ *   post:
+ *     summary: Synchronize a SmartDB entity with blockchain data by address with options
+ *     tags: [SmartDB Entities]
+ *     parameters:
+ *       - in: path
+ *         name: smartdb-entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *       - in: path
+ *         name: address
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The blockchain address to sync
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               event:
+ *                 type: string
+ *                 description: Event to sync
+ *               force:
+ *                 type: boolean
+ *                 description: Force sync
+ *               tryCountAgain:
+ *                 type: boolean
+ *                 description: Try sync again
+ *     responses:
+ *       200:
+ *         description: Entity synchronized successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Address not found
+ *       500:
+ *         description: Internal server error
+ */
+
+
+// #endregion api swagger
 
 // Api Handlers siempre llevan una Entity y el backend methods, es especifico para cada entidad
 // Se tiene entonces que crear uno por cada Entidad SI o SI
@@ -124,30 +881,9 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
 
     // #region api handlers
 
-    // public static async mainApiHandler<T extends BaseEntity>(req: NextApiRequestAuthenticated, res: NextApiResponse) {
-    //     return await initApiRequestWithContext(1, this._Entity.className(), req, res, this.mainApiHandlerWithContext.bind(this));
-    // }
-
     protected static async mainApiHandlerWithContext<T extends BaseEntity>(req: NextApiRequestAuthenticated, res: NextApiResponse) {
         //--------------------------------------
         const { query } = req.query;
-        //--------------------
-        // const AuthBackEnd = (await import('../../lib/Auth/Auth.BackEnd.js')).AuthBackEnd;
-        // //--------------------------------------
-        // try {
-        //     await AuthBackEnd.addCorsHeaders(req, res);
-        // } catch (error) {
-        //     console_errorLv1(0, this._Entity.className(), `Api handler - Error: ${error}`);
-        //     return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
-        // }
-        // //--------------------
-        // try {
-        //     await AuthBackEnd.authenticate(req, res);
-        // } catch (error) {
-        //     console_errorLv1(0, this._Entity.className(), `Api handler - Error: ${error}`);
-        //     return res.status(401).json({ error: 'Unauthorized' });
-        // }
-
         //--------------------
         if (query === undefined || query.length === 0) {
             return await this.createApiHandlers(req, res);
@@ -195,11 +931,6 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
             req.query = { id: query[0], ...req.query };
             return await this.getByIdAndDeleteByIdApiHandlers(req, res);
         }
-        // };
-        // runAsync().catch((error) => {
-        //     console_errorLv1(0, this._Entity.className(), `Api handler - Error: ${error}`);
-        //     return res.status(500).json({ error: `An error occurred while processing the request: ${error}` });
-        // });
     }
 
     public static async createApiHandlers<T extends BaseSmartDBEntity>(req: NextApiRequestAuthenticated, res: NextApiResponse) {

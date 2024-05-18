@@ -5,7 +5,7 @@ import { CardanoWallet } from '../Commons/types.js';
 import { pushSucessNotification, pushWarningNotification } from '../Commons/pushNotification.js';
 import { explainError } from '../Commons/explainError.js';
 
-export default function useWalletActions() {
+export function useWalletActions() {
     //--------------------------------------
     const [isRefreshing, setIsRefreshing] = useState(true);
     useEffect(() => {

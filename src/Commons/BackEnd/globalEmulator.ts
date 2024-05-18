@@ -1,14 +1,28 @@
-import { Blockfrost, Lucid } from 'lucid-cardano';
-import { console_log, tabs } from './globalLogs.js';
 import { EmulatorEntity } from '../../Entities/Emulator.Entity.js';
 import { isEmulator } from '../Constants/constants.js';
+import { console_log } from './globalLogs.js';
 
-export interface GlobalEmulator {
+interface GlobalEmulator {
     emulatorDB: EmulatorEntity | undefined;
 }
-export const globalEmulator = {
-    emulatorDB: undefined as EmulatorEntity | undefined,
-} as GlobalEmulator;
+
+let globalState: any;
+
+if (typeof window !== 'undefined') {
+    // Client-side environment
+    globalState = window;
+} else {
+    // Server-side environment (Node.js)
+    globalState = global;
+}
+
+if (!globalState.globalEmulator) {
+    globalState.globalEmulator = {
+        emulatorDB: undefined as EmulatorEntity | undefined,
+    } as GlobalEmulator;
+}
+
+export const globalEmulator = globalState.globalEmulator;
 
 export async function getGlobalEmulator(refresh: boolean = false): Promise<EmulatorEntity | undefined> {
     //------------------

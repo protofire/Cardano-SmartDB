@@ -1,0 +1,2557 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Example SmartDB API",
+    "version": "1.0.0",
+    "description": "API Documentation"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/api/{entity}": {
+      "post": {
+        "summary": "Create an entity",
+        "tags": [
+          "Normal Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "createFields": {
+                    "type": "object",
+                    "description": "Fields required to create the entity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Entity created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{entity}/update/{id}": {
+      "post": {
+        "summary": "Update an entity by ID",
+        "tags": [
+          "Normal Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "updateFields": {
+                    "type": "object",
+                    "description": "Fields required to update the entity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Entity updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{entity}/exists/{id}": {
+      "get": {
+        "summary": "Check if an entity exists by ID",
+        "tags": [
+          "Normal Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entity exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "swExists": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{entity}/exists": {
+      "post": {
+        "summary": "Check if an entity exists by parameters",
+        "tags": [
+          "Normal Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paramsFilter": {
+                    "type": "object",
+                    "description": "Parameters to filter the entity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Entity exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "swExists": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{entity}/{id}": {
+      "get": {
+        "summary": "Get an entity by ID",
+        "tags": [
+          "Normal Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entity retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an entity by ID",
+        "tags": [
+          "Normal Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entity deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Success message"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{entity}/all": {
+      "get": {
+        "summary": "Get all entities",
+        "tags": [
+          "Normal Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entities retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{entity}/by-params": {
+      "post": {
+        "summary": "Get entities by parameters",
+        "tags": [
+          "Normal Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paramsFilter": {
+                    "type": "object",
+                    "description": "Parameters to filter the entities"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Entities retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{entity}/count": {
+      "post": {
+        "summary": "Get the count of entities by parameters",
+        "tags": [
+          "Normal Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paramsFilter": {
+                    "type": "object",
+                    "description": "Parameters to filter the entities"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Count retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{entity}/loadRelationMany/{id}/{relation}": {
+      "get": {
+        "summary": "Load many relations for an entity",
+        "tags": [
+          "Normal Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          },
+          {
+            "in": "path",
+            "name": "relation",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the relation"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Relations loaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Load many relations for an entity with options",
+        "tags": [
+          "Normal Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          },
+          {
+            "in": "path",
+            "name": "relation",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the relation"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "optionsGet": {
+                    "type": "object",
+                    "description": "Options to filter the relations"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Relations loaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{entity}/loadRelationOne/{id}/{relation}": {
+      "get": {
+        "summary": "Load one relation for an entity",
+        "tags": [
+          "Normal Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          },
+          {
+            "in": "path",
+            "name": "relation",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the relation"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Relation loaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity or relation not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Load one relation for an entity with options",
+        "tags": [
+          "Normal Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          },
+          {
+            "in": "path",
+            "name": "relation",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the relation"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "optionsGet": {
+                    "type": "object",
+                    "description": "Options to filter the relation"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Relation loaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity or relation not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{smartdb-entity}": {
+      "post": {
+        "summary": "Create a SmartDB entity",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the SmartDB entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "createFields": {
+                    "type": "object",
+                    "description": "Fields required to create the SmartDB entity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SmartDB entity created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{smartdb-entity}/update/{id}": {
+      "post": {
+        "summary": "Update a SmartDB entity by ID",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "updateFields": {
+                    "type": "object",
+                    "description": "Fields required to update the entity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Entity updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{smartdb-entity}/exists/{id}": {
+      "get": {
+        "summary": "Check if a SmartDB entity exists by ID",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entity exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "swExists": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{smartdb-entity}/exists": {
+      "post": {
+        "summary": "Check if a SmartDB entity exists by parameters",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paramsFilter": {
+                    "type": "object",
+                    "description": "Parameters to filter the entity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Entity exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "swExists": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{smartdb-entity}/{id}": {
+      "get": {
+        "summary": "Get a SmartDB entity by ID",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the SmartDB entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the SmartDB entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SmartDB entity retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "SmartDB entity not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a SmartDB entity by ID",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the SmartDB entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the SmartDB entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SmartDB entity deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Success message"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "SmartDB entity not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{smartdb-entity}/all": {
+      "get": {
+        "summary": "Get all SmartDB entities",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entities retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{smartdb-entity}/by-params": {
+      "post": {
+        "summary": "Get SmartDB entities by parameters",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paramsFilter": {
+                    "type": "object",
+                    "description": "Parameters to filter the entities"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Entities retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{smartdb-entity}/count": {
+      "post": {
+        "summary": "Get the count of SmartDB entities by parameters",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paramsFilter": {
+                    "type": "object",
+                    "description": "Parameters to filter the entities"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Count retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{smartdb-entity}/loadRelationMany/{id}/{relation}": {
+      "get": {
+        "summary": "Load many relations for a SmartDB entity",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          },
+          {
+            "in": "path",
+            "name": "relation",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the relation"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Relations loaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Load many relations for a SmartDB entity with options",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          },
+          {
+            "in": "path",
+            "name": "relation",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the relation"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "optionsGet": {
+                    "type": "object",
+                    "description": "Options to filter the relations"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Relations loaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{smartdb-entity}/loadRelationOne/{id}/{relation}": {
+      "get": {
+        "summary": "Load one relation for a SmartDB entity",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          },
+          {
+            "in": "path",
+            "name": "relation",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the relation"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Relation loaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity or relation not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Load one relation for a SmartDB entity with options",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the entity"
+          },
+          {
+            "in": "path",
+            "name": "relation",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the relation"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "optionsGet": {
+                    "type": "object",
+                    "description": "Options to filter the relation"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Relation loaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Entity or relation not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{smartdb-entity}/deployed": {
+      "get": {
+        "summary": "Get all deployed SmartDB entities",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deployed entities retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Get deployed SmartDB entities with options",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "optionsGet": {
+                    "type": "object",
+                    "description": "Options to filter the entities"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deployed entities retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/{smartdb-entity}/sync/{address}": {
+      "get": {
+        "summary": "Synchronize a SmartDB entity with blockchain data by address",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The blockchain address to sync"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entity synchronized successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Success message"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Address not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Synchronize a SmartDB entity with blockchain data by address with options",
+        "tags": [
+          "SmartDB Entities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "smartdb-entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the entity"
+          },
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The blockchain address to sync"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "type": "string",
+                    "description": "Event to sync"
+                  },
+                  "force": {
+                    "type": "boolean",
+                    "description": "Force sync"
+                  },
+                  "tryCountAgain": {
+                    "type": "boolean",
+                    "description": "Try sync again"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Entity synchronized successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Success message"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Address not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "summary": "Check the health of the application",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Application is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "Health status",
+                      "example": "ok"
+                    },
+                    "time": {
+                      "type": "string",
+                      "description": "Current server time in ISO format",
+                      "example": "2024-05-17T09:30:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An error occurred while checking the health",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message",
+                      "example": "An error occurred while checking the health"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/init": {
+      "post": {
+        "summary": "Initialize the application",
+        "tags": [
+          "Init"
+        ],
+        "responses": {
+          "200": {
+            "description": "Initialization complete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "Initialization complete"
+                    },
+                    "token": {
+                      "type": "string",
+                      "example": "YOUR_TOKEN"
+                    },
+                    "csrfToken": {
+                      "type": "string",
+                      "example": "YOUR_CSRF_TOKEN"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Initialization failed"
+          }
+        }
+      }
+    },
+    "/api/auth/csrf": {
+      "get": {
+        "summary": "Get CSRF token",
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "CSRF token retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "csrfToken": {
+                      "type": "string",
+                      "description": "CSRF token",
+                      "example": "YOUR_CSRF_TOKEN"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/callback/credentials": {
+      "post": {
+        "summary": "Authenticate user with credentials",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "csrfToken": {
+                    "type": "string",
+                    "description": "CSRF token",
+                    "example": "YOUR_CSRF_TOKEN"
+                  },
+                  "token": {
+                    "type": "string",
+                    "description": "JWT token",
+                    "example": "YOUR_JWT_TOKEN"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful"
+          },
+          "401": {
+            "description": "Authentication failed"
+          }
+        }
+      }
+    },
+    "/api/auth/signout": {
+      "post": {
+        "summary": "Sign out the user",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "csrfToken": {
+                    "type": "string",
+                    "description": "CSRF token",
+                    "example": "YOUR_CSRF_TOKEN"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sign out successful"
+          },
+          "401": {
+            "description": "Sign out failed"
+          }
+        }
+      }
+    },
+    "/api/smart-db-auth/get-challengue": {
+      "get": {
+        "summary": "Get a challengue token",
+        "tags": [
+          "Smart DB Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "Challengue token generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "Challengue token"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/smart-db-auth/get-token": {
+      "post": {
+        "summary": "Get a JWT token",
+        "tags": [
+          "Smart DB Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "address": {
+                    "type": "string",
+                    "description": "Wallet address"
+                  },
+                  "walletNameOrSeedOrKey": {
+                    "type": "string",
+                    "description": "Wallet name or seed or key"
+                  },
+                  "useBlockfrostToSubmit": {
+                    "type": "string",
+                    "description": "Whether to use Blockfrost to submit"
+                  },
+                  "isWalletFromSeed": {
+                    "type": "string",
+                    "description": "Whether the wallet is from a seed"
+                  },
+                  "isWalletFromKey": {
+                    "type": "string",
+                    "description": "Whether the wallet is from a key"
+                  },
+                  "challengue": {
+                    "type": "string",
+                    "description": "Challengue string"
+                  },
+                  "signedChallengue": {
+                    "type": "string",
+                    "description": "Signed challengue string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT token generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "JWT token"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/time/get": {
+      "get": {
+        "summary": "Get server time",
+        "tags": [
+          "Time"
+        ],
+        "description": "Retrieve the current server time.",
+        "responses": {
+          "200": {
+            "description": "Server time retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "serverTime": {
+                      "type": "string",
+                      "description": "The current server time in ISO format",
+                      "example": "2024-05-17T12:34:56.789Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message",
+                      "example": "An error occurred while getting server time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/time/sync-emulator-blockchain-time": {
+      "get": {
+        "summary": "Sync emulator blockchain with server time",
+        "tags": [
+          "Time"
+        ],
+        "description": "Sync the emulator blockchain time with the server time.",
+        "responses": {
+          "200": {
+            "description": "Emulator blockchain time synced successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "serverTime": {
+                      "type": "string",
+                      "description": "The current server time in ISO format after sync",
+                      "example": "2024-05-17T12:34:56.789Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message",
+                      "example": "Method not allowed"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message",
+                      "example": "An error occurred while setting server time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blockfrost/{path*}": {
+      "get": {
+        "summary": "Proxy request to Blockfrost API",
+        "tags": [
+          "Blockfrost Proxy"
+        ],
+        "description": "This endpoint proxies requests to the Blockfrost API. For detailed information on the Blockfrost API endpoints, refer to the [Blockfrost API documentation](https://docs.blockfrost.io/).",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "path*",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The path of the Blockfrost API endpoint to proxy."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response from Blockfrost API",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message",
+                      "example": "Invalid target or project id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Normal Entities",
+      "description": "Operations related to normal entities (not linked to Blockchain Datums)"
+    },
+    {
+      "name": "SmartDB Entities",
+      "description": "Operations related to SmartDB entities (linked with Blockchain Datums)"
+    },
+    {
+      "name": "Health",
+      "description": "Health check endpoints"
+    },
+    {
+      "name": "Init",
+      "description": "Init endpoints"
+    },
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "Smart DB Auth",
+      "description": "Authentication endpoints for Smart DB"
+    },
+    {
+      "name": "Time",
+      "description": "Time-related endpoints"
+    },
+    {
+      "name": "Blockfrost Proxy",
+      "description": "Proxies requests to the Blockfrost API"
+    }
+  ]
+}

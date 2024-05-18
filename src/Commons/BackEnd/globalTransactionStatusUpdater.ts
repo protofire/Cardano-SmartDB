@@ -12,7 +12,7 @@ import {
     TX_CONSUMING_TIME,
     TX_PREPARING_TIME,
     TX_TIMEOUT,
-    isEmulator
+    isEmulator,
 } from '../Constants/constants.js';
 import { RegistryManager } from '../Decorators/registerManager.js';
 import { showData, sleep, toJson } from '../utils.js';
@@ -296,12 +296,27 @@ export class TransactionStatusUpdater {
     }
 }
 
-export interface GlobalTransactionStatusUpdater {
+interface GlobalTransactionStatusUpdater {
     updater: TransactionStatusUpdater;
 }
-export const globalTransactionStatusUpdater: GlobalTransactionStatusUpdater = {
-    updater: new TransactionStatusUpdater(),
-};
+
+let globalState: any;
+
+if (typeof window !== 'undefined') {
+    // Client-side environment
+    globalState = window;
+} else {
+    // Server-side environment (Node.js)
+    globalState = global;
+}
+
+if (!globalState.globalTransactionStatusUpdater) {
+    globalState.globalTransactionStatusUpdater = {
+        updater: new TransactionStatusUpdater(),
+    } as GlobalTransactionStatusUpdater;
+}
+
+export const globalTransactionStatusUpdater = globalState.globalTransactionStatusUpdater;
 
 export async function getGlobalTransactionStatusUpdater(): Promise<TransactionStatusUpdater> {
     //------------------

@@ -47,6 +47,7 @@ export default function Home() {
     const [isLoadingTxClaim, setIsLoadingTxClaim] = useState(false);
     //--------------------------------------
     const [lucid, setLucid] = useState<Lucid>();
+    //--------------------------------------
     const [address, setAddress] = useState<string>();
     const [balance, setBalance] = useState<bigint>();
     //--------------------------------------
@@ -493,18 +494,22 @@ export default function Home() {
             {walletStore.isConnected === true ? (
                 <>
                     <div>
-                        <div className={styles.subTitle}>Address:</div>
+                        <div className={styles.subTitle}>Wallet Address:</div>
                         <div>{address}</div>
                     </div>
                     <div>
+                        <div className={styles.subTitle}>Wallet Pkh:</div>
+                        <div>{walletStore.info?.pkh}</div>
+                    </div>
+                    <div>
                         <div className={styles.subTitle}>1: Faucet to get ADA</div>
-                        <button onClick={handleBtnFaucet} className={styles.buttonNormal}>
+                        <button onClick={handleBtnFaucet} className={styles.buttonCenterWithLoading}>
                             Faucet
                         </button>
                     </div>
                     <div>
                         <div className={styles.subTitle}>2: Check Balance</div>
-                        <button onClick={handleBtnBalance} className={styles.buttonNormal}>
+                        <button onClick={handleBtnBalance} className={styles.buttonCenterWithLoading}>
                             Refresh Balance{' '}
                             {isLoadingBalance && (
                                 <>
@@ -525,7 +530,7 @@ export default function Home() {
                             <div>
                                 <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
                             </div>
-                            <button onClick={handleBtnCreateTx} className={styles.buttonNormal}>
+                            <button onClick={handleBtnCreateTx} className={styles.buttonCenterWithLoading}>
                                 Create{' '}
                                 {isLoadingTxCreate && (
                                     <>
@@ -541,7 +546,7 @@ export default function Home() {
             )}
             <div>
                 <div className={styles.subTitle}>5: Sycn Database</div>
-                <button onClick={handleBtnSync} className={styles.buttonNormal}>
+                <button onClick={handleBtnSync} className={styles.buttonCenterWithLoading}>
                     Sync{' '}
                     {isLoadingSync && (
                         <>
@@ -575,7 +580,7 @@ export default function Home() {
                             <div>
                                 {(isEditingValue || isLoadingTxUpdate) && selectedItem === item ? (
                                     <>
-                                        <button onClick={() => handleBtnUpdateTx(item)}>
+                                        <button onClick={() => handleBtnUpdateTx(item)} className={styles.buttonCenterWithLoading}>
                                             Save{' '}
                                             {item === selectedItem && isLoadingTxUpdate && (
                                                 <>
@@ -587,8 +592,10 @@ export default function Home() {
                                     </>
                                 ) : (
                                     <>
-                                        <button onClick={() => startEditing(item)}>Update</button>
-                                        <button onClick={() => handleBtnClaimTx(item)}>
+                                        <button onClick={() => startEditing(item)} className={styles.buttonCenterWithLoading}>
+                                            Update
+                                        </button>
+                                        <button onClick={() => handleBtnClaimTx(item)} className={styles.buttonCenterWithLoading}>
                                             Claim
                                             {item === selectedItem && isLoadingTxClaim && (
                                                 <>

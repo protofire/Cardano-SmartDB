@@ -27,9 +27,9 @@
             }
         ],
         "paths": {
-            "@example/*": ["./*"],
+            "@example/*": ["./*"]
         }
     },
     "include": ["next-env.d.ts", "jest.config.js", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-    "exclude": ["node_modules", "_OLD", "src/**/_OLD/*", "**/*.test.ts", "**/*.spec.ts", "**/__tests__/**", "jest.config.js", "jest.config.ts", "*.config.js"]
+    "exclude": ["node_modules", "_OLD", "src/**/_OLD/*", "**/*.test.ts", "**/*.spec.ts", "**/__tests__/**", "jest.config.js", "jest.config.ts", "*.config.js", "_swagger/*.ts"]
 }

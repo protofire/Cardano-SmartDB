@@ -4,11 +4,8 @@ import { getGlobalLucid } from './globalLucid.js';
 import { getGlobalSettings } from './globalSettings.js';
 import { getGlobalTransactionStatusUpdater } from './globalTransactionStatusUpdater.js';
 import { getGlobalBlockchainTime } from './globalBlockchainTime.js';
-import { requestContext } from './globalContext.js';
 
 export const initGlobals = async (
-    // req: NextApiRequest,
-    // res: NextApiResponse,
     swUseGlobalSettings: boolean = true,
     swUseGlobalEmulator: boolean = true,
     swUseGlobalLucid: boolean = true,
@@ -32,10 +29,6 @@ export const initGlobals = async (
         if (swUseGlobalBlockchainTime) await getGlobalBlockchainTime();
         //--------------------------------------
         if (swUseGlobalTransactionStatusUpdater) await getGlobalTransactionStatusUpdater();
-        //--------------------------------------
-        if (requestContext.active) {
-            console_log(0, `initGlobals`, `requestContext.active: ${requestContext.active}`);
-        }
         //--------------------------------------
         console_log(-1, `initGlobals`, `OK`);
         //--------------------------------------
