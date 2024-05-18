@@ -897,7 +897,7 @@ export class BaseBackEndApiHandlers {
                 const sanitizedQuery = sanitizeForDatabase(req.query);
                 //-------------------------
                 const schemaQuery = yup.object().shape({
-                    id: yup.string().required().label(`${this._Entity.className()} ID`),
+                    id:  yup.string().required().isValidID(),
                 });
                 //-------------------------
                 let validatedQuery;

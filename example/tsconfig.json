@@ -31,5 +31,5 @@
         }
     },
     "include": ["next-env.d.ts", "jest.config.js", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-    "exclude": ["node_modules", "_OLD", "src/**/_OLD/*", "**/*.test.ts", "**/*.spec.ts", "**/__tests__/**", "jest.config.js", "jest.config.ts", "*.config.js", "_swagger/*.ts"]
+    "exclude": ["node_modules", "_OLD", "src/**/_OLD/*", "**/*.test.ts", "**/*.spec.ts", "jest.config.js", "jest.config.ts", "*.config.js", "_swagger/*.ts"]
 }

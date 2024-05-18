@@ -3,6 +3,8 @@ import { createHash, randomBytes } from 'crypto';
 import { utcToZonedTime, format } from 'date-fns-tz';
 import { Decimals } from './types.js';
 import { ADA_DECIMALS, ADA_UI } from './Constants/constants.js';
+import sanitizeHtml from 'sanitize-html';
+import he from 'he';
 
 //----------------------------------------------------------------------
 
@@ -100,8 +102,14 @@ export const sanitizeForDatabase = (input: any): any => {
         }
         return sanitizedObject;
     } else if (typeof input === 'string') {
-        // Trim strings
-        return input.trim();
+        //TODO: agregar allowed tags si se necesita, o el encoding
+        // Trim and sanitize strings, then encode
+        const sanitizedString = sanitizeHtml(input.trim(), {
+            allowedTags: [], // Specify allowed tags if any, or leave empty to allow no tags
+            allowedAttributes: {}, // Specify allowed attributes if any, or leave empty to allow no attributes
+        });
+        return sanitizedString;
+        // return he.encode(sanitizedString);
     }
     // Otherwise, keep the value as is
     return input;

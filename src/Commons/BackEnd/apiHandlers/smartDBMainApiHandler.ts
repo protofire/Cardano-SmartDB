@@ -13,6 +13,7 @@ import { healthApiHandlerWithContext } from './healthApiHandler.js';
 import { initApiHandlerWithContext } from './initApiHandler.js';
 import { initApiRequestWithContext } from './initApiRequestWithContext.js';
 import { requestContext, requestId } from '../globalContext.js';
+import { showData } from '../../utils.js';
 const CredentialsProvider = require('next-auth/providers/credentials').default;
 const NextAuth = require('next-auth').default;
 
@@ -41,7 +42,7 @@ export async function smartDBMainApiHandler(req: NextApiRequestAuthenticated, re
 async function smartDBMainApiHandlerWithContext(req: NextApiRequestAuthenticated, res: NextApiResponse) {
     try {
         //--------------------
-        console_log(1, `Api handler`, `Requested API URL: ${req.url}`);
+        console_log(1, `Api handler`, `Requested API URL: ${req.url} - req.method ${req.method} - req.query: ${showData(req.query, false)}`);
         //--------------------
         // Extract the full API route path
         const fullApiRoute =
@@ -67,6 +68,7 @@ async function smartDBMainApiHandlerWithContext(req: NextApiRequestAuthenticated
                 try {
                     console_log(0, `Api handler`, `Parsing Body...`);
                     req.body = await parseBody(req);
+                    console_log(0, `Api handler`, `Body: ${showData(req.body, false)}`);
                 } catch (error) {
                     console_error(-1, `Api handler`, `Error parsing body: ${error}`);
                     return res.status(400).json({ error: 'Invalid Body input' });

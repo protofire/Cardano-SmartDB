@@ -13,14 +13,9 @@ module.exports = {
     '@dcspark/cardano-multiplatform-lib-browser': '@dcspark/cardano-multiplatform-lib-nodejs',
     '^@/(.*)$': '<rootDir>/$1'
   },
-  testRegex: "/__tests__/api.ts$",
+  testRegex: "/__tests__/.*\\.ts$",
   //testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-
-  reporters: [
-    'default',
-    '<rootDir>/__tests__/csvReporter.js'
-  ],
 };
 
 
