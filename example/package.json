@@ -23,37 +23,27 @@
     },
     "dependencies": {
         "easy-peasy": "^5.0.4",
-        "esm": "^3.2.25",
         "lucid-cardano": "^0.10.7",
         "next": "^12.1.6",
         "next-auth": "^4.22.1",
-        "next-http-proxy-middleware": "^1.2.5",
-        "next-swagger-doc": "^0.4.0",
-        "nodemailer": "^6.9.1",
         "react": "18.2.0",
         "react-dom": "18.2.0",
         "react-modal": "^3.16.1",
         "react-notifications-component": "^4.0.1",
         "smart-db": "file:../smart-db.tgz",
         "swagger-jsdoc": "^6.2.8",
-        "swagger-ui-express": "^5.0.0",
-        "tsx": "^4.10.4"
+        "swagger-ui-express": "^5.0.0"
     },
     "devDependencies": {
         "@next/eslint-plugin-next": "^13.4.12",
-        "@types/cls-hooked": "^4.3.8",
         "@types/cors": "^2.8.13",
-        "@types/formidable": "^3.4.5",
         "@types/jest": "^29.5.12",
-        "@types/jsonwebtoken": "^9.0.2",
         "@types/node": "20.5.9",
-        "@types/nodemailer": "^6.4.7",
         "@types/react": "18.2.21",
         "@types/react-dom": "18.2.7",
         "@types/react-modal": "^3.16.3",
         "@types/supertest": "^6.0.2",
         "@types/swagger-ui-express": "^4.1.6",
-        "@types/uuid": "^9.0.8",
         "@typescript-eslint/eslint-plugin": "^5.61.0",
         "@typescript-eslint/parser": "^5.61.0",
         "chokidar-cli": "^3.0.0",
@@ -65,8 +55,6 @@
         "reflect-metadata": "^0.1.13",
         "sass": "^1.72.0",
         "supertest": "^7.0.0",
-        "terser": "^5.31.0",
-        "ts-jest": "^29.1.2",
         "typescript": "5.2.2"
     }
 }

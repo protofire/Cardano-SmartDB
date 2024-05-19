@@ -48,3 +48,5 @@ next-env.d.ts
 .priv
 
 /public/uploads/*
+
+directory_structure.json

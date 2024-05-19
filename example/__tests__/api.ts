@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { baseURL, populateTestData, MAXTIMEOUT } from './baseTestCases';
+import { baseURL, populateTestData, deleteTestData, MAXTIMEOUT } from './baseTestCases';
 import yup from 'smart-db/Commons/yupLocale';
 import { showData } from 'smart-db';
 
@@ -11,8 +11,8 @@ import { testCases as getEntityId } from './testCases-GET-Entity-Id';
 import { testCases as getEntityAll } from './testCases-GET-Entity-All';
 import { testCases as postEntityByParams } from './testCases-POST-Entity-ByParams';
 import { testCases as postEntityCount } from './testCases-POST-Entity-Count';
+import { testCases as deleteEntityId } from './testCases-DELETE-Entity-ById.js';
 import { testCases as othersCases } from './testCases-Others';
-
 
 interface TestCase {
     method: 'GET' | 'POST' | 'DELETE'; // Add more methods if needed
@@ -38,9 +38,9 @@ const testCaseGroups = [
     { name: 'Get All Entity GET API', testCases: getEntityAll as TestCase[] },
     { name: 'Get All Entity By Params POST API', testCases: postEntityByParams as TestCase[] },
     { name: 'Entity Count POST API', testCases: postEntityCount as TestCase[] },
+    { name: 'Delete Entity By Id DELETE API', testCases: deleteEntityId as TestCase[] },
     { name: 'Others', testCases: othersCases as TestCase[] },
 ];
-
 
 let testData = {};
 
@@ -54,7 +54,7 @@ function parseTestCase(testCase: Record<string, any>, testData: Record<string, a
             // const newObj: any = {};
             for (const key in obj) {
                 // if (obj.hasOwnProperty(key)) {
-                    obj[key] = replaceValues(obj[key]);
+                obj[key] = replaceValues(obj[key]);
                 // }
             }
             return obj;
@@ -74,108 +74,117 @@ beforeAll(async () => {
     console.log('Data Loaded');
 });
 
+afterAll(async () => {
+    console.log('Cleaning up data...');
+    await deleteTestData();
+    console.log('Data cleanup complete');
+});
+
 describe('API Tests', () => {
     testCaseGroups.forEach(({ name, testCases }) => {
         describe(name, () => {
-            test.each(testCases)('$description', async (testCase) => {
+            test.each(testCases)(
+                '$description',
+                async (testCase) => {
+                    const parsedTestCase = parseTestCase(testCase, testData);
 
-                const parsedTestCase = parseTestCase(testCase, testData);
+                    const {
+                        method,
+                        url,
+                        entity,
+                        id,
+                        body,
+                        token,
+                        expectedStatus,
+                        expectedBody,
+                        expectedBodySchema,
+                        maxTimeResponse,
+                        numberOfRequests,
+                        maxTimeResponseForParallelRequest,
+                    } = parsedTestCase;
 
-                const {
-                    method,
-                    url,
-                    entity,
-                    id,
-                    body,
-                    token,
-                    expectedStatus,
-                    expectedBody,
-                    expectedBodySchema,
-                    maxTimeResponse,
-                    numberOfRequests,
-                    maxTimeResponseForParallelRequest,
-                } = parsedTestCase;
+                    const parsedUrl = url.replace('{entity}', entity).replace('{id}', id || '');
 
-                const parsedUrl = url.replace('{entity}', entity).replace('{id}', id || '');
+                    console.log(`Method: ${method}, URL: ${parsedUrl}, Body: ${JSON.stringify(body)}`);
 
-                console.log(`Method: ${method}, URL: ${parsedUrl}, Body: ${JSON.stringify(body)}`);
+                    const executeRequest = async () => {
+                        const start = Date.now();
+                        let response;
 
-                const executeRequest = async () => {
-                    const start = Date.now();
-                    let response;
+                        const makeRequest = async (reqMethod: string, reqUrl: string, reqBody?: Record<string, any>) => {
+                            switch (reqMethod) {
+                                case 'GET':
+                                    return await request(baseURL)
+                                        .get(reqUrl)
+                                        .set('Authorization', token ? `Bearer ${token}` : '');
+                                case 'POST':
+                                    return await request(baseURL)
+                                        .post(reqUrl)
+                                        .set('Authorization', token ? `Bearer ${token}` : '')
+                                        .send(reqBody);
+                                case 'DELETE':
+                                    return await request(baseURL)
+                                        .delete(reqUrl)
+                                        .set('Authorization', token ? `Bearer ${token}` : '');
+                                // Add more cases for other methods if needed
+                                default:
+                                    throw new Error(`Unsupported method: ${reqMethod}`);
+                            }
+                        };
 
-                    const makeRequest = async (reqMethod: string, reqUrl: string, reqBody?: Record<string, any>) => {
-                        switch (reqMethod) {
-                            case 'GET':
-                                return await request(baseURL)
-                                    .get(reqUrl)
-                                    .set('Authorization', token ? `Bearer ${token}` : '');
-                            case 'POST':
-                                return await request(baseURL)
-                                    .post(reqUrl)
-                                    .set('Authorization', token ? `Bearer ${token}` : '')
-                                    .send(reqBody);
-                            case 'DELETE':
-                                return await request(baseURL)
-                                    .delete(reqUrl)
-                                    .set('Authorization', token ? `Bearer ${token}` : '');
-                            // Add more cases for other methods if needed
-                            default:
-                                throw new Error(`Unsupported method: ${reqMethod}`);
+                        response = await makeRequest(method, parsedUrl, body);
+
+                        if (response.status === 308) {
+                            // console.log(`Handling 308 redirect for ${method} ${parsedUrl} to ${response.headers.location}`);
+                            response = await makeRequest(method, response.headers.location, body);
                         }
+
+                        // console.log(`Response Status: ${response.status}, Method: ${method}`);
+
+                        const end = Date.now();
+                        const responseTime = end - start;
+
+                        expect(response.status).toBe(expectedStatus);
+
+                        // console.log(`Response Body: ${showData(response.body, false)}`);
+
+                        if (expectedBody && Object.keys(expectedBody).length > 0) {
+                            expect(response.body).toEqual(expectedBody);
+                        }
+
+                        if (expectedBodySchema) {
+                            try {
+                                await expectedBodySchema.validate(response.body);
+                            } catch (error: any) {
+                                throw new Error('Response Body Schema Validation - ' + error.message);
+                            }
+                        }
+
+                        if (maxTimeResponse !== undefined) {
+                            // console.log(`Response time for ${parsedUrl}: ${responseTime} ms`);
+                            expect(responseTime).toBeLessThanOrEqual(maxTimeResponse);
+                        }
+
+                        return responseTime;
                     };
 
-                    response = await makeRequest(method, parsedUrl, body);
+                    if (numberOfRequests && numberOfRequests > 1) {
+                        const requests = Array(numberOfRequests).fill(0).map(executeRequest);
+                        const responseTimes = await Promise.all(requests);
+                        const averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+                        const totalResponseTime = responseTimes.reduce((a, b) => a + b, 0);
 
-                    if (response.status === 308) {
-                        // console.log(`Handling 308 redirect for ${method} ${parsedUrl} to ${response.headers.location}`);
-                        response = await makeRequest(method, response.headers.location, body);
-                    }
-
-                    // console.log(`Response Status: ${response.status}, Method: ${method}`);
-
-                    const end = Date.now();
-                    const responseTime = end - start;
-
-                    expect(response.status).toBe(expectedStatus);
-
-                    // console.log(`Response Body: ${showData(response.body, false)}`);
-
-                    if (expectedBody && Object.keys(expectedBody).length > 0) {
-                        expect(response.body).toEqual(expectedBody);
-                    }
-
-                    if (expectedBodySchema) {
-                        try {
-                            await expectedBodySchema.validate(response.body);
-                        } catch (error: any) {
-                            throw new Error('Response Body Schema Validation - ' + error.message);
+                        // console.log(`Average Response Time for ${numberOfRequests} requests: ${averageResponseTime} ms`);
+                        // console.log(`Total Response Time for ${numberOfRequests} requests: ${totalResponseTime} ms`);
+                        if (maxTimeResponseForParallelRequest !== undefined) {
+                            expect(totalResponseTime).toBeLessThanOrEqual(maxTimeResponseForParallelRequest);
                         }
+                    } else {
+                        await executeRequest();
                     }
-
-                    if (maxTimeResponse !== undefined) {
-                        // console.log(`Response time for ${parsedUrl}: ${responseTime} ms`);
-                        expect(responseTime).toBeLessThanOrEqual(maxTimeResponse);
-                    }
-
-                    return responseTime;
-                };
-
-                if (numberOfRequests && numberOfRequests > 1) {
-                    const requests = Array(numberOfRequests).fill(0).map(executeRequest);
-                    const responseTimes = await Promise.all(requests);
-                    const averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
-                    const totalResponseTime = responseTimes.reduce((a, b) => a + b, 0);
-
-                    // console.log(`Average Response Time for ${numberOfRequests} requests: ${averageResponseTime} ms`);
-                    // console.log(`Total Response Time for ${numberOfRequests} requests: ${totalResponseTime} ms`);
-                    if (maxTimeResponseForParallelRequest !== undefined) {
-                        expect(totalResponseTime).toBeLessThanOrEqual(maxTimeResponseForParallelRequest);
-                    }
-                } else {
-                    await executeRequest();
-                }
-            }, MAXTIMEOUT);
+                },
+                MAXTIMEOUT
+            );
         });
     });
 });

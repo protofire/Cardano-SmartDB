@@ -8,6 +8,7 @@ const { testCases: getEntityId } = require('./testCases-GET-Entity-Id');
 const { testCases: getEntityAll } = require('./testCases-GET-Entity-All');
 const { testCases: postEntityByParams } = require('./testCases-POST-Entity-ByParams');
 const { testCases: postEntityCount } = require('./testCases-POST-Entity-Count');
+const { testCases: deleteEntityId } = require('./testCases-DELETE-Entity-ById');
 const { testCases: othersCases } = require('./testCases-Others');
 
 const testCaseGroups = [
@@ -19,6 +20,7 @@ const testCaseGroups = [
     { name: 'Get All Entity GET API', testCases: getEntityAll },
     { name: 'Get All Entity By Params POST API', testCases: postEntityByParams },
     { name: 'Entity Count POST API', testCases: postEntityCount },
+    { name: 'Delete Entity By Id DELETE API', testCases: deleteEntityId },
     { name: 'Others', testCases: othersCases },
 ];
 
@@ -60,11 +62,11 @@ class CSVReporter {
             ...this._results.map((result) => [
                 result.url,
                 result.method,
-                result.testCase,
+                `"${result.testCase.replace(/"/g, '""')}"`,
                 result.category,
                 result.urlParsed,
                 result.status,
-                result.errorMessage,
+                `"${result.errorMessage.replace(/"/g, '""')}"`,
                 result.executionTime,
             ]),
         ]

@@ -61,6 +61,14 @@ const expectedBodySchemaChallengue = object({
     token: string().required(),
 });
 
+const expectedBodySchemaError = object({
+    error: string().required(),
+});
+
+const expectedBodySchemaMessage = object({
+    message: string().required(),
+});
+
 
 const validTimeResponse = 1000; // 1 second
 const validTimeResponseUnderLoad = 5000; // 5 seconds
@@ -119,6 +127,19 @@ const populateTestData = async () => {
     }
 };
 
+const deleteTestData = async () => {
+    const response = await request(baseURL).get(`/api/${validEntity}/all`).set('Authorization', `Bearer ${validToken}`);
+    if (response.status === 200 && Array.isArray(response.body)) {
+        const entities = response.body;
+        for (const entity of entities) {
+            await request(baseURL).delete(`/api/${validEntity}/${entity._DB_id}`).set('Authorization', `Bearer ${validToken}`);
+        }
+    } else {
+        throw new Error('Failed to fetch entities from the database for deletion');
+    }
+};
+
+
 module.exports = {
     baseURL,
     validToken,
@@ -144,11 +165,15 @@ module.exports = {
     expectedBodySchemaInit,
     expectedBodySchemaCSRF,
     expectedBodySchemaChallengue,
+    expectedBodySchemaError,
+    expectedBodySchemaMessage,
     validTimeResponse,
     validTimeResponseUnderLoad,
     numberOfRequests,
     MAXTIMEOUT,
     populateTestData,
+    deleteTestData
 };
 
 exports.populateTestData = populateTestData;
+exports.deleteTestData = deleteTestData;

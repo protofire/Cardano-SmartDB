@@ -65,7 +65,6 @@ const testCases = [
     //         error: yup.string().required(),
     //     }),
     // },
-
     {
         category: 'Health Check',
         description: 'should return 200 and status ok when the application is healthy',
@@ -180,7 +179,7 @@ const testCases = [
     // },
     {
         category: 'Smart DB Auth',
-        description: 'should return 200 and a challenge token',
+        description: 'get-challengue should return 200 and a challenge token',
         method: 'GET',
         url: '/api/smart-db-auth/get-challengue',
         entity: '',
@@ -191,7 +190,7 @@ const testCases = [
     },
     {
         category: 'Smart DB Auth',
-        description: 'should return 405 when method is not allowed',
+        description: 'get-challengue should return 405 when method is not allowed',
         method: 'POST',
         url: '/api/smart-db-auth/get-challengue',
         entity: '',
@@ -245,7 +244,7 @@ const testCases = [
     // },
     {
         category: 'Smart DB Auth',
-        description: 'should return 405 when method is not allowed',
+        description: 'get-token should return 405 when method is not allowed',
         method: 'GET',
         url: '/api/smart-db-auth/get-token',
         entity: '',
