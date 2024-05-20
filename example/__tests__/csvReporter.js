@@ -24,6 +24,9 @@ const testCaseGroups = [
     { name: 'Others', testCases: othersCases },
 ];
 
+const addGroupNameToTestCases = (groupName, testCases) => {
+    return testCases.map(testCase => ({ ...testCase, groupName }));
+};
 
 class CSVReporter {
     constructor(globalConfig, options) {
@@ -34,14 +37,21 @@ class CSVReporter {
 
     onTestResult(test, testResult, aggregatedResult) {
         testResult.testResults.forEach((result) => {
-            const matchingTestCase = testCaseGroups.flatMap((group) => group.testCases).find((testCase) => testCase.description === result.title);
+            const matchingTestCase = testCaseGroups
+                .flatMap((group) => group.testCases.map(testCase => ({ ...testCase, groupName: group.name })))
+                .find((testCase) => {
+                    const testCaseDescription = `${result.ancestorTitles.join(' ')} ${result.title}`;
+                    const fullName = `API Tests ${testCase.groupName} ${testCase.description}`;
+                    console.log (testCaseDescription, fullName);
+                    return testCaseDescription === fullName;
+                });
             const category = matchingTestCase ? matchingTestCase.category : 'N/A';
             const method = matchingTestCase ? matchingTestCase.method : 'N/A';
             const url = matchingTestCase ? matchingTestCase.url : 'N/A';
             const urlParsed = matchingTestCase ? matchingTestCase.url.replace('{entity}', matchingTestCase.entity).replace('{id}', matchingTestCase.id) : 'N/A';
 
             // Extract only the message from the error
-            const errorMessage = result.failureMessages.length > 0 ? result.failureMessages.map(msg => msg.split('\n')[0]).join('; ') : '';
+            const errorMessage = result.failureMessages.length > 0 ? result.failureMessages.map((msg) => msg.split('\n')[0]).join('; ') : '';
 
             this._results.push({
                 testCase: result.fullName,
