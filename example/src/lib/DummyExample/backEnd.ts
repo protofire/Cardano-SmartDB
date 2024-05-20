@@ -3,11 +3,12 @@ export * from 'smart-db/backEnd';
 export * from './BackEnd/index';
 export * from './Entities/index.BackEnd';
 
-// TODO: es muy importante que este archivo sea usado para importar desde todos los endpoints api
-// por que asi se generan todos los decoratos necesarios de todas las clases
+// NOTE: It is very important that this file is used to import from all API endpoints 
+// so that all necessary decorators of all classes are generated.
 
 export function initBackEnd() {
     initBackEndSmartDB ();
     const endpointsManager = EndpointsManager.getInstance();
-    // endpointsManager.setPublicEndPointsInternet([/^\/api\/blockfrost\/.+/]);
+   // endpointsManager.setPublicEndPointsInternet([/^\/api\/blockfrost\/.+/]);
+    // endpointsManager.setPublicEndPointsInternet([/^\/api\/dummy\/all/]);
 }

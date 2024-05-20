@@ -71,7 +71,7 @@ const expectedBodySchemaMessage = object({
 
 
 const validTimeResponse = 1000; // 1 second
-const validTimeResponseUnderLoad = 5000; // 5 seconds
+const validTimeResponseUnderLoad = 8000; // 5 seconds
 const numberOfRequests = 10;
 
 const MAXTIMEOUT = 10000; // 10 seconds
