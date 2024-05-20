@@ -19,7 +19,7 @@
         - [macOS and Ubuntu](#macos-and-ubuntu)
     - [Using nvm to Install Node.js](#using-nvm-to-install-nodejs)
     - [Obtaining Blockfrost API Keys](#obtaining-blockfrost-api-keys)
-    - [Installation of the Project](#installation-of-the-project)
+    - [Installation of the example Project](#installation-of-the-example-project)
   - [Familiarize Yourself](#familiarize-yourself)
   - [Usage](#usage)
     - [Wallet Connection](#wallet-connection)
@@ -35,9 +35,8 @@
   - [Project Code Structure](#project-code-structure)
     - [Configuration and Contracts](#configuration-and-contracts)
     - [Components and Pages](#components-and-pages)
-    - [Library and Example Implementation](#library-and-example-implementation)
+    - [Library Implementation and Entities files](#library-implementation-and-entities-files)
     - [API and Backend](#api-and-backend)
-      - [Required API Files](#required-api-files)
   - [Example Code Structure](#example-code-structure)
     - [Directories](#directories)
   - [Swagger Server and UI](#swagger-server-and-ui)
@@ -52,8 +51,16 @@
   - [Jest Tests for API](#jest-tests-for-api)
     - [Run Jest Tests](#run-jest-tests)
     - [Test Results](#test-results)
-  - [New Normal Entity: Test Entity](#new-normal-entity-test-entity)
-    - [Test Entity Files](#test-entity-files)
+  - [Setting Up New Projects with Custom Entities](#setting-up-new-projects-with-custom-entities)
+    - [Entities](#entities)
+      - [Normal Entities](#normal-entities)
+        - [Test Entity Files](#test-entity-files)
+      - [Smart DB Entities](#smart-db-entities)
+        - [Dummy Entity Files](#dummy-entity-files)
+  - [Root Backend File](#root-backend-file)
+    - [Root Backend File Example](#root-backend-file-example)
+      - [Endpoints Configuration](#endpoints-configuration)
+    - [NextJs Api Handler Files](#nextjs-api-handler-files)
   - [Conclusion](#conclusion)
   - [Contribution](#contribution)
   - [License](#license)
@@ -69,13 +76,13 @@ Please note that in this stage, after a transaction is confirmed, the user needs
 
 ## Features
 
-- **Wallet Connect and Generation**: You can connect with wallets using the Chrome browser extensions like Eternl, Yoroi, and others. Its also possible to Create wallets on-the-fly and use them in the wallet connector.
+- **Wallet Connect and Generation**: You can connect with wallets using the Chrome browser extensions like Eternl, Yoroi, and others. It’s also possible to create wallets on-the-fly and use them in the wallet connector.
 - **Seamless Blockchain Integration**: Simplify interactions with the Cardano blockchain using JavaScript entities.
 - **Manual Synchronization**: Users must manually synchronize the application after transactions are confirmed to reflect the latest blockchain state in the internal database.
 - **Exclusive Update/Claim Logic**: Only the creator of the datum can update or claim, ensuring creator exclusivity.
 - **User-Friendly Interface**: Demonstrates these capabilities through a Next.js application.
 - **Swagger Server**: Provides a Swagger UI for testing API endpoints.
-- **Test Api**: The project includes Jest tests for the API.
+- **Test API**: The project includes Jest tests for the API.
 
 ## Getting Started
 
@@ -204,7 +211,9 @@ wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 ```
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+[ -
+
+s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 ```
 
 ### Using nvm to Install Node.js
@@ -259,18 +268,17 @@ Sign up for an account by clicking the "Sign Up" button and following the regist
 
 Once logged in, go to the dashboard and create a new project.
 Provide a name for your project and select the network for which you want the API key.
-You will need to create three separate projects if
-
- you want keys for all three networks: Mainnet, Preview testnet, and Preprod testnet.
+You will need to create three separate projects if you want keys for all three networks: Mainnet, Preview testnet, and Preprod testnet.
 
 3. Retrieve Your API Keys:
 
 After creating a project, you will be directed to the project overview page.
 Here, you can find the API key under the 'Project keys' section.
 Copy the PROJECT_ID which is your API key for the respective network.
-Set Up Environment Variables:
 
-4. In your local development environment, set the API keys as environment variables in `.env.local` file:
+4. Set Up Environment Variables:
+
+In your local development environment, set the API keys as environment variables in `.env.local` file:
 
 ```
 BLOCKFROST_KEY_MAINNET=your_mainnet_project_key_here
@@ -280,26 +288,32 @@ BLOCKFROST_KEY_PREPROD=your_preprod_testnet_project_key_here
 
 Replace your_mainnet_project_key_here, your_preview_testnet_project_key_here, and your_preprod_testnet_project_key_here with the actual keys you obtained from Blockfrost.
 
-The configuration for the `.env.local` file is explained in details in the following section of this README.
+The configuration for the `.env.local` file is explained in detail in the following section of this README.
 
-### Installation of the Project
+### Installation of the example Project
 
 1. **Clone the Repository**
 
-   ```
-   git clone git@github.com:protofire/Cardano-SmartDB.git
-   cd Cardano-SmartDB
-   ```
+```
+git clone git@github.com:protofire/Cardano-SmartDB.git
+cd Cardano-SmartDB
+```
 
-2. **Install Dependencies**
+2. **Navigate to example folder**
 
-   ```
-   npm install
-   # Or if you use Yarn
-   yarn
-   ```
+```
+cd example
+```
 
-3. **Environment Setup**
+3. **Install Dependencies**
+
+```
+npm install
+# Or if you use Yarn
+yarn
+```
+
+4. **Environment Setup**
 
 Create a `.env.local` file at the root of your project by copying the contents from the `.env` template file. Adjust the environment variables according to your project's needs:
 
@@ -310,7 +324,7 @@ Create a `.env.local` file at the root of your project by copying the contents f
 - `NEXT_PUBLIC_BLOCKFROST_URL_PREVIEW`: Blockfrost API URL for the Cardano Preview testnet.
 - `NEXT_PUBLIC_BLOCKCHAIN_EXPLORER_URL_PREVIEW`: URL for the Cardano Preview testnet blockchain explorer.
 - `NEXT_PUBLIC_BLOCKFROST_URL_PREPROD`: Blockfrost API URL for the Cardano Preprod testnet.
-- `NEXT_PUBLIC_BLOCKCHAIN_EXPLORER_URL_PREPROD=`: URL for the Cardano Preprod testnet blockchain explorer.
+- `NEXT_PUBLIC_BLOCKCHAIN_EXPLORER_URL_PREPROD`: URL for the Cardano Preprod testnet blockchain explorer.
 - `BLOCKFROST_KEY_MAINNET`: Your Blockfrost project key for the Mainnet.
 - `BLOCKFROST_KEY_PREVIEW`: Your Blockfrost project key for the Preview testnet.
 - `BLOCKFROST_KEY_PREPROD`: Your Blockfrost project key for the Preprod testnet.
@@ -326,17 +340,17 @@ Create a `.env.local` file at the root of your project by copying the contents f
 
 After setting these variables, your application will be configured to communicate with the specified Cardano network and utilize the necessary services and databases.
 
-4. **Run the Application in developer mode**
+5. **Run the Application in developer mode**
 
-   ```
-   npm run dev
-   # Or for Yarn users
-   yarn dev
-   ```
+```
+npm run dev
+# Or for Yarn users
+yarn dev
+```
 
-   Visit `http://localhost:3000` in your browser to view the application in developer mode.
+Visit `http://localhost:3000` in your browser to view the application in developer mode.
 
-5. **Build and Run Application**
+6. **Build and Run Application**
 
 First, compile your application into static assets for production by running the build command. This process bundles your React application and optimizes it for the best performance. The build is minified, and filenames include the hashes for browser caching efficiency.
 
@@ -356,7 +370,7 @@ npm run start
 yarn start
 ```
 
-Visit http://localhost:3000 in your browser to interact with the application in production mode.
+Visit `http://localhost:3000` in your browser to interact with the application in production mode.
 
 **Additional Notes:**
 
@@ -424,6 +438,8 @@ To sync the latest blockchain state with the internal database after transaction
 ### Claim Funds
 
 1. Click "Claim" to transfer the funds associated with a dummy entity to your wallet.
+
+
 2. A modal will show the transaction status.
    
 - This action is restricted to the datum's creator per the validator script's logic.
@@ -448,45 +464,14 @@ The project's architecture is designed for applications interacting with the Car
 - `src/components`: React components used throughout the application reside here.
 - `src/pages`: New pages can be added within this directory. Essential files like `_app.tsx`, `_document.tsx`, and `index.tsx` are set up to load the `Home` component by default.
 
-### Library and Example Implementation
+### Library Implementation and Entities files
 - `src/lib/DummyExample`: Sample implementation directory for creating entities that are synced with the blockchain. This directory should contain all entity models required by a project, whether they are synced with the blockchain (like the Dummy Entity) or simply database-backed entities with full API support for the frontend and backend.
+
+Read this section for further clarifications:
+[Setting Up New Projects with Custom Entities](#setting-up-new-projects-with-custom-entities)
 
 ### API and Backend
 - `src/pages/api`: Defines the API routes and backend logic for server-side operations.
-
-#### Required API Files
-
-With the following two files, the imported library will handle all routes:
-
-`example/src/pages/api/[[...query]].ts`
-```
-import { initBackEnd } from '@example/src/lib/DummyExample/backEnd';
-import { smartDBMainApiHandler } from 'smart-db/backEnd';
-initBackEnd();
-
-export const config = {
-    api: {
-        bodyParser: false,
-    },
-};
-
-export default smartDBMainApiHandler.bind(smartDBMainApiHandler);
-```
-
-`example/src/pages/api/auth/[...nextauth].ts`
-```
-import { initBackEnd } from '@example/src/lib/DummyExample/backEnd';
-import { smartDBMainApiHandler } from 'smart-db/backEnd';
-initBackEnd();
-
-export const config = {
-    api: {
-        bodyParser: false,
-    },
-};
-
-export default smartDBMainApiHandler.bind(smartDBMainApiHandler);
-```
 
 ## Example Code Structure
 
@@ -654,18 +639,419 @@ npm run test-api
 
 The test results will be generated in a CSV file located at:
 
-`__tests__/testResults.csv`
+```
+__tests__/testResults.csv
+```
 
-## New Normal Entity: Test Entity
+## Setting Up New Projects with Custom Entities
 
-The example includes a new normal entity called "Test Entity". This is a simple entity with a database backend, not linked to blockchain datums, making it easy to test all API endpoints.
+### Entities
 
-### Test Entity Files
+Entities in Smart DB Library can be classified into two types: normal entities and Smart DB entities.
 
-- **Entity Definition**: Located at `src/lib/DummyExample/Entities/Test.Entity.ts`
+#### Normal Entities
+
+Normal entities are standard database entities with frontend API calls and backend code, and they have a presence in the database.
+
+The example includes a new normal entity called "Test Entity". This is a simple entity with a database backend, not linked to blockchain datums, making it easy to test all API endpoints. To create a normal entity, follow the example below:
+
+##### Test Entity Files
+
+- **Entity Definition**: Located at `exame/src/lib/DummyExample/Entities/Test.Entity.ts`
 - **MongoDB Model**: Located at `src/lib/DummyExample/Entities/Test.Entity.Mongo.ts`
 - **Backend Handlers**: Located at `src/lib/DummyExample/BackEnd/Test.BackEnd.Api.Handlers.ts`
 - **Frontend API Calls**: Located at `src/lib/DummyExample/FrontEnd/Test.FrontEnd.Api.Calls.ts`
+
+**Test.Entity.ts**
+
+Entities must extend `BaseEntity` and use the `@asEntity` decorator.
+
+```
+import 'reflect-metadata';
+import { BaseEntity, Convertible, asEntity } from 'smart-db';
+
+@asEntity()
+export class TestEntity extends BaseEntity {
+    protected static _apiRoute: string = 'test';
+    protected static _className: string = 'Test';
+
+    @Convertible()
+    name!: string;
+
+    @Convertible()
+    description!: string;
+
+    public static defaultFieldsWhenUndefined: Record<string, boolean> = {};
+
+    public static alwaysFieldsForSelect: Record<string, boolean> = {
+        ...super.alwaysFieldsForSelect,
+        name: true,
+        description: true,
+    };
+}
+```
+
+**Test.Entity.Mongo.ts**
+
+Classes for Mongo Schemma should extend `BaseEntityMongo` and use the `@MongoAppliedFor` decorator.
+
+```
+import { type PaymentKeyHash } from 'lucid-cardano';
+import { Schema, model, models } from 'mongoose';
+import 'reflect-metadata';
+import { Maybe, MongoAppliedFor } from 'smart-db';
+import { BaseEntityMongo } from 'smart-db/backEnd';
+import { TestEntity } from './Test.Entity';
+
+@MongoAppliedFor([TestEntity])
+export class TestEntityMongo extends BaseEntityMongo {
+    protected static Entity = TestEntity;
+    protected static _mongoTableName: string = TestEntity.className();
+
+    public getMongoStatic(): typeof TestEntityMongo {
+        return this.constructor as typeof TestEntityMongo;
+    }
+
+    public static getMongoStatic(): typeof TestEntityMongo {
+        return this as typeof TestEntityMongo;
+    }
+
+    public getStatic(): typeof TestEntity {
+        return this.getMongoStatic().getStatic() as typeof TestEntity;
+    }
+
+    public static getStatic(): typeof TestEntity {
+        return this.Entity as typeof TestEntity;
+    }
+
+    public className(): string {
+        return this.getStatic().className();
+    }
+
+    public static className(): string {
+        return this.getStatic().className();
+    }
+
+    public static MongoModel() {
+        interface Interface {
+            name: PaymentKeyHash;
+            description: Maybe<PaymentKeyHash>;
+        }
+
+        const schema = new Schema<Interface>({
+            name: { type: String, required: true },
+            description: { type: String, required: true },
+        });
+
+        const ModelDB = models[this._mongoTableName] || model<Interface>(this._mongoTableName, schema);
+        return ModelDB;
+    }
+}
+```
+
+**Test.BackEnd.Api.Handlers.ts**
+
+The backend for new entities must extend both `BaseBackEndApplied` and `BaseBackEndApiHandlers` and use the `@BackEndAppliedFor` and `@BackEndApiHandlersFor` decorators.
+
+```
+import {
+    BackEndApiHandlersFor,
+    BackEndAppliedFor,
+    BaseBackEndApiHandlers,
+    BaseBackEndApplied,
+    BaseBackEndMethods
+} from 'smart-db/backEnd';
+import { TestEntity } from '../Entities';
+
+@BackEndAppliedFor(TestEntity)
+export class TestBackEndApplied extends BaseBackEndApplied {
+    protected static _Entity = TestEntity;
+    protected static _BackEndMethods = BaseBackEndMethods;
+}
+
+@BackEndApiHandlersFor(TestEntity)
+export class TestApiHandlers extends BaseBackEndApiHandlers {
+    protected static _Entity = TestEntity;
+    protected static _BackEndApplied = TestBackEndApplied;
+}
+```
+
+**Test.FrontEnd.Api.Calls.ts**
+
+Classes for frontend API calls should extend `BaseFrontEndApiCalls`.
+
+```
+import { BaseFrontEndApiCalls } from 'smart-db';
+import { TestEntity } from '../Entities';
+
+export class TestApi extends BaseFrontEndApiCalls {
+    protected static _Entity = TestEntity;
+}
+```
+
+#### Smart DB Entities
+
+Smart DB entities include all the features of normal entities but also have methods to synchronize them with blockchain datums.
+
+The example includes a smartDb entity called "Dummy Entity".
+
+##### Dummy Entity Files
+
+- **Entity Definition**: Located at `src/lib/DummyExample/Entities/Dummy.Entity.ts`
+- **MongoDB Model**: Located at `src/lib/DummyExample/Entities/Dummy.Entity.Mongo.ts`
+- **Backend Handlers**: Located at `src/lib/DummyExample/BackEnd/Dummy.BackEnd.Api.Handlers.Tx.ts`
+- **Frontend API Calls**: Located at `src/lib/DummyExample/FrontEnd/Dummy.FrontEnd.Api.Calls.ts`
+
+**Dummy.Entity.ts**
+
+Entities must extend `BaseSmartDBEntity` and use the `@asSmartDBEntity` decorator. Fields synchronized with the database should utilize the `@Convertible({ isForDatum: true })` decorator.
+
+```
+import { type PaymentKeyHash } from 'lucid-cardano';
+import 'reflect-metadata';
+import { BaseSmartDBEntity, Convertible, Maybe, StakeCredentialPubKeyHash, asSmartDBEntity } from 'smart-db';
+
+@asSmartDBEntity()
+export class DummyEntity extends BaseSmartDBEntity {
+    protected static _apiRoute: string = 'dummy';
+    protected static _className: string = 'Dummy';
+
+    protected static _plutusDataIndex = 0;
+    protected static _is_NET_id_Unique = false;
+
+    // #region fields
+
+    _NET_id_TN: string = 'DummyID';
+
+    // #endregion fields
+
+    // #region datum
+
+    @Convertible({ isForDatum: true })
+    ddPaymentPKH!: PaymentKeyHash;
+
+    @Convertible({ isForDatum: true, type: Maybe<StakeCredentialPubKeyHash> })
+    ddStakePKH!: Maybe<StakeCredentialPubKeyHash>;
+
+    @Convertible({ isForDatum: true })
+    ddValue!: BigInt;
+
+    // #endregion datum
+
+    // #region  db
+
+    public static defaultFieldsWhenUndefined: Record<string, boolean> = {};
+
+    public static alwaysFieldsForSelect: Record<string, boolean> = {
+        ...super.alwaysFieldsForSelect,
+        ddPaymentPKH: true,
+        ddStakePKH: true,
+        ddValue: true,
+    };
+
+    // #endregion  db
+}
+```
+
+**Dummy.Entity.Mongo.ts**
+
+Classes for Mongo Schemma should extend `BaseSmartDBEntityMongo` and use the `@MongoAppliedFor` decorator.
+
+```
+import { type PaymentKeyHash } from 'lucid-cardano';
+import { Schema, model, models } from 'mongoose';
+import 'reflect-metadata';
+import { Maybe, MongoAppliedFor } from 'smart-db';
+import { BaseSmartDBEntityMongo, IBaseSmartDBEntity } from 'smart-db/backEnd';
+import { DummyEntity } from './Dummy.Entity';
+
+@MongoAppliedFor([DummyEntity])
+export class DummyEntityMongo extends BaseSmartDBEntityMongo {
+    protected static Entity = DummyEntity;
+    protected static _mongoTableName: string = DummyEntity.className();
+
+    // #region fields
+
+    // #endregion fields
+
+    // #region internal class methods
+
+    public getMongoStatic(): typeof DummyEntityMongo {
+        return this.constructor as typeof DummyEntityMongo;
+    }
+
+    public static getMongoStatic(): typeof DummyEntityMongo {
+        return this as typeof DummyEntityMongo;
+    }
+
+    public getStatic(): typeof DummyEntity {
+        return this.getMongoStatic().getStatic() as typeof DummyEntity;
+    }
+
+    public static getStatic(): typeof DummyEntity {
+        return this.Entity as typeof DummyEntity;
+    }
+
+    public className(): string {
+        return this.getStatic().className();
+    }
+
+    public static className(): string {
+        return this.getStatic().className();
+    }
+
+    // #endregion internal class methods
+
+    // #region mongo db
+
+    public static MongoModel() {
+        interface InterfaceDB extends IBaseSmartDBEntity {}
+        interface InterfaceDatum {
+            ddPaymentPKH: PaymentKeyHash;
+            ddStakePKH: Maybe<PaymentKeyHash>;
+            ddValue: string;
+        }
+
+        interface Interface extends InterfaceDB, InterfaceDatum {}
+
+        const schemaDB = {
+            ...BaseSmartDBEntityMongo.smartDBSchema,
+        };
+
+        const schemaDatum = {
+            ddPaymentPKH: { type: String, required: false },
+            ddStakePKH: { type: Object, required: false },
+            ddValue: { type: String, required: false },
+        };
+
+        const schema = new Schema<Interface>({
+            ...schemaDB,
+            ...schemaDatum,
+        });
+
+        const ModelDB = models[this._mongoTableName] || model<Interface>(this._mongoTableName, schema);
+        return ModelDB;
+    }
+
+    // #endregion mongo db
+}
+```
+
+**Dummy.BackEnd.Api.Handlers.Tx.ts**
+
+The backend for new entities synced with the blockchain must extend both `BaseSmartDBBackEndApplied` and `BaseSmartDBBackEndApiHandlers`  and use the `@BackEndAppliedFor` and `@BackEndApiHandlersFor` decorators.
+
+```
+import { BackEndApiHandlersFor, BackEndAppliedFor, BaseSmartDBBackEndApiHandlers,  BaseSmartDBBackEndApplied, BaseSmartDBBackEndMethods } from 'smart-db/backEnd';
+import { DummyEntity } from '../Entities/Dummy.Entity';
+
+@BackEndAppliedFor(DummyEntity)
+export class DummyBackEndApplied extends BaseSmartDBBackEndApplied {
+    protected static _Entity = DummyEntity;
+    protected static _BackEndMethods = BaseSmartDBBackEndMethods;
+}
+
+@Back
+
+EndApiHandlersFor(DummyEntity)
+export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
+    protected static _Entity = DummyEntity;
+    protected static _BackEndApplied = DummyBackEndApplied;
+}
+```
+
+**Dummy.FrontEnd.Api.Calls.ts**
+
+Classes for frontend API calls should extend `BaseSmartDBFrontEndApiCalls`.
+
+```
+import { BaseSmartDBFrontEndApiCalls } from 'smart-db';
+import { DummyEntity } from '../Entities/Dummy.Entity';
+
+export class DummyApi extends BaseSmartDBFrontEndApiCalls {
+    protected static _Entity = DummyEntity;
+
+    // #region api
+
+    // #endregion api
+}
+```
+
+## Root Backend File
+
+To configure the backend for projects using our library, create a root backend file. This file needs to import all backend code from the test case and should be imported in any backend code file. This ensures that all decorators and registries of entities and backend handlers are loaded.
+
+### Root Backend File Example
+
+The example includes a Root Backend File in `src/lib/DummyExample/backEnd.ts`.
+
+It is important to import `initBackEnd` from `smart-db/backEnd` so all registries are filled in the backend environment using the decorators that all classes have.
+
+```
+import { EndpointsManager, initBackEnd as initBackEndSmartDB } from 'smart-db/backEnd';
+export * from 'smart-db/backEnd';
+export * from './BackEnd/index';
+export * from './Entities/index.BackEnd';
+
+// It is very important that this file is used to import from all API endpoints 
+// so that all necessary decorators of all classes are generated.
+
+export function initBackEnd() {
+    initBackEndSmartDB();
+    const endpointsManager = EndpointsManager.getInstance();
+    // endpointsManager.setPublicEndPointsInternet([/^\/api\/blockfrost\/.+/]);
+}
+```
+
+#### Endpoints Configuration
+
+To set any endpoint as public or private, you must set them in `initBackEnd` method in `Root Backend File`
+
+Use an array of regex like:
+
+```
+endpointsManager.setPublicEndPointsInternet([/^\/api\/blockfrost\/.+/]);
+```
+
+By default, the library sets all endpoints as secured, accessible only with API keys.
+
+### NextJs Api Handler Files
+
+A minimum of two files are needed to handle all routes.
+
+The example includes both files:
+
+`src/pages/api/[[...query]].ts`
+
+```
+import { initBackEnd } from 'path to main backend file in project';
+import { smartDBMainApiHandler } from 'smart-db/backEnd';
+initBackEnd();
+
+export const config = {
+    api: {
+        bodyParser: false,
+    },
+};
+
+export default smartDBMainApiHandler.bind(smartDBMainApiHandler);
+```
+
+`src/pages/api/auth/[...nextauth].ts`
+
+```
+import { initBackEnd } from 'path to main backend file in project';
+import { smartDBMainApiHandler } from 'smart-db/backEnd';
+initBackEnd();
+
+export const config = {
+    api: {
+        bodyParser: false,
+    },
+};
+
+export default smartDBMainApiHandler.bind(smartDBMainApiHandler);
+```
 
 ## Conclusion
 
@@ -677,7 +1063,7 @@ Remember, this is an evolving project, and future updates may introduce features
 
 ## Contribution
 
-Contributions to the Cardano Smart DB are welcome. Whether you're looking to fix bugs, add new features, or improve documentation, your help is appreciated. 
+Contributions to the Cardano Smart DB are welcome. Whether you're looking to fix bugs, add new features, or improve documentation, your help is appreciated.
 
 ## License
 
