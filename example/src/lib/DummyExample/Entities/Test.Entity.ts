@@ -8,17 +8,13 @@ export class TestEntity extends BaseEntity {
 
     // #region fields
 
-    // #endregion fields
-
-    // #region datum
-
     @Convertible()
     name!: string;
 
     @Convertible()
     description!: string;
 
-    // #endregion datum
+    // #endregion fields
 
     // #region  db
 

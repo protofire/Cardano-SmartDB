@@ -276,7 +276,7 @@ npm install ../smart-db.tgz
 In the future, the package will be publicly accessible via npm. To install:
 
 ```
-npm install smart-db.tgz 
+npm install smart-db
 ```
 
 4. Import the necessary modules into your project:
