@@ -14,8 +14,20 @@
       - [macOS and Ubuntu](#macos-and-ubuntu)
   - [Using nvm to Install Node.js](#using-nvm-to-install-nodejs)
   - [Obtaining Blockfrost API Keys](#obtaining-blockfrost-api-keys)
-  - [Installation of the example Project](#installation-of-the-example-project)
-  
+  - [Installing MongoDB](#installing-mongodb)
+    - [Windows](#windows-2)
+    - [macOS](#macos-1)
+    - [Ubuntu](#ubuntu-1)
+    - [Setting up MongoDB connection string](#setting-up-mongodb-connection-string)
+      - [Localhost (default)](#localhost-default)
+      - [Docker](#docker)
+      - [WSL (Windows Subsystem for Linux)](#wsl-windows-subsystem-for-linux)
+      - [Remote MongoDB Server](#remote-mongodb-server)
+- [Installation of the example Project](#installation-of-the-example-project)
+- [Environment Setup](#environment-setup)
+- [Run the Application in developer mode](#run-the-application-in-developer-mode)
+- [Build and Run Application](#build-and-run-application)
+
 ## Getting Started
 
 ### Prerequisites
@@ -25,7 +37,8 @@ Before you begin, ensure you have:
 - npm (version 10.1.0 or later) or Yarn
 - Basic knowledge of React and Next.js
 - Blockfrost API Keys
-  
+- MongoDB (installation instructions below)
+
 ### Installing Node.js and npm
 
 Node.js is a runtime required to execute JavaScript on the server, and npm is the package manager for JavaScript. 
@@ -143,9 +156,7 @@ wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 ```
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -
-
-s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 ```
 
 ### Using nvm to Install Node.js
@@ -183,8 +194,6 @@ nvm use <version_number>
 
 Replace `<version_number>` with the actual version of Node.js you want to switch to.
 
-By following these steps, you will have `nvm` set up on your system, allowing for flexible Node.js version management tailored to your development needs.
-
 ### Obtaining Blockfrost API Keys
 
 To interact with the Cardano blockchain through our project, you will need to obtain API keys from Blockfrost, a service that provides access to the Cardano blockchain data. You'll require separate keys for each network you intend to work with: Mainnet, Preview testnet, and Preprod testnet.
@@ -209,7 +218,7 @@ Here, you can find the API key under the 'Project keys' section.
 Copy the PROJECT_ID which is your API key for the respective network.
 
 4. Set Up Environment Variables:
-
+   
 In your local development environment, set the API keys as environment variables in `.env.local` file:
 
 ```
@@ -220,9 +229,108 @@ BLOCKFROST_KEY_PREPROD=your_preprod_testnet_project_key_here
 
 Replace your_mainnet_project_key_here, your_preview_testnet_project_key_here, and your_preprod_testnet_project_key_here with the actual keys you obtained from Blockfrost.
 
-The configuration for the `.env.local` file is explained in detail in the following section of this README.
+Only one Blockfrost API key is needed, corresponding to the network set in `NEXT_PUBLIC_CARDANO_NET` variable.
 
-### Installation of the example Project
+The configuration for the `.env.local` file is explained in detail in the following section of this [Environment Setup](#environment-setup).
+
+### Installing MongoDB
+
+#### Windows
+
+1. Download the MongoDB installer from the [official MongoDB website](https://www.mongodb.com/try/download/community).
+2. Run the installer and follow the prompts.
+3. Configure MongoDB as a Windows service.
+
+#### macOS
+
+1. If Homebrew is not installed, install it first from [Homebrew's website](https://brew.sh/).
+2. Install MongoDB using Homebrew:
+
+```
+brew tap mongodb/brew
+brew install mongodb-community@5.0
+```
+
+3. Start MongoDB:
+
+```
+brew services start mongodb/brew/mongodb-community
+```
+
+#### Ubuntu
+
+1. Import the MongoDB public GPG Key:
+
+```
+wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | sudo apt-key add -
+```
+
+2. Create a list file for MongoDB:
+
+```
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-5.0.list
+```
+
+3. Reload local package database:
+
+```
+sudo apt update
+```
+
+4. Install MongoDB packages:
+
+```
+sudo apt install -y mongodb-org
+```
+
+5. Start MongoDB:
+
+```
+sudo systemctl start mongod
+sudo systemctl enable mongod
+```
+
+#### Setting up MongoDB connection string
+
+The `MONGO_URLDB` environment variable should contain the MongoDB connection string. 
+
+The configuration for the `.env.local` file is explained in detail in the following section of this [Environment Setup](#environment-setup).
+
+Here are examples of how to set it up in different environments:
+
+##### Localhost (default)
+If MongoDB is installed locally on your machine:
+```
+MONGO_URLDB=mongodb://localhost:27017/your-database-name
+```
+
+##### Docker
+If you are running MongoDB inside a Docker container:
+```
+MONGO_URLDB=mongodb://<docker-container-ip>:27017/your-database-name
+```
+Replace `<docker-container-ip>` with the actual IP address of your Docker container.
+
+##### WSL (Windows Subsystem for Linux)
+To get the IP address of the Windows host from WSL, use the following command:
+```
+cat /etc/resolv.conf
+```
+Use the IP address found in the output to set up the MongoDB connection string:
+```
+MONGO_URLDB=mongodb://<windows-ip>:27017/your-database-name
+```
+
+##### Remote MongoDB Server
+If you are connecting to a remote MongoDB server:
+```
+MONGO_URLDB=mongodb://<remote-server-ip>:27017/your-database-name
+```
+Replace `<remote-server-ip>` with the actual IP address of your remote MongoDB server.
+
+After setting these variables, your application will be configured to communicate with the specified Cardano network and utilize the necessary services and databases.
+
+## Installation of the example Project
 
 1. **Clone the Repository**
 
@@ -245,9 +353,11 @@ npm install
 yarn
 ```
 
-4. **Environment Setup**
+## Environment Setup
 
-Create a `.env.local` file at the root of your project by copying the contents from the `.env` template file. Adjust the environment variables according to your project's needs:
+Create a `.env.local` file at the root of your project by copying the contents from the `.env` template file. 
+
+Adjust the environment variables according to your project's needs:
 
 - `REACT_EDITOR`: Specifies the IDE to open files from within the application.
 - `NEXT_PUBLIC_CARDANO_NET`: Sets the Cardano network environment. Valid options include 'Mainnet', 'Preview' or 'Preprod'.
@@ -269,10 +379,11 @@ Create a `.env.local` file at the root of your project by copying the contents f
 - `NEXT_PUBLIC_USE_BLOCKCHAIN_TIME`: Boolean flag to decide if blockchain time should be used.
 - `USE_DATABASE`: Type of database used, such as 'mongo' for MongoDB.
 - `MONGO_URLDB`: MongoDB connection string.
+- `SWAGGER_PORT`: The Swagger server port
 
-After setting these variables, your application will be configured to communicate with the specified Cardano network and utilize the necessary services and databases.
+**Note:** Only one Blockfrost API key is needed, corresponding to the network set in `NEXT_PUBLIC_CARDANO_NET`.
 
-5. **Run the Application in developer mode**
+## Run the Application in developer mode
 
 ```
 npm run dev
@@ -282,7 +393,11 @@ yarn dev
 
 Visit `http://localhost:3000` in your browser to view the application in developer mode.
 
-6. **Build and Run Application**
+**Additional Notes:**
+
+It's important to ensure that all environment variables set in your `.env.local` file are compatible with your production environment. 
+
+## Build and Run Application
 
 First, compile your application into static assets for production by running the build command. This process bundles your React application and optimizes it for the best performance. The build is minified, and filenames include the hashes for browser caching efficiency.
 
@@ -306,12 +421,4 @@ Visit `http://localhost:3000` in your browser to interact with the application i
 
 **Additional Notes:**
 
-It's important to ensure that all environment variables set in your `.env.local` file are compatible with your production environment. Any sensitive keys should not be hard-coded and must be securely managed.
-
-The npm run build or yarn build command should be run in your production environment or as part of a CI/CD pipeline to ensure that the build assets are suitable for the production servers they will run on.
-
-When running in production, monitoring and logging tools should be implemented to keep track of the application's health and performance.
-
-By following these steps, your application will be built and run in a production environment, providing users with a faster and more secure experience.
-
-
+It's important to ensure that all environment variables set in your `.env.local` file are compatible with your production environment. 

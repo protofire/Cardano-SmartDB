@@ -1,14 +1,14 @@
-# Smart DB Library: Cardano Blockchain Integration Example
 
 ## Table of Contents
-- [Smart DB Library: Cardano Blockchain Integration Example](#smart-db-library-cardano-blockchain-integration-example)
-  - [Table of Contents](#table-of-contents)
-  - [Introduction](#introduction)
-  - [Features](#features)
-  - [Conclusion](#conclusion)
-  - [Contribution](#contribution)
-  - [License](#license)
-  - [Acknowledgements](#acknowledgements)
+- [Table of Contents](#table-of-contents)
+- [Introduction](#introduction)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Conclusion](#conclusion)
+- [Contribution](#contribution)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
   
 ## Introduction
 
@@ -28,6 +28,14 @@ Please note that in this stage, after a transaction is confirmed, the user needs
 - **Swagger Server**: Provides a Swagger UI for testing API endpoints.
 - **Test API**: The project includes Jest tests for the API.
 - **Validator Script Logic**: The example validator script only permits the creator of the datum to consume it for updates or claims, demonstrating the implementation of custom business logic on the blockchain.
+
+## Installation
+
+Refer to [Installation](docs/installation.md)
+
+## Usage
+
+Refer to [Usage](docs/usage.md)
 
 ## Conclusion
 

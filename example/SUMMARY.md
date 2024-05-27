@@ -1,5 +1,5 @@
 
-# Summary
+# Smart DB Library: Cardano Blockchain Integration Example
 
 * [Introduction](README.md)
 <!-- - [Table of Contents](README.md#table-of-contents)

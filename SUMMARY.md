@@ -1,5 +1,5 @@
 
-# Summary
+# Smart DB Library
 
 * [Introduction](README.md)
 <!-- - [Table of Contents](README.md#table-of-contents)
