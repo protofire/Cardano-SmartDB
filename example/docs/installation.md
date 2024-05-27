@@ -349,9 +349,23 @@ cd example
 
 ```
 npm install
+
 # Or if you use Yarn
 yarn
 ```
+
+
+4. **Update Library**
+
+In this example we are using the library package as a tar file.
+
+```
+npm install ../smart-db.tgz --force
+```
+
+- **Note:** Ensure that the library was packed before.
+
+[Download, Build and Pack the library](../../docs/installation.md#download-build-and-pack-the-library)
 
 ## Environment Setup
 
