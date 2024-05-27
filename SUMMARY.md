@@ -2,12 +2,6 @@
 # Summary
 
 * [Introduction](README.md)
-* [Installation](docs/installation.md)
-* [Usage](docs/usage.md)
-
-
-
-* [Introduction](README.md)
 - [Table of Contents](README.md#table-of-contents)
 - [Introduction](README.md#introduction)
 - [Features](README.md#features)
@@ -17,7 +11,6 @@
 - [Contribution](README.md#contribution)
 - [License](README.md#license)
 - [Acknowledgements](README.md#acknowledgements)
-
 
 * [Installation](docs/installation.md)
 - [Table of Contents](docs/installation.md#table-of-contents)
@@ -35,7 +28,7 @@
       - [macOS and Ubuntu](docs/installation.md#macos-and-ubuntu)
   - [Using nvm to Install Node.js](docs/installation.md#using-nvm-to-install-nodejs)
 - [Download, Build and Pack the library](docs/installation.md#download-build-and-pack-the-library)
-
+  
 * [Usage](docs/usage.md)
 - [Table of Contents](docs/usage.md#table-of-contents)
 - [Directory Structure](docs/usage.md#directory-structure)
