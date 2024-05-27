@@ -3,6 +3,7 @@
 - [Table of Contents](#table-of-contents)
 - [Introduction](#introduction)
 - [Features](#features)
+- [Documentation](#documentation)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Conclusion](#conclusion)
@@ -22,6 +23,12 @@ The Smart DB Library is a Node.js package designed to simplify the interaction b
 - **API Handling**: The library handles all API routes, reducing the complexity in the projects that use our library.
 - **Example Project**: Includes a comprehensive example project in the `example` folder demonstrating the use of the library.
 - **Node.js Dependency**: This is a Node.js library to add as a dependency in dApps projects.
+
+## Documentation
+
+**Gitbook**
+
+https://protofire-docs.gitbook.io/smartdb/
 
 ## Installation
 
