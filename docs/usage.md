@@ -160,7 +160,7 @@ import { any backend module } from 'smart-db/backEnd';
 ```
 
 4. To create normal and Smart DB entities, refer to the detailed sections in this README. 
-[Setting Up New Projects with Custom Entities](#setting-up-new-projects-with-custom-entities)
+[Custom Entities](#custom-entities)
 
 5. To create a root backend file that imports all the backend and defines the `initBackEnd` function, refer to the "Root Backend File" section in this README.
 [Root Backend File](#root-backend-file)

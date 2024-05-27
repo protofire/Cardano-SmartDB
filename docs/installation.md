@@ -191,7 +191,6 @@ git clone git@github.com:protofire/Cardano-SmartDB.git
 cd Cardano-SmartDB
 ```
 
-
 2. **Install Dependencies**
 
 ```
