@@ -1,7 +1,15 @@
-# Smart DB Library
+# Introduction
 
-## Introduction
 The Smart DB Library is a Node.js package designed to simplify the interaction between JavaScript entities, a database, and the Cardano blockchain. It enables developers to work with entities backed by a database and synced with the blockchain, providing a transparent and seamless experience.
+
+## Table of Contents
+- [Introduction](#introduction)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Conclusion](#conclusion)
+  - [Contribution](#contribution)
+  - [License](#license)
+  - [Acknowledgements](#acknowledgements)
 
 ## Features
 - **Hooks and Stores**: Provides useHooks and EasyPeasy stores to deal with wallet connection.

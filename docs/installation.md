@@ -1,3 +1,23 @@
+# Installation
+
+## Table of Contents
+- [Installation](#installation)
+  - [Table of Contents](#table-of-contents)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installing Node.js and npm](#installing-nodejs-and-npm)
+      - [Windows](#windows)
+      - [macOS](#macos)
+      - [Ubuntu](#ubuntu)
+      - [Optional: Install Yarn](#optional-install-yarn)
+    - [Node Version Management with nvm](#node-version-management-with-nvm)
+      - [Benefits of Using nvm](#benefits-of-using-nvm)
+      - [Installing nvm](#installing-nvm)
+        - [Windows](#windows-1)
+        - [macOS and Ubuntu](#macos-and-ubuntu)
+    - [Using nvm to Install Node.js](#using-nvm-to-install-nodejs)
+  - [Download, Build and Pack the library](#download-build-and-pack-the-library)
+
 ## Getting Started
 
 ### Prerequisites
@@ -164,7 +184,7 @@ Replace `<version_number>` with the actual version of Node.js you want to switch
 
 By following these steps, you will have `nvm` set up on your system, allowing for flexible Node.js version management tailored to your development needs.
 
-## Download, build and Pack the library
+## Download, Build and Pack the library
 
 1. **Clone the Repository**
 
