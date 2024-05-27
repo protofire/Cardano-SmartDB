@@ -1,23 +1,3 @@
-# Smart DB Library
-
-## Table of Contents
-- [Smart DB Library](#smart-db-library)
-  - [Table of Contents](#table-of-contents)
-  - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Installing Node.js and npm](#installing-nodejs-and-npm)
-      - [Windows](#windows)
-      - [macOS](#macos)
-      - [Ubuntu](#ubuntu)
-      - [Optional: Install Yarn](#optional-install-yarn)
-    - [Node Version Management with nvm](#node-version-management-with-nvm)
-      - [Benefits of Using nvm](#benefits-of-using-nvm)
-      - [Installing nvm](#installing-nvm)
-        - [Windows](#windows-1)
-        - [macOS and Ubuntu](#macos-and-ubuntu)
-    - [Using nvm to Install Node.js](#using-nvm-to-install-nodejs)
-  - [Download, build and Pack the library](#download-build-and-pack-the-library)
-  
 ## Getting Started
 
 ### Prerequisites
