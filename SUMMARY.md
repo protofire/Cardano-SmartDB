@@ -2,7 +2,7 @@
 # Summary
 
 * [Introduction](README.md)
-- [Table of Contents](README.md#table-of-contents)
+<!-- - [Table of Contents](README.md#table-of-contents)
 - [Introduction](README.md#introduction)
 - [Features](README.md#features)
 - [Installation](README.md#installation)
@@ -10,10 +10,10 @@
 - [Conclusion](README.md#conclusion)
 - [Contribution](README.md#contribution)
 - [License](README.md#license)
-- [Acknowledgements](README.md#acknowledgements)
+- [Acknowledgements](README.md#acknowledgements) -->
 
 * [Installation](docs/installation.md)
-- [Table of Contents](docs/installation.md#table-of-contents)
+<!-- - [Table of Contents](docs/installation.md#table-of-contents)
 - [Getting Started](docs/installation.md#getting-started)
   - [Prerequisites](docs/installation.md#prerequisites)
   - [Installing Node.js and npm](docs/installation.md#installing-nodejs-and-npm)
@@ -27,10 +27,10 @@
       - [Windows](docs/installation.md#windows-1)
       - [macOS and Ubuntu](docs/installation.md#macos-and-ubuntu)
   - [Using nvm to Install Node.js](docs/installation.md#using-nvm-to-install-nodejs)
-- [Download, Build and Pack the library](docs/installation.md#download-build-and-pack-the-library)
+- [Download, Build and Pack the library](docs/installation.md#download-build-and-pack-the-library) -->
   
 * [Usage](docs/usage.md)
-- [Table of Contents](docs/usage.md#table-of-contents)
+<!-- - [Table of Contents](docs/usage.md#table-of-contents)
 - [Directory Structure](docs/usage.md#directory-structure)
 - [Smart DB Library Code Structure](docs/usage.md#smart-db-library-code-structure)
   - [Entities](docs/usage.md#entities)
@@ -52,4 +52,4 @@
   - [Root Backend File](docs/usage.md#root-backend-file)
     - [Root Backend File Example](docs/usage.md#root-backend-file-example)
     - [Endpoints Configuration](docs/usage.md#endpoints-configuration)
-  - [NextJs Api Handler Files](docs/usage.md#nextjs-api-handler-files)
+  - [NextJs Api Handler Files](docs/usage.md#nextjs-api-handler-files) -->
