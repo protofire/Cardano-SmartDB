@@ -2,6 +2,7 @@ export * from './Base/Base.Entity.Mongo.js';
 export * from './Base/Base.SmartDB.Entity.Mongo.js';
 export * from './AddressToFollow.Entity.Mongo.js';
 export * from './Emulator.Entity.Mongo.js';
+export * from './Job.Entity.Mongo.js';
 export * from './Price.Entity.Mongo.js';
 export * from './SiteSettings.Entity.Mongo.js';
 export * from './SmartUTxO.Entity.Mongo.js';

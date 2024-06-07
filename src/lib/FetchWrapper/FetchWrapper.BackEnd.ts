@@ -25,7 +25,7 @@ export const fetchWrapperBackEnd = async (
         }
         //----------------------
     }
-    //----------------------
+    //-----------------------
     const csrfToken = generateCsrfToken();
     if (csrfToken) {
         headers.append('x-csrf-token', csrfToken);

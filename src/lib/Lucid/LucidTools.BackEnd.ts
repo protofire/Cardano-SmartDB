@@ -19,6 +19,18 @@ export class LucidToolsBackEnd extends LucidToolsFrontEnd {
         }
     };
 
+    public static initializeLucidWithBlockfrostAndExternalWallet = async (wallet: ExternalWallet) => {
+        console.log('[Lucid] - initializeLucidWithBlockfrostAndExternalWallet');
+        try {
+            const lucid = await this.initializeLucidWithBlockfrost();
+            lucid.selectWalletFrom(wallet);
+            return lucid;
+        } catch (error) {
+            console.log(`[Lucid] - initializeLucidWithBlockfrostAndExternalWallet - Error: ${error}`);
+            throw error;
+        }
+    };
+
     public static async prepareLucidBackEndForTx(walletTxParams?: WalletTxParams): Promise<{ lucid: Lucid; wallet: ExternalWallet | undefined }> {
         try {
             //--------------------------------------

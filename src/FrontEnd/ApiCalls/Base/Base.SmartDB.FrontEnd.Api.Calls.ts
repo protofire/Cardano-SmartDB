@@ -112,5 +112,39 @@ export class BaseSmartDBFrontEndApiCalls extends BaseFrontEndApiCalls {
         }
     }
 
+
+    public static async parseBlockchainAddressApi<T extends BaseSmartDBEntity>(Entity: typeof BaseSmartDBEntity, address: string, datumType: string, fromBlock?: number, toBlock?: number,): Promise<string> {
+        try {
+            //-------------------------
+            if (isNullOrBlank(address)) {
+                throw `address not defined`;
+            }
+            //-------------------------
+            const body = toJson({address, datumType, fromBlock, toBlock});
+            //-------------------------
+            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/parse-blockchain-address`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body,
+            });
+            //-------------------------
+            if (response.status === 202) {
+                const data = await response.json();
+                console.log(`[${Entity.className()}] - parseBlockchainAddressApi - jobId: ${data.jobId} - response OK`);
+                return data.jobId;
+            } else {
+                const errorData = await response.json();
+                //throw `Received status code ${response.status} with message: ${errorData.error.message ? errorData.error.message : errorData.error}`;
+                throw `${errorData.error.message ? errorData.error.message : errorData.error}`;
+            }
+            //-------------------------
+        } catch (error) {
+            console.log(`[${Entity.className()}] - parseBlockchainAddressApi - Error: ${error}`);
+            throw `${error}`;
+        }
+    }
+
     // #endregion api
 }

@@ -308,7 +308,7 @@ export type TransactionDatum = {
 
 export type TransactionRedeemer = {
     tx_index: number;
-    purpose: string;
+    purpose: 'mint' | 'spend' ;
     script_hash?: string;
     redeemer_data_hash?: string;
     datum_hash?: string;

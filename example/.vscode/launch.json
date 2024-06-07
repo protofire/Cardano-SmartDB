@@ -16,6 +16,23 @@
         //     "request": "launch",
         //     "command": "npm run dev"
         // },
+
+        {
+            "name": "Next.js: debug server-side-NEW",
+            "type": "node",
+            "request": "launch",
+            "skipFiles": ["<node_internals>/**"],
+            "runtimeExecutable": "npm", 
+            "runtimeArgs": ["run", "dev"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "sourceMaps": true,
+            "env": {
+                "NODE_ENV": "development",
+                "NODE_OPTIONS": "--inspect",
+                "DEBUG":"true"
+            }
+        },
         {
             "name": "Attach to Next.js",
             "type": "node",

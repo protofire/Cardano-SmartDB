@@ -1,6 +1,6 @@
 {
     "name": "smart-db",
-    "version": "1.0.432",
+    "version": "1.0.449",
     "description": "Smart DB",
     "type": "module",
     "main": "index.js",

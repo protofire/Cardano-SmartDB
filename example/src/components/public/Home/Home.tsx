@@ -1,34 +1,13 @@
 import { DummyEntity } from '@example/src/lib/DummyExample/Entities/Dummy.Entity';
-import {
-    DummyPolicyRedeemerBurnID,
-    DummyPolicyRedeemerMintID,
-    DummyValidatorRedeemerClaim,
-    DummyValidatorRedeemerDatumUpdate,
-} from '@example/src/lib/DummyExample/Entities/Redeemers/Dummy.Redeemer';
 import { DummyApi } from '@example/src/lib/DummyExample/FrontEnd/Dummy.FrontEnd.Api.Calls';
-import { Address, Assets, Lucid, Script, SpendingValidator } from 'lucid-cardano';
+import { Address, Lucid, Script, SpendingValidator } from 'lucid-cardano';
 import { useEffect, useState } from 'react';
 import Modal from 'react-modal';
-import {
-    ADA_UI,
-    BaseSmartDBFrontEndApiCalls,
-    CS,
-    LucidToolsFrontEnd,
-    Maybe,
-    addAssetsList,
-    addressToPubKeyHash,
-    calculateMinAdaOfUTxO,
-    formatHash,
-    formatTokenAmount,
-    formatUTxO,
-    objToCborHex,
-    showData,
-    strToHex,
-    useWalletStore,
-} from 'smart-db';
+import { ADA_UI, BaseSmartDBFrontEndApiCalls, BaseSmartDBFrontEndBtnHandlers, CS, LucidToolsFrontEnd, formatHash, formatTokenAmount, formatUTxO, pushSucessNotification, pushWarningNotification, useWalletStore } from 'smart-db';
 import LoaderButton from '../../Commons/LoaderButton/LoaderButton';
 import WalletConnector from '../../Commons/WalletConnector/WalletConnector';
 import styles from './Home.module.scss';
+import { ClaimTxParams, CreateTxParams, UpdateTxParams } from '@example/src/lib/Commons/Constants/transactions';
 
 export default function Home() {
     //--------------------------------------
@@ -183,6 +162,18 @@ export default function Home() {
         }
     };
     //--------------------------------------
+        const startEditing = (item: DummyEntity) => {
+            setSelectedItem(item);
+            setIsEditingValue(true);
+            setEditValue(item.ddValue.toString());
+        };
+        const finishEditing = () => {
+            setSelectedItem(undefined);
+            setIsEditingValue(false);
+            setEditValue('');
+        };
+        //-------------------------------------
+
     const handleBtnFaucet = async () => {
         //----------------------------
         //open link https://docs.cardano.org/cardano-testnet/tools/faucet/
@@ -192,6 +183,30 @@ export default function Home() {
     const handleBtnBalance = async () => {
         await getBalance();
     };
+
+    const handleBtnSync = async () => {
+        //----------------------------
+        if (lucid === undefined) return;
+        if (validatorAddress === undefined) return;
+        //----------------------------
+        setIsLoadingSync(true);
+        //----------------------------
+        try {
+            //----------------------------
+            await DummyApi.syncWithAddressApi(DummyEntity, validatorAddress, true);
+            const list: DummyEntity[] = await DummyApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
+            setList(list);
+            //----------------------------
+            pushSucessNotification(`Dummy Sync`, 'Syncronization complete!', false);
+            //----------------------------
+        } catch (e) {
+            console.error(e);
+            pushWarningNotification(`Dummy Sync`, 'Syncronization Error' + e);
+        }
+        //----------------------------
+        setIsLoadingSync(false);
+    };
+
     const handleBtnCreateTx = async () => {
         //----------------------------
         if (lucid === undefined) return;
@@ -211,76 +226,62 @@ export default function Home() {
         setIsLoadingTxCreate(true);
         setTxConfirmed(false);
         try {
+            //----------------------------
             setTxHash(undefined);
             setIsTxError(false);
             setTxMessage('Creating Transaction...');
             //----------------------------
-            const lucidAC_MintID = datumID_CS + strToHex(datumID_TN);
-            const valueFor_Mint_ID: Assets = { [lucidAC_MintID]: 1n };
-            console.log(`valueFor_Mint_ID: ${showData(valueFor_Mint_ID)}`);
-            //----------------------------
-            let valueFor_DummyDatum_Out: Assets = valueFor_Mint_ID;
-            const minADA_For_DummyDatum = calculateMinAdaOfUTxO({ assets: valueFor_DummyDatum_Out });
-            const value_MinAda_For_DummyDatum: Assets = { lovelace: minADA_For_DummyDatum };
-            valueFor_DummyDatum_Out = addAssetsList([value_MinAda_For_DummyDatum, valueFor_DummyDatum_Out]);
-            console.log(`valueFor_FundDatum_Out: ${showData(valueFor_DummyDatum_Out, false)}`);
-            //--------------------------------------
-            const paymentPKH = addressToPubKeyHash(address);
-            const datumPlainObject = {
-                ddPaymentPKH: paymentPKH,
-                ddStakePKH: new Maybe(),
+            const txParams: CreateTxParams = {
                 ddValue: BigInt(inputValue),
+                datumID_CS,
+                datumID_TN,
+                validatorAddress,
+                mintingIdDummy,
             };
-            let dummyDatum_Out = DummyEntity.mkDatumFromPlainObject(datumPlainObject);
-            console.log(`dummyDatum_Out: ${showData(dummyDatum_Out, false)}`);
-            const dummyDatum_Out_Hex = DummyEntity.datumToCborHex(dummyDatum_Out);
-            console.log(`dummyDatum_Out_Hex: ${showData(dummyDatum_Out_Hex, false)}`);
             //--------------------------------------
-            const dummyPolicyRedeemerMintID = new DummyPolicyRedeemerMintID();
-            console.log(`dummyPolicyRedeemerMintID: ${showData(dummyPolicyRedeemerMintID, false)}`);
-            const dummyPolicyRedeemerMintID_Hex = objToCborHex(dummyPolicyRedeemerMintID);
-            console.log(`dummyPolicyRedeemerMintID_Hex: ${showData(dummyPolicyRedeemerMintID_Hex, false)}`);
+            // const { lucid, emulatorDB, walletTxParams } = await LucidToolsFrontEnd.prepareLucidFrontEndForTx(walletStore);
+            // //--------------------------------------
+            // const txApiCall = DummyApi.callGenericTxApi_.bind(DummyApi, 'create-dummy-tx', walletTxParams, txParams);
+            // const result = await BaseSmartDBFrontEndBtnHandlers.handleBtnDoTransaction(
+            //     DummyEntity,
+            //     'Creating Dummy...',
+            //     'Create Dummy Tx',
+            //     lucid,
+            //     emulatorDB,
+            //     txApiCall,  setTxMessage,
+            //     setTxHash,walletStore
+            // );
             //--------------------------------------
-            const tx = await lucid
-                .newTx()
-                .mintAssets(valueFor_Mint_ID, dummyPolicyRedeemerMintID_Hex)
-                .payToContract(validatorAddress, { inline: dummyDatum_Out_Hex }, valueFor_DummyDatum_Out)
-                .attachMintingPolicy(mintingIdDummy)
-                .complete();
+            const result = await BaseSmartDBFrontEndBtnHandlers.handleBtnDoTransactionV1(
+                DummyEntity,
+                'Creating Dummy...',
+                'Create Tx',
+                setTxMessage,
+                setTxHash,
+                walletStore,
+                txParams,
+                DummyApi.callGenericTxApi_.bind(DummyApi, 'create-dummy-tx')
+            );
             //----------------------------
-            const signedTx = await tx.sign().complete();
-            setTxMessage('Transaction has been submited and now waiting for confirmation...');
-
-            console.log(lucid.wallet);
-            console.log(lucid.wallet.submitTx);
-            console.log(lucid.provider);
-            console.log(lucid.provider.submitTx);
-
-            // // return await (this.lucid.wallet || this.lucid.provider).submitTx(toHex(this.txSigned.to_bytes()));
-
-            const txHash = await signedTx.submit();
-            //----------------------------
-            setTxMessage('Transaction has been submited and now waiting for confirmation...');
-            //----------------------------
-            setTxHash(txHash);
-            console.log(`txHash: ${txHash}`);
-            //----------------------------
-            if (await lucid.awaitTx(txHash)) {
-                console.log('Tx confirmed');
-                setTxConfirmed(true);
-                setTxMessage('Transaction has been confirmed!');
-            } else {
-                console.log('Tx not confirmed');
-                throw new Error('Tx not confirmed');
+            if (result === false) {
+                throw 'There was an error in the transaction';
             }
+            //----------------------------
+            setTxMessage('Transaction has been confirmed. Refreshing data...');
+            const list: DummyEntity[] = await DummyApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
+            setList(list);
+            //----------------------------
+            setTxMessage('Transaction has been confirmed. Data has been refreshed.');
+            setTxConfirmed(result);
+            //----------------------------
         } catch (e) {
             console.error(e);
             setTxHash(undefined);
             setIsTxError(true);
-            setTxMessage(`Error: ${e}`);
         }
         setIsLoadingTxCreate(false);
     };
+
     const handleBtnClaimTx = async (item: DummyEntity) => {
         //----------------------------
         if (lucid === undefined) return;
@@ -306,87 +307,45 @@ export default function Home() {
             setIsTxError(false);
             setTxMessage('Creating Transaction...');
             //----------------------------
-            const lucidAC_BurnID = datumID_CS + strToHex(datumID_TN);
-            const valueFor_Burn_ID: Assets = { [lucidAC_BurnID]: -1n };
-            console.log(`valueFor_Burn_ID: ${showData(valueFor_Burn_ID)}`);
-            //----------------------------
-            const dummyDatum_UTxO = item.smartUTxO?.getUTxO();
-            if (dummyDatum_UTxO === undefined) return;
+            const txParams: ClaimTxParams = {
+                dummy_id: item._DB_id,
+                datumID_CS,
+                datumID_TN,
+                mintingIdDummy,
+                validatorDummy,
+            };
             //--------------------------------------
-            const dummyPolicyRedeemerBurnID = new DummyPolicyRedeemerBurnID();
-            console.log(`dummyPolicyRedeemerBurnID: ${showData(dummyPolicyRedeemerBurnID, false)}`);
-            const dummyPolicyRedeemerBurnID_Hex = objToCborHex(dummyPolicyRedeemerBurnID);
-            console.log(`dummyPolicyRedeemerBurnID_Hex: ${showData(dummyPolicyRedeemerBurnID_Hex, false)}`);
-            //--------------------------------------
-            const dummyValidatorRedeemerClaim = new DummyValidatorRedeemerClaim();
-            console.log(`dummyValidatorRedeemerClaim: ${showData(dummyValidatorRedeemerClaim, false)}`);
-            const dummyValidatorRedeemerClaim_Hex = objToCborHex(dummyValidatorRedeemerClaim);
-            console.log(`dummyValidatorRedeemerClaim_Hex: ${showData(dummyValidatorRedeemerClaim_Hex, false)}`);
-            //--------------------------------------
-            const tx = await lucid
-                .newTx()
-                .mintAssets(valueFor_Burn_ID, dummyPolicyRedeemerBurnID_Hex)
-                .collectFrom([dummyDatum_UTxO], dummyValidatorRedeemerClaim_Hex)
-                .attachMintingPolicy(mintingIdDummy)
-                .attachSpendingValidator(validatorDummy)
-                .addSigner(address)
-                .complete();
+            const result = await BaseSmartDBFrontEndBtnHandlers.handleBtnDoTransactionV1(
+                DummyEntity,
+                'Claiming Dummy...',
+                'Claim Tx',
+                setTxMessage,
+                setTxHash,
+                walletStore,
+                txParams,
+                DummyApi.callGenericTxApi_.bind(DummyApi, 'claim-dummy-tx')
+            );
             //----------------------------
-            const signedTx = await tx.sign().complete();
-            const txHash = await signedTx.submit();
-            //----------------------------
-            setTxMessage('Transaction has been submited and now waiting for confirmation...');
-            //----------------------------
-            setTxHash(txHash);
-            console.log(`txHash: ${txHash}`);
-            //----------------------------
-            if (await lucid.awaitTx(txHash)) {
-                console.log('Tx confirmed');
-                setTxConfirmed(true);
-                setTxMessage('Transaction has been confirmed!');
-            } else {
-                console.log('Tx not confirmed');
-                throw new Error('Tx not confirmed');
+            if (result === false) {
+                throw 'There was an error in the transaction';
             }
+            //----------------------------
+            setTxMessage('Transaction has been confirmed. Refreshing data...');
+            const list: DummyEntity[] = await DummyApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
+            setList(list);
+            //----------------------------
+            setTxMessage('Transaction has been confirmed. Data has been refreshed.');
+            setTxConfirmed(result);
+            //----------------------------
         } catch (e) {
             console.error(e);
             setTxHash(undefined);
             setIsTxError(true);
-            setTxMessage(`Error: ${e}`);
         }
         setIsLoadingTxClaim(false);
         setSelectedItem(undefined);
     };
-    const handleBtnSync = async () => {
-        //----------------------------
-        if (lucid === undefined) return;
-        if (validatorAddress === undefined) return;
-        //----------------------------
-        setIsLoadingSync(true);
-        //----------------------------
-        try {
-            //----------------------------
-            await DummyApi.syncWithAddressApi(DummyEntity, validatorAddress, true);
-            const list: DummyEntity[] = await DummyApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
-            setList(list);
-            //----------------------------
-        } catch (e) {
-            console.error(e);
-        }
-        //----------------------------
-        setIsLoadingSync(false);
-    };
-    //-------------------------------------
-    const startEditing = (item: DummyEntity) => {
-        setSelectedItem(item);
-        setIsEditingValue(true);
-        setEditValue(item.ddValue.toString());
-    };
-    const finishEditing = () => {
-        setSelectedItem(undefined);
-        setIsEditingValue(false);
-        setEditValue('');
-    };
+
     const handleBtnUpdateTx = async (item: DummyEntity) => {
         //----------------------------
         if (lucid === undefined) return;
@@ -413,61 +372,41 @@ export default function Home() {
             setIsTxError(false);
             setTxMessage('Creating Transaction...');
             //----------------------------
-            const lucidAC_ID = datumID_CS + strToHex(datumID_TN);
-            const valueFor_ID: Assets = { [lucidAC_ID]: 1n };
-            console.log(`valueFor_ID: ${showData(valueFor_ID)}`);
-            //----------------------------
-            const dummyDatum_UTxO = item.smartUTxO?.getUTxO();
-            if (dummyDatum_UTxO === undefined) return;
-            //--------------------------------------
-            const paymentPKH = addressToPubKeyHash(address);
-            const datumPlainObject = {
-                ddPaymentPKH: paymentPKH,
-                ddStakePKH: new Maybe(),
+            const txParams: UpdateTxParams = {
                 ddValue: BigInt(editValue),
+                dummy_id: item._DB_id,
+                datumID_CS,
+                datumID_TN,
+                validatorAddress,
+                validatorDummy,
             };
             //--------------------------------------
-            let valueFor_DummyDatum_Out = dummyDatum_UTxO.assets;
-            //--------------------------------------
-            let dummyDatum_Out = DummyEntity.mkDatumFromPlainObject(datumPlainObject);
-            console.log(`dummyDatum_Out: ${showData(dummyDatum_Out, false)}`);
-            const dummyDatum_Out_Hex = DummyEntity.datumToCborHex(dummyDatum_Out);
-            console.log(`dummyDatum_Out_Hex: ${showData(dummyDatum_Out_Hex, false)}`);
-            //--------------------------------------
-            const dummyValidatorRedeemerDatumUpdate = new DummyValidatorRedeemerDatumUpdate();
-            console.log(`dummyValidatorRedeemerDatumUpdate: ${showData(dummyValidatorRedeemerDatumUpdate, false)}`);
-            const dummyValidatorRedeemerDatumUpdate_Hex = objToCborHex(dummyValidatorRedeemerDatumUpdate);
-            console.log(`dummyValidatorRedeemerDatumUpdate_Hex: ${showData(dummyValidatorRedeemerDatumUpdate_Hex, false)}`);
-            //--------------------------------------
-            const tx = await lucid
-                .newTx()
-                .collectFrom([dummyDatum_UTxO], dummyValidatorRedeemerDatumUpdate_Hex)
-                .payToContract(validatorAddress, { inline: dummyDatum_Out_Hex }, valueFor_DummyDatum_Out)
-                .attachSpendingValidator(validatorDummy)
-                .addSigner(address)
-                .complete();
+            const result = await BaseSmartDBFrontEndBtnHandlers.handleBtnDoTransactionV1(
+                DummyEntity,
+                'Updating Dummy...',
+                'Update Tx',
+                setTxMessage,
+                setTxHash,
+                walletStore,
+                txParams,
+                DummyApi.callGenericTxApi_.bind(DummyApi, 'update-dummy-tx')
+            );
             //----------------------------
-            const signedTx = await tx.sign().complete();
-            const txHash = await signedTx.submit();
-            //----------------------------
-            setTxMessage('Transaction has been submited and now waiting for confirmation...');
-            //----------------------------
-            setTxHash(txHash);
-            console.log(`txHash: ${txHash}`);
-            //----------------------------
-            if (await lucid.awaitTx(txHash)) {
-                console.log('Tx confirmed');
-                setTxConfirmed(true);
-                setTxMessage('Transaction has been confirmed!');
-            } else {
-                console.log('Tx not confirmed');
-                throw new Error('Tx not confirmed');
+            if (result === false) {
+                throw 'There was an error in the transaction';
             }
+            //----------------------------
+            setTxMessage('Transaction has been confirmed. Refreshing data...');
+            const list: DummyEntity[] = await DummyApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
+            setList(list);
+            //----------------------------
+            setTxMessage('Transaction has been confirmed. Data has been refreshed.');
+            setTxConfirmed(result);
+            //----------------------------
         } catch (e) {
             console.error(e);
             setTxHash(undefined);
             setIsTxError(true);
-            setTxMessage(`Error: ${e}`);
         }
         setIsLoadingTxUpdate(false);
         setSelectedItem(undefined);

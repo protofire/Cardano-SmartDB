@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { isFrontEndEnvironment } from '../../Commons/utils.js';
 
-export  const fetchWrapper = async (url: string, options: RequestInit = {}, swAddChallengue: boolean = true, retryCount: number = 0, timeout: number = 0): Promise<Response> => {
+export const fetchWrapper = async (url: string, options: RequestInit = {}, swAddChallengue: boolean = true, retryCount: number = 0, timeout: number = 0): Promise<Response> => {
     //----------------------
     if (isFrontEndEnvironment() === false) {
         throw `fetchWrapper - Only use FronEnd environment`;
@@ -60,20 +60,20 @@ export function createApiRequest(url: string, options: RequestInit, headers: Hea
             return fetchResponse;
             //----------------------
         } catch (error: any) {
-            //----------------------
-            errors.push({ attempt: count + 1, error }); // Log the error message for this attempt
-
-            //----------------------
+            if (axios.isAxiosError(error)) {
+                errors.push({ attempt: count + 1, error: error.response?.data?.error || error.message || 'Unknown error' });
+            } else {
+                errors.push({ attempt: count + 1, error: error.message || 'Unknown error' });
+            }
             if (count < retryCount) {
-                // if (axios.isAxiosError(error) && count < retryCount) {
                 return retry(count + 1);
             }
-            //----------------------
-            // All retries failed, send the accumulated errors in the response
+            const errorMessageResponse =
+                errors.length === 1 ? 'Request failed: ' + errors[0].error : 'All retries failed. ' + errors.map((err) => `Attempt ${err.attempt}: ${err.error}`).join(', ');
             const errorResponse = new Response(
                 JSON.stringify({
                     error: {
-                        message: 'All retries failed' + errors.map((err) => `Attempt ${err.attempt}: ${err.error}`),
+                        message: errorMessageResponse,
                     },
                 }),
                 {
@@ -83,21 +83,6 @@ export function createApiRequest(url: string, options: RequestInit, headers: Hea
                 }
             );
             return errorResponse;
-            //----------------------
-            // if (axios.isAxiosError(error)) {
-            //     const fetchResponse: Response = new Response(JSON.stringify(error.response?.data), {
-            //         status: error.response?.status || 500,
-            //         statusText: error.response?.statusText || 'Internal Server Error',
-            //         headers: new Headers(
-            //             Object.entries(error.response?.headers || {})
-            //                 .filter(([_, value]) => value !== undefined)
-            //                 .map(([key, value]) => [key, value] as [string, string]) // Ensuring tuple type
-            //         ),
-            //     });
-            //     return fetchResponse;
-            // }
-            // //----------------------
-            // throw error;
         }
     };
     //----------------------

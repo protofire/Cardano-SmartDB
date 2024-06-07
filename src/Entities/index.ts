@@ -3,6 +3,7 @@ export * from './Base/Base.Entity.js';
 export * from './Base/Base.SmartDB.Entity.js';
 export * from './AddressToFollow.Entity.js';
 export * from './Emulator.Entity.js';
+export * from './Job.Entity.js';
 export * from './Price.Entity.js';
 export * from './SiteSettings.Entity.js';
 export * from './SmartUTxO.Entity.js';
