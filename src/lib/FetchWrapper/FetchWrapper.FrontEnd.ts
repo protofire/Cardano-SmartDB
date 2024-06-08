@@ -61,9 +61,18 @@ export function createApiRequest(url: string, options: RequestInit, headers: Hea
             //----------------------
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
-                errors.push({ attempt: count + 1, error: error.response?.data?.error || error.message || 'Unknown error' });
+                const message =
+                    error.response?.data?.error?.message !== undefined
+                        ? error.response?.data?.error?.message
+                        : error.response?.data?.error !== undefined
+                        ? error.response?.data?.error
+                        : error.message !== undefined
+                        ? error.message
+                        : 'Unknown error';
+                errors.push({ attempt: count + 1, error: message });
             } else {
-                errors.push({ attempt: count + 1, error: error.message || 'Unknown error' });
+                const message = error.message !== undefined ? error.message : 'Unknown error';
+                errors.push({ attempt: count + 1, error: message });
             }
             if (count < retryCount) {
                 return retry(count + 1);

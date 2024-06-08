@@ -1,3 +1,6 @@
+import { Assets, Tx } from 'lucid-cardano';
+import { NextApiResponse } from 'next';
+import yup from 'smart-db/Commons/yupLocale';
 import {
     BackEndApiHandlersFor,
     BackEndAppliedFor,
@@ -21,23 +24,224 @@ import {
     console_log,
     isEmulator,
     objToCborHex,
-    optionsGetAllFields,
     optionsGetMinimalWithSmartUTxO,
     sanitizeForDatabase,
     showData,
     strToHex,
+    walletTxParamsSchema
 } from 'smart-db/backEnd';
+import {
+    ClaimTxParams,
+    CreateTxParams,
+    DUMMY_CLAIM,
+    DUMMY_CREATE,
+    DUMMY_UPDATE,
+    UpdateTxParams,
+    createTxParamsSchema,
+    updateTxParamsSchema,
+} from '../../Commons/Constants/transactions';
 import { DummyEntity } from '../Entities/Dummy.Entity';
-import { NextApiResponse } from 'next';
-import { Assets, Tx } from 'lucid-cardano';
 import { DummyPolicyRedeemerBurnID, DummyPolicyRedeemerMintID, DummyValidatorRedeemerClaim, DummyValidatorRedeemerDatumUpdate } from '../Entities/Redeemers/Dummy.Redeemer';
-import { ClaimTxParams, CreateTxParams, DUMMY_CLAIM, DUMMY_CREATE, DUMMY_UPDATE, UpdateTxParams } from '../../Commons/Constants/transactions';
 
 @BackEndAppliedFor(DummyEntity)
 export class DummyBackEndApplied extends BaseSmartDBBackEndApplied {
     protected static _Entity = DummyEntity;
     protected static _BackEndMethods = BaseSmartDBBackEndMethods;
 }
+
+// #region api swagger
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ * tags:
+ *   name: Dummy Transactions
+ *   description: Operations related to Dummy Transactions
+ */
+/**
+ * @swagger
+ * /api/dummy/tx/create-dummy-tx:
+ *   post:
+ *     summary: Create a dummy transaction
+ *     tags: [Dummy Transactions]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               walletTxParams:
+ *                 type: object
+ *                 $ref: '#/components/schemas/WalletTxParams'
+ *               txParams:
+ *                 type: object
+ *                 $ref: '#/components/schemas/CreateTxParams'
+ *     responses:
+ *       200:
+ *         description: Transaction created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 txCborHex:
+ *                   type: string
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/dummy/tx/claim-dummy-tx:
+ *   post:
+ *     summary: Claim a dummy transaction
+ *     tags: [Dummy Transactions]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               walletTxParams:
+ *                 type: object
+ *                 $ref: '#/components/schemas/WalletTxParams'
+ *               txParams:
+ *                 type: object
+ *                 $ref: '#/components/schemas/ClaimTxParams'
+ *     responses:
+ *       200:
+ *         description: Transaction claimed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 txCborHex:
+ *                   type: string
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/dummy/tx/update-dummy-tx:
+ *   post:
+ *     summary: Update a dummy transaction
+ *     tags: [Dummy Transactions]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               walletTxParams:
+ *                 type: object
+ *                 $ref: '#/components/schemas/WalletTxParams'
+ *               txParams:
+ *                 type: object
+ *                 $ref: '#/components/schemas/UpdateTxParams'
+ *     responses:
+ *       200:
+ *         description: Transaction updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 txCborHex:
+ *                   type: string
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     WalletTxParams:
+ *       type: object
+ *       properties:
+ *         pkh:
+ *           type: string
+ *         stakePkh:
+ *           type: string
+ *         address:
+ *           type: string
+ *         rewardAddress:
+ *           type: string
+ *         utxos:
+ *           type: array
+ *           items:
+ *             type: object
+ *     CreateTxParams:
+ *       type: object
+ *       properties:
+ *         datumID_CS:
+ *           type: string
+ *         datumID_TN:
+ *           type: string
+ *         validatorAddress:
+ *           type: string
+ *         mintingIdDummy:
+ *           type: string
+ *         ddValue:
+ *           type: number
+ *     ClaimTxParams:
+ *       type: object
+ *       properties:
+ *         datumID_CS:
+ *           type: string
+ *         datumID_TN:
+ *           type: string
+ *         mintingIdDummy:
+ *           type: string
+ *         validatorDummy:
+ *           type: string
+ *         dummy_id:
+ *           type: string
+ *     UpdateTxParams:
+ *       type: object
+ *       properties:
+ *         datumID_CS:
+ *           type: string
+ *         datumID_TN:
+ *           type: string
+ *         validatorAddress:
+ *           type: string
+ *         validatorDummy:
+ *           type: string
+ *         dummy_id:
+ *           type: string
+ *         ddValue:
+ *           type: number
+ */
+// #endregion api swagger
 
 @BackEndApiHandlersFor(DummyEntity)
 export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
@@ -73,7 +277,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
             return res.status(405).json({ error: `Wrong Custom Api route` });
         }
     }
-    
+
     // #endregion custom api handlers
 
     // #region api tx handlers
@@ -86,7 +290,20 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 //-------------------------
                 const sanitizedBody = sanitizeForDatabase(req.body);
                 //-------------------------
-                const { walletTxParams, txParams }: { walletTxParams: WalletTxParams; txParams: CreateTxParams } = sanitizedBody;
+                const schemaBody = yup.object().shape({
+                    walletTxParams: walletTxParamsSchema,
+                    txParams: createTxParamsSchema,
+                });
+                //-------------------------
+                let validatedBody;
+                try {
+                    validatedBody = await schemaBody.validate(sanitizedBody);
+                } catch (error) {
+                    console_error(-1, this._Entity.className(), `Create Tx - Error: ${error}`);
+                    return res.status(400).json({ error });
+                }
+                //--------------------------------------
+                const { txParams, walletTxParams }: { txParams: CreateTxParams; walletTxParams: WalletTxParams } = validatedBody;
                 //--------------------------------------
                 console_log(0, this._Entity.className(), `Create Tx - txParams: ${showData(txParams)}`);
                 //--------------------------------------
@@ -309,7 +526,20 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 //-------------------------
                 const sanitizedBody = sanitizeForDatabase(req.body);
                 //-------------------------
-                const { walletTxParams, txParams }: { walletTxParams: WalletTxParams; txParams: UpdateTxParams } = sanitizedBody;
+                const schemaBody = yup.object().shape({
+                    walletTxParams: walletTxParamsSchema,
+                    txParams: updateTxParamsSchema,
+                });
+                //-------------------------
+                let validatedBody;
+                try {
+                    validatedBody = await schemaBody.validate(sanitizedBody);
+                } catch (error) {
+                    console_error(-1, this._Entity.className(), `Create Tx - Error: ${error}`);
+                    return res.status(400).json({ error });
+                }
+                //--------------------------------------
+                const { walletTxParams, txParams }: { walletTxParams: WalletTxParams; txParams: UpdateTxParams } = validatedBody;
                 //--------------------------------------
                 console_log(0, this._Entity.className(), `Update Tx - txParams: ${showData(txParams)}`);
                 //--------------------------------------

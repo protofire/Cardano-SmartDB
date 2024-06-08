@@ -232,11 +232,11 @@ export default function Home() {
             setTxMessage('Creating Transaction...');
             //----------------------------
             const txParams: CreateTxParams = {
-                ddValue: BigInt(inputValue),
                 datumID_CS,
                 datumID_TN,
                 validatorAddress,
                 mintingIdDummy,
+                ddValue: Number(inputValue),
             };
             //--------------------------------------
             // const { lucid, emulatorDB, walletTxParams } = await LucidToolsFrontEnd.prepareLucidFrontEndForTx(walletStore);
@@ -308,11 +308,11 @@ export default function Home() {
             setTxMessage('Creating Transaction...');
             //----------------------------
             const txParams: ClaimTxParams = {
-                dummy_id: item._DB_id,
                 datumID_CS,
                 datumID_TN,
                 mintingIdDummy,
                 validatorDummy,
+                dummy_id: item._DB_id,
             };
             //--------------------------------------
             const result = await BaseSmartDBFrontEndBtnHandlers.handleBtnDoTransactionV1(
@@ -373,12 +373,12 @@ export default function Home() {
             setTxMessage('Creating Transaction...');
             //----------------------------
             const txParams: UpdateTxParams = {
-                ddValue: BigInt(editValue),
-                dummy_id: item._DB_id,
                 datumID_CS,
                 datumID_TN,
                 validatorAddress,
                 validatorDummy,
+                dummy_id: item._DB_id,
+                ddValue: Number(editValue),
             };
             //--------------------------------------
             const result = await BaseSmartDBFrontEndBtnHandlers.handleBtnDoTransactionV1(

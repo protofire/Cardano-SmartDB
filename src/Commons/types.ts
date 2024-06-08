@@ -292,9 +292,32 @@ export interface WalletTxParams {
     pkh: PaymentKeyHash;
     stakePkh?: StakeCredentialPubKeyHash;
     address: Address;
-    rewardAddress: Address | undefined;
+    rewardAddress?: Address;
     utxos: UTxO[];
 }
+
+export const scriptSchema = yup.object().shape({
+    type: yup.mixed<'Native' | 'PlutusV1' | 'PlutusV2'>().oneOf(['Native', 'PlutusV1', 'PlutusV2']).required(),
+    script: yup.string().required(),
+});
+
+export const utxoSchema = yup.object().shape({
+    txHash: yup.string().required(),
+    outputIndex: yup.number().required(),
+    assets: yup.object().required(), // Define the schema for Assets if needed
+    address: yup.string().required(),
+    datumHash: yup.string().optional().nullable(),
+    datum: yup.string().optional().nullable(),
+    scriptRef: yup.object().optional(),
+});
+
+export const walletTxParamsSchema = yup.object().shape({
+    pkh: yup.string().required(),
+    stakePkh: yup.string().optional(),
+    address: yup.string().required(),
+    rewardAddress: yup.string().optional(),
+    utxos: yup.array().of(utxoSchema).required(),
+});
 
 //-------------------------------------------------------------
 
@@ -308,7 +331,7 @@ export type TransactionDatum = {
 
 export type TransactionRedeemer = {
     tx_index: number;
-    purpose: 'mint' | 'spend' ;
+    purpose: 'mint' | 'spend';
     script_hash?: string;
     redeemer_data_hash?: string;
     datum_hash?: string;

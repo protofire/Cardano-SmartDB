@@ -48,6 +48,7 @@ export class BaseSmartDBFrontEndBtnHandlers {
             return false;
         }
     }
+    
     public static async handleBtnDoTransactionV1<T extends BaseSmartDBEntity>(
         Entity: typeof BaseSmartDBEntity,
         name: string,

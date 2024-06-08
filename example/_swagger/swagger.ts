@@ -39,6 +39,7 @@ const options = {
     swaggerDefinition,
     apis: [
         path.resolve(__dirname, '../src/pages/api/**/*.ts'),
+        path.resolve(__dirname, '../src/**/BackEnd/**/*.ts'),
         path.resolve(__dirname, '../node_modules/smart-db/**/*.ts'),
         path.resolve(__dirname, '../node_modules/smart-db/**/*.js'),
     ],
