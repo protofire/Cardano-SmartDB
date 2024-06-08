@@ -308,7 +308,12 @@ export const utxoSchema = yup.object().shape({
     address: yup.string().required(),
     datumHash: yup.string().optional().nullable(),
     datum: yup.string().optional().nullable(),
-    scriptRef: yup.object().optional(),
+    // scriptRef: yup.lazy((value) =>
+    //     value === undefined ? yup.mixed().optional() : scriptSchema.required()
+    // ),
+    // scriptRef2: yup.lazy((value) => {
+    //     return value ? scriptSchema.required() : yup.object().notRequired().nullable();
+    //   }),
 });
 
 export const walletTxParamsSchema = yup.object().shape({
