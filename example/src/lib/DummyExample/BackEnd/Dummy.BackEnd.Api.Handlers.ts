@@ -73,6 +73,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
             return res.status(405).json({ error: `Wrong Custom Api route` });
         }
     }
+    
     // #endregion custom api handlers
 
     // #region api tx handlers

@@ -17,13 +17,13 @@ This example demonstrates the usage of the Smart DB library, which simplifies th
 
 In this specific example, we showcase the creation of a dummy entity (datum) on the Cardano blockchain and how it is saved and synced with an internal database associated with a specific address. The project includes dynamic wallet generation, allowing users to perform transactions on the Cardano testnet. The example validator script enforces custom logic where only the datum creator can update or claim it.
 
-Please note that in this stage, after a transaction is confirmed, the user needs to manually trigger the synchronization process by clicking the "Sync" button to reflect the latest state in the application's database.
+With the new library version, synchronization is handled dynamically. The manual "Sync" button is still present but no longer necessary for reflecting the latest state in the application's database.
 
 ## Features
 
 - **Wallet Connect and Generation**: You can connect with wallets using the Chrome browser extensions like Eternl, Yoroi, and others. It’s also possible to create wallets on-the-fly and use them in the wallet connector.
 - **Seamless Blockchain Integration**: Simplify interactions with the Cardano blockchain using JavaScript entities.
-- **Manual Synchronization**: Users must manually synchronize the application after transactions are confirmed to reflect the latest blockchain state in the internal database.
+- **Dynamic Synchronization**: The application's state is automatically synchronized with the blockchain, removing the need for manual syncing.
 - **Exclusive Update/Claim Logic**: Only the creator of the datum can update or claim, ensuring creator exclusivity.
 - **User-Friendly Interface**: Demonstrates these capabilities through a Next.js application.
 - **Swagger Server**: Provides a Swagger UI for testing API endpoints.

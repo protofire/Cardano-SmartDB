@@ -6,10 +6,10 @@
     - [Wallet Creation](#wallet-creation)
   - [Faucet](#faucet)
   - [Check Balance](#check-balance)
-  - [Create Dummy Datum Transaction](#create-dummy-datum-transaction)
+  - [Create Dummy Transaction](#create-dummy-transaction)
+  - [Update Dummy Transaction](#update-dummy-transaction)
+  - [Claim Dummy Transaction](#claim-dummy-transaction)
   - [Sync Database](#sync-database)
-  - [Update Datum Value](#update-datum-value)
-  - [Claim Funds](#claim-funds)
   - [Transaction Modal](#transaction-modal)
 - [Project Code Structure](#project-code-structure)
   - [Directories](#directories)
@@ -50,10 +50,10 @@ The `Home` component is the main entry point, managing state and user interactio
 
 - generateScripts: Generates the necessary scripts (minting policy and validator) for the dummy smart contract.
 - getBalance: Retrieves the balance of the connected wallet.
-- handleBtnCreateTx: Creates a new dummy datum transaction and saves the entity in the internal database.
-- handleBtnUpdateTx: Updates the value of a dummy datum and syncs the changes with the internal database.
-- handleBtnClaimTx: Claims the funds associated with a dummy datum.
-- handleBtnSync: Synchronizes the local database with the blockchain state, ensuring data consistency.
+- handleBtnCreateTx: Creates a new dummy datum transaction, and the sync process saves the entity in the internal database.
+- handleBtnUpdateTx: Updates the value of a dummy datum, and the sync process updates the internal database.
+- handleBtnClaimTx: Claims the funds associated with a dummy datum and deletes the datum. The sync process also deletes it in the internal database.
+- handleBtnSync: (Deprecated) This button was used to manually synchronize the local database with the blockchain state. With the new automatic sync process, this button is no longer needed, but it remains for backward compatibility or manual sync if ever required.
 
 The component leverages various helper functions and libraries from the Smart DB library to interact with the Cardano blockchain, manage the smart contract state, and perform database synchronization.
 
@@ -73,34 +73,38 @@ Click the "Faucet" button to obtain testnet ADA for transaction fees.
 
 Click the "Refresh Balance" button to check the wallet's balance.
 
-### Create Dummy Datum Transaction
+### Create Dummy Transaction
 
-1. Enter a dummy value in the input field provided.
-2. Click "Create" to initiate a new dummy datum transaction.
-3. A modal will display the transaction status and details.
+This transaction will create a new UTXO in the validator address with a datum. This datum will have a value set in its fields. The automatic synchronization process will sync this UTXO datum with a new entry in the table Dummy in the internal database.
 
-### Sync Database
+1. Enter a value in the input field provided. This value will be saved in the UTXO Datum.
+2. Click "Create" to initiate the transaction.
+3. If you are using a wallet connected, you need to sign the transaction with your wallet in the upcoming modal.
+4. A modal will display the transaction status and details.
+   
+### Update Dummy Transaction
 
-After a transaction is confirmed, users must manually initiate synchronization to update the application's internal database with the blockchain's state. This ensures that the data displayed reflects the latest changes made on the blockchain.
-
-To sync the latest blockchain state with the internal database after transactions, users need to click the "Sync" button within the application. This action fetches the current state of the blockchain and updates the local database accordingly.
-
-### Update Datum Value
+This transaction will consume the old UTXO from the validator address and create a new UTXO with a new datum. This action is restricted to the datum's creator per the validator script's logic. The new datum will have the updated value set in its fields. The automatic synchronization process will sync this UTXO datum with an entry in the table Dummy in the internal database. The internal database will delete the old entry and create a new one to ensure both entities, in the database and on the blockchain, are the same.
 
 1. Click "Update" next to the datum you want to modify.
 2. Enter a new value and click "Save".
-3. A modal will show the transaction status.
-   
-- This action is restricted to the datum's creator per the validator script's logic.
+3. If you are using a wallet connected, you need to sign the transaction with your wallet in the upcoming modal.
+4. A modal will show the transaction status.
 
-### Claim Funds
+   
+### Claim Dummy Transaction
+
+This transaction will consume the old UTXO with the datum from the validator address. Because it is not generating a new one, this datum will be deleted. This action is restricted to the datum's creator per the validator script's logic. The automatic sync process will delete the entry also in the internal database.
 
 1. Click "Claim" to transfer the funds associated with a dummy entity to your wallet.
+2. If you are using a wallet connected, you need to sign the transaction with your wallet in the upcoming modal.
+3. A modal will show the transaction status.
 
+### Sync Database
 
-2. A modal will show the transaction status.
-   
-- This action is restricted to the datum's creator per the validator script's logic.
+The synchronization process will initiate automatically when a transaction is confirmed, ensuring that the application's internal database is updated with the latest blockchain state. However, users can also trigger the synchronization manually if needed.
+
+To manually sync the latest blockchain state with the internal database, users can click the "Sync" button within the application. This action fetches the current state of the blockchain and updates the local database accordingly.
 
 ### Transaction Modal
 
@@ -173,9 +177,12 @@ The example code is organized to showcase the usage of the Smart DB library, pro
 │   │           ├── Home.module.scss
 │   │           └── Home.tsx
 │   └── lib
+│       ├── Commons
+│       |   ├── Constants
+│       |   │   ├── transactions.ts
 │       └── DummyExample
 │           ├── BackEnd
-│           │   ├── Dummy.BackEnd.Api.Handlers.Tx.ts
+│           │   ├── Dummy.BackEnd.Api.Handlers.ts
 │           │   ├── Test.BackEnd.Api.Handlers.ts
 │           │   └── index.ts
 │           ├── Entities
@@ -449,7 +456,7 @@ The example includes a smartDb entity called "Dummy Entity".
 
 - **Entity Definition**: Located at `src/lib/DummyExample/Entities/Dummy.Entity.ts`
 - **MongoDB Model**: Located at `src/lib/DummyExample/Entities/Dummy.Entity.Mongo.ts`
-- **Backend Handlers**: Located at `src/lib/DummyExample/BackEnd/Dummy.BackEnd.Api.Handlers.Tx.ts`
+- **Backend Handlers**: Located at `src/lib/DummyExample/BackEnd/Dummy.BackEnd.Api.Handlers.ts`
 - **Frontend API Calls**: Located at `src/lib/DummyExample/FrontEnd/Dummy.FrontEnd.Api.Calls.ts`
 
 **Dummy.Entity.ts**
@@ -587,7 +594,7 @@ export class DummyEntityMongo extends BaseSmartDBEntityMongo {
 }
 ```
 
-**Dummy.BackEnd.Api.Handlers.Tx.ts**
+**Dummy.BackEnd.Api.Handlers.ts**
 
 The backend for new entities synced with the blockchain must extend both `BaseSmartDBBackEndApplied` and `BaseSmartDBBackEndApiHandlers`  and use the `@BackEndAppliedFor` and `@BackEndApiHandlersFor` decorators.
 
@@ -607,6 +614,14 @@ EndApiHandlersFor(DummyEntity)
 export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
     protected static _Entity = DummyEntity;
     protected static _BackEndApplied = DummyBackEndApplied;
+
+
+    // #region custom api handlers
+    // #endregion custom api handlers
+
+    // #region api tx handlers
+    // #endregion api tx handlers
+
 }
 ```
 
