@@ -454,6 +454,8 @@ export type ConversionFunctions<T> = {
     optionsCreateOrUpdate?: OptionsCreateOrUpdate;
     toMongoInterface?: (value: any | undefined) => T | undefined;
     fromMongoInterface?: (value: T | undefined) => any | undefined;
+    toPostgreSQLInterface?: (value: any | undefined) => T | undefined;
+    fromPostgreSQLInterface?: (value: T | undefined) => any | undefined;
     toPlainObject?: (value: any | undefined) => Object | undefined;
     fromPlainObject?: (value: Object | undefined) => any | undefined;
     toPlutusData?: (value: any | undefined) => Data | undefined;

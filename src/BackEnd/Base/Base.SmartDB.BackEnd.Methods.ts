@@ -173,24 +173,20 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             //----------------------------
             console_logLv1(1, instance.className(), `updateSyncSmartUTxO  - Init`);
             //----------------------------
-            if (process.env.USE_DATABASE === 'mongo') {
-                if (instance.smartUTxO === undefined) {
-                    instance._isDeployed = false;
-                    instance.deleteMyDatum();
-                    await this.update(instance, { loadRelations: {} });
-                } else {
-                    instance._isDeployed = true;
-                    if (address !== undefined) {
-                        instance._NET_address = address;
-                    }
-                    await this.update(instance, { loadRelations: {} });
-                }
-                //----------------------------
-                console_logLv1(-1, instance.className(), `updateSyncSmartUTxO - Instance: ${instance.show()} - OK`);
-                //----------------------------
+            if (instance.smartUTxO === undefined) {
+                instance._isDeployed = false;
+                instance.deleteMyDatum();
+                await this.update(instance, { loadRelations: {} });
             } else {
-                throw `Database not defined`;
+                instance._isDeployed = true;
+                if (address !== undefined) {
+                    instance._NET_address = address;
+                }
+                await this.update(instance, { loadRelations: {} });
             }
+            //----------------------------
+            console_logLv1(-1, instance.className(), `updateSyncSmartUTxO - Instance: ${instance.show()} - OK`);
+            //----------------------------
         } catch (error) {
             console_errorLv1(-1, instance.className(), `updateSyncSmartUTxO - Error: ${error}`);
             throw `${error}`;

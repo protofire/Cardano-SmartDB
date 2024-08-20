@@ -19,6 +19,7 @@ export class RegistryManager {
     private backEndAppliedRegistry: Map<string, any> = new Map();
     private backEndApiHandlersRegistry: Map<string, any> = new Map();
     private mongoAppliedRegistry: Map<string, any> = new Map();
+    private postgreSQLAppliedRegistry: Map<string, any> = new Map();
 
     private conversionFunctionsRegistry: Map<string, Map<string, ConversionFunctions<any>>> = new Map();
 
@@ -62,6 +63,8 @@ export class RegistryManager {
                 return this.backEndApiHandlersRegistry;
             case 'mongoApplied':
                 return this.mongoAppliedRegistry;
+            case 'postgreSQLApplied':
+                return this.postgreSQLAppliedRegistry;
             case 'conversionFunctions':
                 return this.conversionFunctionsRegistry;
             default:
@@ -89,6 +92,10 @@ export class RegistryManager {
         return RegistryManager.getRegistry(entity.className(), 'mongoApplied');
     }
 
+    public static getFromPostgreSQLAppliedRegistry(entity: any): any {
+        return RegistryManager.getRegistry(entity.className(), 'postgreSQLApplied');
+    }
+
     public static getFromConversionFunctionsRegistry(className: string): Map<string, ConversionFunctions<any>> {
         return RegistryManager.getRegistry(className, 'conversionFunctions');
     }
@@ -111,5 +118,9 @@ export class RegistryManager {
 
     public static getAllFromMongoAppliedRegistry(): Map<string, any> {
         return new Map(RegistryManager.getInstance().getRegistryFromType('mongoApplied'));
+    }
+
+    public static getAllFromPosgreSQLAppliedRegistry(): Map<string, any> {
+        return new Map(RegistryManager.getInstance().getRegistryFromType('postgreSQLApplied'));
     }
 }
