@@ -290,7 +290,7 @@ sudo systemctl start mongod
 sudo systemctl enable mongod
 ```
 
-#### Setting up MongoDB connection string
+ #### Setting up MongoDB connection string
 
 The `MONGO_URLDB` environment variable should contain the MongoDB connection string. 
 

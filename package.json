@@ -1,6 +1,6 @@
 {
     "name": "smart-db",
-    "version": "1.0.482",
+    "version": "1.0.541",
     "description": "Smart DB",
     "type": "module",
     "main": "index.js",
@@ -35,12 +35,15 @@
         "next-auth": "^4.24.7",
         "next-http-proxy-middleware": "^1.2.5",
         "nodemailer": "^6.9.1",
+        "pg": "^8.12.0",
+        "pg-promise": "^11.8.0",
         "qs": "^6.12.1",
         "raw-body": "^2.5.2",
         "react": "18.2.0",
         "react-dom": "18.2.0",
         "react-notifications-component": "^4.0.1",
         "sanitize-html": "^2.13.0",
+        "typeorm": "^0.3.20",
         "yup": "^1.0.2"
     },
     "devDependencies": {
@@ -55,6 +58,7 @@
         "@types/next-auth": "^3.15.0",
         "@types/node": "20.5.9",
         "@types/nodemailer": "^6.4.7",
+        "@types/pg": "^8.11.6",
         "@types/qs": "^6.9.15",
         "@types/react": "18.2.21",
         "@types/react-dom": "18.2.7",

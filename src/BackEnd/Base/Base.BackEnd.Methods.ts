@@ -6,6 +6,7 @@ import { CascadeUpdate, ConversionFunctions, OptionsCreateOrUpdate, OptionsDelet
 import { isEmptyObject, isEqual, isFrontEndEnvironment, isNullOrBlank, isObject, isString, isSubclassOf, showData, toJson } from '../../Commons/utils.js';
 import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
 import { MongoDatabaseService } from '../DatabaseService/Mongo.Database.Service.js';
+import { PostgreSQLDatabaseService } from '../DatabaseService/PostgreSQL.Database.Service.js';
 
 // BaseBackEndMethods es generico
 // Todos los metodos reciben o instancia o entidad
@@ -227,6 +228,10 @@ export class BaseBackEndMethods {
             await this.getBack(instance.getStatic()).cascadeSaveChildRelations(instance, useOptionCreate);
             //--------------------------------------
             if (process.env.USE_DATABASE === 'mongo') {
+
+                await PostgreSQLDatabaseService.create<T>(instance);
+
+
                 const _id = await MongoDatabaseService.create<T>(instance);
                 if (_id) {
                     const instance_ = await this.getById<T>(instance.getStatic(), _id, optionsCreate, undefined);
@@ -243,22 +248,7 @@ export class BaseBackEndMethods {
                 } else {
                     throw `unknown`;
                 }
-                // }else if (process.env.USE_DATABASE=="postgres"){
-                // await connectPostgresDB();
-                // let userAddressesPostgres: UserAddressPostgres[] = []
-                // for (let i = 0; i < user.userAddresses.length; i++) {
-                //     const userAddress = user.userAddresses[i];
-                //     const userAddressPostgres: UserAddressPostgres = new UserAddressPostgres(userAddress); //{street : userAddress.street, city:  userAddress.city}
-                //     await dbPostgressConnection.manager.create(userAddressPostgres);
-                //     userAddressesPostgres.push(userAddressPostgres)
-                // }
-
-                // const smartUTxOPostgres: SmartUTxOPostgres = new SmartUTxOPostgres(user.smartUTxO);
-                // await dbPostgressConnection.manager.create(smartUTxOPostgres);
-
-                // const userPostgres: UserPostgres = new UserPostgres({name : user.name , userAddresses: userAddressesPostgres, smartUTxO: smartUTxOPostgres});
-                // await dbPostgressConnection.manager.create(userPostgres);
-                // console_log('User created to PostgreSQL');
+         
             } else {
                 throw `Database not defined`;
             }
@@ -676,6 +666,8 @@ export class BaseBackEndMethods {
                 // console_log (`pre getByParams ${Entity.className()}`)
                 const documents = await MongoDatabaseService.getByParams(Entity, filters, fieldsForSelectForMongo, useOptionGet);
                 // console_log (`post getByParams ${Entity.className()}`)
+
+                await PostgreSQLDatabaseService.getByParams(Entity, filters, fieldsForSelectForMongo, useOptionGet);
                 //----------------------------
                 const instances: T[] = [];
                 //----------------------------
