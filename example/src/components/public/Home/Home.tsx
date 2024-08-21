@@ -112,7 +112,6 @@ export default function Home() {
         setIsLoadingBalance(walletStore.isLoadingAnyData);
     }, [walletStore.isLoadingAnyData]);
     //--------------------------------------
-    //--------------------------------------
     useEffect(() => {
         const fetch = async () => {
             //----------------------------
