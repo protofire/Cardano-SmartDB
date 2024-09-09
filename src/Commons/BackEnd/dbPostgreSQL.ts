@@ -3,6 +3,10 @@ import { SiteSettingsEntity } from "../../backEnd.js";
 import { Client } from "pg";
 import { SiteSettingsEntityPostgreSQL } from "../../Entities/SiteSettings.Entity.PostgreSQL.js";
 
+import { AddressToFollowEntityPostgreSQL } from "../../Entities/AddressToFollow.Entity.PostgreSQL.js";
+import { EmulatorEntityPostgreSQL } from "../../Entities/Emulator.Entity.PostgreSQL.js";
+import { JobEntityPostgreSQL } from "../../Entities/Job.Entity.PostgreSQL.js";
+
 // Define a new DataSource for connecting to the default database (postgres)
 const DefaultDataSource = new DataSource({
   type: "postgres",
@@ -37,7 +41,11 @@ export async function connectPostgres(): Promise<void> {
       database: process.env.POSTGRES_DB,
       synchronize: true,
       logging: true,
-      entities: [SiteSettingsEntityPostgreSQL],
+      entities: [SiteSettingsEntityPostgreSQL,
+        AddressToFollowEntityPostgreSQL,
+        EmulatorEntityPostgreSQL,
+        // JobEntityPostgreSQL
+      ],
       subscribers: [],
       migrations: [],
     });
