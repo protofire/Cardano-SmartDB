@@ -1,5 +1,5 @@
 import { getCombinedConversionFunctions, ConversionFunctions, executeFunction, toJson, deserealizeBigInt } from '../../backEnd.js';
-import { PostgreSQLAppliedFor } from '../../Commons/Decorators/Decorator.PostgreSQLApplliedFor.js';
+import { PostgreSQLAppliedFor } from '../../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
 import { BaseEntity } from './Base.Entity.js';
 
 @PostgreSQLAppliedFor([BaseEntity])

@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
-import { PostgreSQLAppliedFor } from "../Commons/Decorators/Decorator.PostgreSQLApplliedFor.js";
+import { PostgreSQLAppliedFor } from "../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js";
 import { BaseEntityPostgreSQL } from "./Base/Base.Entity.PostgreSQL.js";
 import { SiteSettingsEntity } from "./SiteSettings.Entity.js";
 

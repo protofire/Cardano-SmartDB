@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, BaseEntity } from 'typeorm';
-import { PostgreSQLAppliedFor } from "../Commons/Decorators/Decorator.PostgreSQLApplliedFor.js";
+import { PostgreSQLAppliedFor } from "../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js";
 import { BaseEntityPostgreSQL } from "./Base/Base.Entity.PostgreSQL.js";  // Change the base class to the TypeORM version
 import { JobEntity } from './Job.Entity.js';  // Assuming JobEntity is implemented in TypeORM
 

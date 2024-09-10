@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn} from "typeorm";
-import { PostgreSQLAppliedFor } from "../Commons/Decorators/Decorator.PostgreSQLApplliedFor.js";
+import type { PrivateKey } from "lucid-cardano";
+import { PostgreSQLAppliedFor } from "../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js";
 import { BaseEntityPostgreSQL } from "./Base/Base.Entity.PostgreSQL.js";
 import { EmulatorEntity } from "./Emulator.Entity.js";
 
@@ -57,7 +58,7 @@ export class EmulatorEntityPostgreSQL extends BaseEntityPostgreSQL {
     zeroTime!: number;
 
     @Column({ type: 'varchar', array: true ,nullable: true})
-    privateKeys!: string[];  // Suponiendo que el array de claves privadas se maneja como texto
+    privateKeys!: PrivateKey[];  // Suponiendo que el array de claves privadas se maneja como texto
 
         // #endregion postgreSQLDB
 }
