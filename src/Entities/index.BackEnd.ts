@@ -11,7 +11,7 @@ export * from './Token.Metadata.Entity.Mongo.js';
 export * from './Wallet.Entity.Mongo.js';
 
 export * from './Base/Base.Entity.PostgreSQL.js';
-// export * from './Base/Base.SmartDB.Entity.PostgreSQL.js';
+export * from './Base/Base.SmartDB.Entity.PostgreSQL.js';
 export * from './AddressToFollow.Entity.PostgreSQL.js';
 export * from './Emulator.Entity.PostgreSQL.js';
 export * from './Job.Entity.PostgreSQL.js';

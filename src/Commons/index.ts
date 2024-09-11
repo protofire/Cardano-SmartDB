@@ -8,6 +8,7 @@ export * from './Decorators/Decorator.BackEndAppliedFor.js';
 export * from './Decorators/Decorator.Convertible.js';
 export * from './Decorators/registerManager.js';
 export * from './Decorators/Decorator.MongoAppliedFor.js';
+export * from './Decorators/Decorator.PostgreSQLAppliedFor.js';
 export * from './explainError.js';
 export * from './helpers.js';
 export * from './pushNotification.js';
