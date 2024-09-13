@@ -1,4 +1,4 @@
-import { getCombinedConversionFunctions, ConversionFunctions, executeFunction, toJson, deserealizeBigInt } from '../../backEnd.js';
+import { ConversionFunctions, deserealizeBigInt, executeFunction, getCombinedConversionFunctions, toJson } from '../../backEnd.js';
 import { PostgreSQLAppliedFor } from '../../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
 import { BaseEntity } from './Base.Entity.js';
 
@@ -41,13 +41,22 @@ export class BaseEntityPostgreSQL {
         return this.getStatic().className();
     }
 
+    // #region postgreSQL db
+    public static PostgreSQLModel(): any {
+        throw `${this.Entity.className()} - postgreSQL model not implemented`;
+    }
+
+    public MongoModel(): any {
+        return this.getPostgreSQLStatic().PostgreSQLModel();
+    }
+    // #endregion postgreSQL db
     // #endregion internal class methods
 
     // #region conversions methods
 
     public static async toPostgreSQLInterface<T extends BaseEntity>(instance: T, cascadeSave?: boolean): Promise<any> {
         const conversionFunctions = getCombinedConversionFunctions(this.getStatic());
-        const interfaceObj: any =  new this();
+        const interfaceObj: any = new this();
         if (conversionFunctions) {
             const processValue = async (propertyKey: string, conversions: ConversionFunctions<any>, value: any) => {
                 try {
@@ -67,8 +76,8 @@ export class BaseEntityPostgreSQL {
                         // } else
                         if (conversions.toPostgreSQLInterface) {
                             value = conversions.toPostgreSQLInterface.call(instance, value);
-                        // } else if (type.toPostgreSQLInterface) {
-                        //     value = await executeFunction(type.toPostgreSQLInterface, value, cascadeSave);
+                            // } else if (type.toPostgreSQLInterface) {
+                            //     value = await executeFunction(type.toPostgreSQLInterface, value, cascadeSave);
                             // } else if (conversions.type === BigInt) {
                             //     value = serializeBigInt(value)
                         } else if (value?.toPlainObject) {
@@ -109,9 +118,9 @@ export class BaseEntityPostgreSQL {
                                 for (let i = 0; i < value_ids.length; i++) {
                                     let value_id = value_ids[i];
                                     if (value_id !== undefined) {
-                                            // if (value_id !== undefined) {
-                                            //     value_id = new Types.ObjectId(value_id);
-                                            // }
+                                        // if (value_id !== undefined) {
+                                        //     value_id = new Types.ObjectId(value_id);
+                                        // }
                                         array_ids.push(value_id);
                                     }
                                 }
@@ -209,9 +218,9 @@ export class BaseEntityPostgreSQL {
                                     }
                                     for (let i = 0; i < value_ids.length; i++) {
                                         let value_id = value_ids[i];
-                                        // if (process.env.USE_DATABASE === 'postgreSQL' && value_id && value_id.toString) {
-                                        //     value_id = value_id.toString();
-                                        // }
+                                        if (process.env.USE_DATABASE === 'postgreSQL' && value_id && value_id.toString) {
+                                            value_id = value_id.toString();
+                                        }
                                         if (value_id) {
                                             array_ids.push(value_id);
                                         }
@@ -237,9 +246,9 @@ export class BaseEntityPostgreSQL {
                                     for (let i = 0; i < value.length; i++) {
                                         let value_ = value[i];
                                         if (conversions.isDB_id) {
-                                            // if (process.env.USE_DATABASE === 'postgreSQL') {
-                                            //     value_ = value_?.toString ? value_.toString() : value_;
-                                            // }
+                                            if (process.env.USE_DATABASE === 'postgreSQL') {
+                                                value_ = value_?.toString ? value_.toString() : value_;
+                                            }
                                         }
                                         const item = await processValue(propertyKey, conversions, value_);
                                         array.push(item);
@@ -248,9 +257,9 @@ export class BaseEntityPostgreSQL {
                                 value = array;
                             } else {
                                 if (conversions.isDB_id) {
-                                    // if (process.env.USE_DATABASE === 'postgreSQL') {
-                                    //     value = value?.toString ? value.toString() : value;
-                                    // }
+                                    if (process.env.USE_DATABASE === 'postgreSQL') {
+                                        value = value?.toString ? value.toString() : value;
+                                    }
                                 }
                                 value = await processValue(propertyKey, conversions, value);
                             }

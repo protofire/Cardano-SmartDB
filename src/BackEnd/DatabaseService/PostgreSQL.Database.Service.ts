@@ -1,11 +1,12 @@
 import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
-import mongoose from 'mongoose';
-import { Types } from 'mongoose';
 import { console_error, console_log } from '../../Commons/BackEnd/globalLogs.js';
-import { isEmptyObject, isString, toJson } from '../../Commons/utils.js';
+import { isEmptyObject, showData } from '../../Commons/utils.js';
 import { OptionsGet } from '../../Commons/types.js';
-import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
 import { connectPostgres, databasePostgreSQL } from '../../Commons/BackEnd/dbPostgreSQL.js';
+import { Repository } from 'typeorm';
+import { log } from 'console';
+import { id } from 'date-fns/locale';
+// import { } from 'typeorm';
 
 export class PostgreSQLDatabaseService {
   public static async create<T extends BaseEntity>(instance: T): Promise<string> {
@@ -16,7 +17,7 @@ export class PostgreSQLDatabaseService {
 
       const document = await databasePostgreSQL!.manager.save(postgreSQLInterface);
       if (document) {
-        return document.id.toString();
+        return document._id.toString();
       } else {
         throw `document is null`;
       }
@@ -26,22 +27,24 @@ export class PostgreSQLDatabaseService {
     }
   }
 
-  public static async update<T extends BaseEntity>(instance: T, updateSet: {}, updateUnSet: {}): Promise<string> {
+  public static async update<T extends BaseEntity>(instance: T, updateSet: {}, updateUnSet: {}) {
     try {
       await connectPostgres();
 
-      const repository = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
+      const postgreSQLEntity = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
+      const repository = databasePostgreSQL!.manager.getRepository(postgreSQLEntity);
+
 
       // Aquí usamos el ID del objeto `instance` para identificar el registro a actualizar
-      const id = (instance as any).id;
+      const id = (instance as any)._id;
       if (!id) {
         throw new Error('Instance does not have an id');
       }
 
       // Realizamos la actualización en PostgreSQL
-      await repository.update(id, { ...updateSet, ...updateUnSet });
+      const document = await repository.update(id, { ...updateSet, ...updateUnSet });
 
-      return `Entity with id ${id} updated successfully`;
+      return  document
     } catch (error) {
       console_error(0, `PostgreSQL`, `update - Error: ${error}`);
       throw `${error}`;
@@ -52,9 +55,10 @@ export class PostgreSQLDatabaseService {
     try {
       await connectPostgres();
 
-      const repository = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
+      const postgreSQLEntity = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
+      const repository = databasePostgreSQL!.manager.getRepository(postgreSQLEntity);
 
-      const id = (instance as any).id;
+      const id = (instance as any)._id;
       if (!id) {
         throw new Error('Instance does not have an id');
       }
@@ -104,34 +108,46 @@ export class PostgreSQLDatabaseService {
       throw `${error}`;
     }
   }
+  // public static async getByParams<T extends BaseEntity>(
+  //   Entity: typeof BaseEntity,
+  //   paramsFilter: Record<string, any>,
+  //   fieldsForSelectForPostgreSQL: Record<string, number>,
+  //   useOptionGet: OptionsGet
+  // ) {
+  //   // console.log (`getByParams pre connect ${Entity.className()}`)
+  //   await connectPostgres();
+  // }
 
   public static async getByParams<T extends BaseEntity>(
     Entity: typeof BaseEntity,
     paramsFilter: Record<string, any>,
-    fieldsForSelectForMongo: Record<string, number> = {},
+    fieldsForSelect: Record<string, number>,
     useOptionGet: OptionsGet
-  ): Promise<T[]> {
+  ) {
     try {
       await connectPostgres();
 
-      const repository = Entity.getPostgreSQL().PostgreSQLModel();
+      const postgreSQLEntity = await Entity.getPostgreSQL().PostgreSQLModel();
+      const repository = databasePostgreSQL!.manager.getRepository(postgreSQLEntity);
 
-      const options = {
-        where: paramsFilter,
-        select: Object.keys(fieldsForSelectForMongo).length ? Object.keys(fieldsForSelectForMongo) : undefined,
-        ...useOptionGet,
-      };
+      const elems = await repository.findBy( paramsFilter );
 
-      // Buscamos las entidades que coincidan con los parámetros
-      const result = await repository.find(options);
-
-      return result;
+      if (elems) {
+        console.log('dsajdlkasjdl' + elems.toString());
+        for(const elem of elems)
+          console.log(showData(elem), false);
+        return elems;
+      } else {
+        throw `document is null`;
+      }
     } catch (error) {
       console_error(0, `PostgreSQL`, `getByParams - Error: ${error}`);
       throw `${error}`;
     }
+    //----------------------------
+    //----------------------------
+    // return query;
   }
-
   // public static async deleteByParams<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter: Record<string, any>): Promise<number | undefined> {
   //     try {
   //         await connectPostgreSQLDB();
