@@ -50,3 +50,5 @@ next-env.d.ts
 /public/uploads/*
 
 directory_structure.json
+
+smart-db.tgz

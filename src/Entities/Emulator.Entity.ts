@@ -11,7 +11,7 @@ export class EmulatorEntity extends BaseEntity {
 
     // #region fields
 
-    @Convertible({ isUnique: true })
+    @Convertible()
     name!: string;
 
     @Convertible()

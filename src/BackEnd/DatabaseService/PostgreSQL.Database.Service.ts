@@ -1,12 +1,13 @@
 import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
-import mongoose from 'mongoose';
-import { Types } from 'mongoose';
 import { console_error, console_log } from '../../Commons/BackEnd/globalLogs.js';
-import { isEmptyObject, isString, toJson } from '../../Commons/utils.js';
+import { isEmptyObject, showData } from '../../Commons/utils.js';
 import { OptionsGet } from '../../Commons/types.js';
-import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
-import { databasePostgreSQL, connectPostgres } from '../../Commons/BackEnd/dbPostgreSQL.js';
-
+import { connectPostgres, databasePostgreSQL } from '../../Commons/BackEnd/dbPostgreSQL.js';
+import { Repository } from 'typeorm';
+import { log } from 'console';
+import { id } from 'date-fns/locale';
+import { SiteSettingsEntity, SiteSettingsEntityPostgreSQL } from '../../backEnd.js';
+// import { } from 'typeorm';
 
 export class PostgreSQLDatabaseService {
     public static async create<T extends BaseEntity>(instance: T): Promise<string> {
@@ -15,104 +16,167 @@ export class PostgreSQLDatabaseService {
             //const PostgreSQLModel = instance.getPostgreSQL()
             const postgreSQLInterface = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
 
-            const document  = await databasePostgreSQL!.manager.save(postgreSQLInterface)
+            const document = await databasePostgreSQL!.manager.save(postgreSQLInterface);
             if (document) {
-                return document.id.toString();
+                return document._id.toString();
             } else {
                 throw `document is null`;
             }
-            
         } catch (error) {
             console_error(0, `PostgreSQL`, `create - Error: ${error}`);
             throw `${error}`;
         }
     }
 
-    // public static async update<T extends BaseEntity>(instance: T, updateSet: {}, updateUnSet: {}) {
-    //     try {
-    //         await connectPostgreSQLDB();
-    //         const PostgreSQLModel = instance.getPostgreSQL().PostgreSQLModel();
-    //         let instanceId: Types.ObjectId | undefined = undefined;
-    //         try {
-    //             instanceId = new Types.ObjectId(instance._DB_id);
-    //             if (instanceId === undefined) throw `id is undefined`;
-    //         } catch (error) {
-    //             console_error(0, `PostgreSQL`, `Error converting ${instanceId} to ObjectId - Error: ${error}`);
-    //             throw `Error: Error converting ${instanceId} to ObjectId - Error: ${error}`;
-    //         }
-    //         const document = await PostgreSQLModel.findOneAndUpdate({ _id: instanceId }, { $set: updateSet, $unset: updateUnSet }, { new: true });
-    //         return document;
-    //     } catch (error) {
-    //         console_error(0, `PostgreSQL`, `update - Error: ${error}`);
-    //         throw `${error}`;
-    //     }
-    // }
+    public static async update<T extends BaseEntity>(instance: T, updateSet: {}, updateUnSet: {}) {
+        try {
+            await connectPostgres();
 
-    // public static async deleteByParams<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter: Record<string, any>): Promise<number | undefined> {
-    //     try {
-    //         await connectPostgreSQLDB();
-    //         const PostgreSQLModel = Entity.getPostgreSQL().PostgreSQLModel();
-    //         this.convertStringToRegexAndObjectId(Entity, paramsFilter);
-    //         const result = await PostgreSQLModel.deleteMany(paramsFilter);
-    //         return result?.deletedCount;
-    //     } catch (error) {
-    //         console_error(0, `PostgreSQL`, `deleteByParams - Error: ${error}`);
-    //         throw `${error}`;
-    //     }
-    // }
+            const postgreSQLEntity = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
 
-    // public static async delete<T extends BaseEntity>(instance: T) {
-    //     try {
-    //         await connectPostgreSQLDB();
-    //         const PostgreSQLModel = instance.getPostgreSQL().PostgreSQLModel();
-    //         let instanceId: Types.ObjectId | undefined = undefined;
-    //         try {
-    //             instanceId = new Types.ObjectId(instance._DB_id);
-    //             if (instanceId === undefined) throw `id is undefined`;
-    //         } catch (error) {
-    //             console_error(0, `PostgreSQL`, `Error converting ${instanceId} to ObjectId - Error: ${error}`);
-    //             throw `Error: Error converting ${instanceId} to ObjectId - Error: ${error}`;
-    //         }
-    //         const document = await PostgreSQLModel.findByIdAndDelete(instanceId).exec();
-    //         return document;
-    //     } catch (error) {
-    //         console_error(0, `PostgreSQL`, `delete - Error: ${error}`);
-    //         throw `${error}`;
-    //     }
-    // }
+            const sqlModel = await instance.getPostgreSQL().PostgreSQLModel();
+            const repository = databasePostgreSQL!.manager.getRepository(sqlModel);
 
-    // public static async checkIfExists<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilterOrID: Record<string, any> | string): Promise<boolean> {
-    //     try {
-    //         await connectPostgreSQLDB();
-    //         const PostgreSQLModel = Entity.getPostgreSQL().PostgreSQLModel();
-    //         let document;
-    //         //----------------------------
-    //         if (isString(paramsFilterOrID)) {
-    //             let instanceId: Types.ObjectId | undefined = undefined;
-    //             try {
-    //                 instanceId = new Types.ObjectId(paramsFilterOrID);
-    //                 if (instanceId === undefined) throw `id is undefined`;
-    //             } catch (error) {
-    //                 console_error(0, `PostgreSQL`, `Error converting ${instanceId} to ObjectId - Error: ${error}`);
-    //                 throw `Error: Error converting ${instanceId} to ObjectId - Error: ${error}`;
-    //             }
-    //             document = await PostgreSQLModel.findById(instanceId, { _id: 1 }).exec();
-    //         } else {
-    //             this.convertStringToRegexAndObjectId(Entity, paramsFilterOrID);
-    //             document = await PostgreSQLModel.findOne(paramsFilterOrID, { _id: 1 }).exec();
-    //         }
-    //         //----------------------------
-    //         if (document) {
-    //             //console_log(0, `PostgreSQL`, `checkIfExists - True`);
-    //             return true;
-    //         } else {
-    //             console_log(0, `PostgreSQL`, `checkIfExists - False`);
-    //             return false;
-    //         }
-    //     } catch (error) {
-    //         console_error(0, `PostgreSQL`, `checkIfExists - Error: ${error}`);
-    //         throw `${error}`;
-    //     }
+            // Aquí usamos el ID del objeto `instance` para identificar el registro a actualizar
+            //
+            const id = postgreSQLEntity._id;
+            if (!id) {
+                throw new Error('Instance does not have an id');
+            }
+
+            // Realizamos la actualización en PostgreSQL
+            const document = await repository.update(
+                { _id: id },
+                {
+                    ...updateSet,
+                    ...updateUnSet,
+                }
+            );
+
+            return document;
+        } catch (error) {
+            console_error(0, `PostgreSQL`, `update - Error: ${error}`);
+            throw `${error}`;
+        }
+    }
+
+    public static async delete<T extends BaseEntity>(instance: T): Promise<string> {
+        try {
+            await connectPostgres();
+
+            const postgreSQLEntity = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
+
+            const sqlModel = await instance.getPostgreSQL().PostgreSQLModel();
+            const repository = databasePostgreSQL!.manager.getRepository(sqlModel);
+
+            const id = postgreSQLEntity._id;
+            if (!id) {
+                throw new Error('Instance does not have an id');
+            }
+
+            // Eliminamos el registro identificado por el ID
+            await repository.delete(id);
+
+            return `Entity with id ${id} deleted successfully`;
+        } catch (error) {
+            console_error(0, `PostgreSQL`, `delete - Error: ${error}`);
+            throw `${error}`;
+        }
+    }
+
+    public static async deleteByParams<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter: Record<string, any>): Promise<number | undefined> {
+        try {
+            await connectPostgres();
+
+            const sqlModel = await Entity.getPostgreSQL().PostgreSQLModel();
+            const repository = databasePostgreSQL!.manager.getRepository(sqlModel);
+
+            // Eliminamos los registros que coincidan con los parámetros
+            const result = await repository.delete(paramsFilter);
+
+            return result.raw;
+        } catch (error) {
+            console_error(0, `PostgreSQL`, `deleteByParams - Error: ${error}`);
+            throw `${error}`;
+        }
+    }
+
+    public static async checkIfExists<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilterOrID: Record<string, any> | string): Promise<boolean> {
+        try {
+            await connectPostgres();
+
+            const sqlModel = await Entity.getPostgreSQL().PostgreSQLModel();
+            const repository = databasePostgreSQL!.manager.getRepository(sqlModel);
+
+            let result;
+            if (typeof paramsFilterOrID === 'string') {
+                result = await repository.findOne({ where: { _id: paramsFilterOrID } });
+            } else {
+                result = await repository.findOne({ where: paramsFilterOrID });
+            }
+
+            return !!result; // Retorna `true` si existe el registro
+        } catch (error) {
+            console_error(0, `PostgreSQL`, `checkIfExists - Error: ${error}`);
+            throw `${error}`;
+        }
+    }
+
+    public static async getByParams<T extends BaseEntity>(
+        Entity: typeof BaseEntity,
+        paramsFilter: Record<string, any>,
+        fieldsForSelect: Record<string, number>,
+        useOptionGet: OptionsGet
+    ) {
+        try {
+            await connectPostgres();
+
+            const postgreSQLEntity = await Entity.getPostgreSQL().PostgreSQLModel();
+            const repository = databasePostgreSQL!.manager.getRepository(postgreSQLEntity);
+
+            const elems = await repository.findBy(paramsFilter);
+
+            if (elems) {
+                for (const elem of elems) {
+                    console.log(showData(elem), false);
+                }
+                return elems;
+            } else {
+                throw `document is null`;
+            }
+        } catch (error) {
+            console_error(0, `PostgreSQL`, `getByParams - Error: ${error}`);
+            throw `${error}`;
+        }
+        //----------------------------
+        //----------------------------
+        // return query;
+    }
+
+    public static async getCount<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter: Record<string, any>): Promise<number> {
+        await connectPostgres();
+
+        const postgreSQLEntity = await Entity.getPostgreSQL().PostgreSQLModel();
+        const repository = databasePostgreSQL!.manager.getRepository(postgreSQLEntity);
+
+        const count = await repository.countBy(paramsFilter);
+
+        return count;
+    }
+
+    // public static async aggregate<T extends BaseEntity>(Entity: typeof BaseEntity, pipeline: Record<string, any>[]) {
+    //     await connectPostgres();
+    //     //----------------------------
+    //     const postgreSQLEntity = await Entity.getPostgreSQL().PostgreSQLModel();
+    //     const repository = databasePostgreSQL!.manager.getRepository(postgreSQLEntity);
+    //     //----------------------------
+    //     let query;
+    //     //----------------------------
+    //     query = postgreSQLEntity.aggregate(pipeline);
+    //     //----------------------------
+    //     const documents = await query.exec();
+    //     //----------------------------
+    //     return documents;
     // }
 
     // public static getPostgreSQLTableName(baseName: string): string {
@@ -130,16 +194,16 @@ export class PostgreSQLDatabaseService {
     //     return baseName;
     // }
 
-    public static async getByParams<T extends BaseEntity>(
-        Entity: typeof BaseEntity,
-        paramsFilter: Record<string, any>,
-        fieldsForSelectForPostgreSQL: Record<string, number>,
-        useOptionGet: OptionsGet
-    ) {
-        // console.log (`getByParams pre connect ${Entity.className()}`)
-        await connectPostgres();
-
-    }
+    //     public static async getByParams<T extends BaseEntity>(
+    //   Entity: typeof BaseEntity,
+    //   paramsFilter: Record<string, any>,
+    //   fieldsForSelectForPostgreSQL: Record<string, number>,
+    //   useOptionGet: OptionsGet
+    // ) {
+    //   // console.log (`getByParams pre connect ${Entity.className()}`)
+    //   await connectPostgres();
+    //
+    // }
     //     // console.log (`getByParams post connect ${Entity.className()}`)
     //     const PostgreSQLModel = Entity.getPostgreSQL().PostgreSQLModel();
     //     //----------------------------
@@ -441,28 +505,6 @@ export class PostgreSQLDatabaseService {
     //         //----------------------------
     //         return documents;
     //     }
-    // }
-
-    // public static async getCount<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter: Record<string, any>): Promise<number> {
-    //     await connectPostgreSQLDB();
-    //     const PostgreSQLModel = Entity.getPostgreSQL().PostgreSQLModel();
-    //     this.convertStringToRegexAndObjectId(Entity, paramsFilter);
-    //     const count = await PostgreSQLModel.countDocuments(paramsFilter).exec();
-    //     return count;
-    // }
-
-    // public static async aggregate<T extends BaseEntity>(Entity: typeof BaseEntity, pipeline: Record<string, any>[]) {
-    //     await connectPostgreSQLDB();
-    //     //----------------------------
-    //     const PostgreSQLModel = Entity.getPostgreSQL().PostgreSQLModel();
-    //     //----------------------------
-    //     let query;
-    //     //----------------------------
-    //     query = PostgreSQLModel.aggregate(pipeline);
-    //     //----------------------------
-    //     const documents = await query.exec();
-    //     //----------------------------
-    //     return documents;
     // }
 
     // public static convertStringToRegexAndObjectId<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter: Record<string, any>) {

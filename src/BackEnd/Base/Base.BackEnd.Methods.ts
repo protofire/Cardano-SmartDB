@@ -1,8 +1,18 @@
-
-import { console_error, console_errorLv2, console_logLv2 } from '../../Commons/BackEnd/globalLogs.js';
+import { throws } from 'assert';
+import { console_error, console_errorLv2, console_log, console_logLv2 } from '../../Commons/BackEnd/globalLogs.js';
 import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
 import { RegistryManager } from '../../Commons/Decorators/registerManager.js';
-import { CascadeUpdate, ConversionFunctions, OptionsCreateOrUpdate, OptionsDelete, OptionsGet, OptionsGetOne, optionsCreateOrUpdateDefault, optionsDeleteDefault, optionsGetDefault } from '../../Commons/types.js';
+import {
+    CascadeUpdate,
+    ConversionFunctions,
+    OptionsCreateOrUpdate,
+    optionsCreateOrUpdateDefault,
+    OptionsDelete,
+    optionsDeleteDefault,
+    OptionsGet,
+    optionsGetDefault,
+    OptionsGetOne,
+} from '../../Commons/types.js';
 import { isEmptyObject, isEqual, isFrontEndEnvironment, isNullOrBlank, isObject, isString, isSubclassOf, showData, toJson } from '../../Commons/utils.js';
 import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
 import { MongoDatabaseService } from '../DatabaseService/Mongo.Database.Service.js';
@@ -228,10 +238,6 @@ export class BaseBackEndMethods {
             await this.getBack(instance.getStatic()).cascadeSaveChildRelations(instance, useOptionCreate);
             //--------------------------------------
             if (process.env.USE_DATABASE === 'mongo') {
-
-                await PostgreSQLDatabaseService.create<T>(instance);
-
-
                 const _id = await MongoDatabaseService.create<T>(instance);
                 if (_id) {
                     const instance_ = await this.getById<T>(instance.getStatic(), _id, optionsCreate, undefined);
@@ -246,9 +252,26 @@ export class BaseBackEndMethods {
                     console_logLv2(-1, instance.className(), `create - Instance: ${instance.show()} - OK`);
                     return instance_;
                 } else {
-                    throw `unknown`;
+                    throw `unknown Mongo`;
                 }
-         
+            } else if (process.env.USE_DATABASE === 'postgresql') {
+                const _id_Postgres = await PostgreSQLDatabaseService.create<T>(instance);
+
+                if (_id_Postgres) {
+                    const instance_ = await this.getById<T>(instance.getStatic(), _id_Postgres, optionsCreate, undefined);
+                    if (instance_ === undefined) {
+                        throw `${instance.className()} - Not found after created - id: ${_id_Postgres.toString()}`;
+                    }
+                    //-----------------------
+                    // se hace despues por que necesita el id de este registro para actualizar en el padre
+                    // se hace unicamente al crear el registro
+                    await this.getBack(instance.getStatic()).cascadeSaveParentRelations(instance_, useOptionCreate);
+                    //-----------------------
+                    console_logLv2(-1, instance.className(), `create - Instance: ${instance.show()} - OK`);
+                    return instance_;
+                } else {
+                    throw `unknown PostgreSQL`;
+                }
             } else {
                 throw `Database not defined`;
             }
@@ -334,6 +357,14 @@ export class BaseBackEndMethods {
                 //-----------------------
                 console_logLv2(-1, instance.className(), `update - Instance: ${instance.show()} - OK`);
                 //----------------------------
+            } else if (process.env.USE_DATABASE === 'postgresql') {
+                //-----------------------
+                const postgreSQLInterface = (await instance.getPostgreSQL().toPostgreSQLInterface(instance)) as any;
+                //-----------------------
+                await this.updateMeWithParams<T>(instance, postgreSQLInterface, useOptionUpdate, false);
+                //-----------------------
+                console_logLv2(-1, instance.className(), `update - Instance: ${instance.show()} - OK`);
+                //----------------------------
             } else {
                 throw `Database not defined`;
             }
@@ -379,7 +410,10 @@ export class BaseBackEndMethods {
                     if (updateFields[key as keyof typeof updateFields] === undefined) {
                         updateUnSet = { ...updateUnSet, [key]: '' };
                     } else {
-                        updateSet = { ...updateSet, [key]: updateFields[key as keyof typeof updateFields] };
+                        updateSet = {
+                            ...updateSet,
+                            [key]: updateFields[key as keyof typeof updateFields],
+                        };
                     }
                 }
                 //----------------------------
@@ -414,6 +448,56 @@ export class BaseBackEndMethods {
                     throw `Document not updated, maybe not found`;
                 }
                 //----------------------------
+            } else if (process.env.USE_DATABASE === 'postgresql') {
+                //----------------------------
+                console_logLv2(0, instance.className(), `updateMeWithParams - id: ${instance._DB_id}`);
+                console_logLv2(0, instance.className(), `updateMeWithParams - updateFields: ${showData(Object.keys(updateFields))} |`);
+                // console_log(instance.className(),  `${tabs()}[${instance.className()}**] - updateMeWithParams - updateFields: ${log(updateFields)}`);
+                //----------------------------
+                let updateSet = {};
+                let updateUnSet = {};
+                //----------------------------
+                for (let key in updateFields) {
+                    if (updateFields[key as keyof typeof updateFields] === undefined) {
+                        updateUnSet = { ...updateUnSet, [key]: '' };
+                    } else {
+                        updateSet = {
+                            ...updateSet,
+                            [key]: updateFields[key as keyof typeof updateFields],
+                        };
+                    }
+                }
+                //----------------------------
+                console_logLv2(0, instance.className(), `updateMeWithParams - set fields: ${showData(Object.keys(updateSet))} |`);
+                // console_log(instance.className(),  `${tabs()}[${instance.className()}**] - updateMeWithParams - set: ${log(updateSet)}`);
+                console_logLv2(0, instance.className(), `updateMeWithParams - unset fields: ${showData(Object.keys(updateUnSet))} |`);
+                //----------------------------
+                const document = await PostgreSQLDatabaseService.update<T>(instance, updateSet, updateUnSet);
+                //----------------------------
+                if (document) {
+                    // const instance_ = await this.getById<T>(instance.getStatic(), document._id.toString(), useOptionUpdate, undefined);
+                    // if (instance_ === undefined) {
+                    //     throw `${instance.className()} - Not found for Update It - id: ${document._id.toString()}`;
+                    // }
+                    // Object.assign(instance, instance_);
+                    //-----------------------
+                    // voy a actualizar los campos manualmente en la instancia, asi no tengo que hacer un refresh
+                    //-----------------------
+                    if (swRefreshInstance) {
+                        //-----------------------
+                        const newInstance = (await instance.getPostgreSQL().fromPostgreSQLInterface(document)) as any;
+                        //-----------------------
+                        Object.entries(updateFields).forEach(([key, value]) => {
+                            if (key in instance) {
+                                instance[key as keyof typeof instance] = newInstance[key as keyof typeof newInstance];
+                            }
+                        });
+                        //-----------------------
+                    }
+                    console_logLv2(-1, instance.className(), `updateMeWithParams - OK`);
+                } else {
+                    throw `Document not updated, maybe not found`;
+                }
             } else {
                 throw `Database not defined`;
             }
@@ -473,7 +557,11 @@ export class BaseBackEndMethods {
             if (process.env.USE_DATABASE === 'mongo') {
                 const swExists = await MongoDatabaseService.checkIfExists<T>(Entity, paramsFilterOrID);
                 return swExists;
-            } else {
+            } else if (process.env.USE_DATABASE === 'postgresql') {
+                const swExists = await PostgreSQLDatabaseService.checkIfExists<T>(Entity, paramsFilterOrID);
+                return swExists;
+            }
+            {
                 throw `Database not defined`;
             }
         } catch (error) {
@@ -500,10 +588,20 @@ export class BaseBackEndMethods {
             //----------------------------
             console_logLv2(1, Entity.className(), `getById - id: ${id} - Options: ${showData(optionsGet, false)} - Init`);
             //----------------------------
-            const instance = await this.getOneByParams<T>(Entity, { _id: id }, { ...optionsGet }, restricFilter);
+            const instance = await this.getOneByParams<T>(
+                Entity,
+                { _id: id },
+                {
+                    ...optionsGet,
+                },
+                restricFilter
+            );
+            console.log(instance?._DB_id);
+            // console.log(instance?.name)
             if (instance) {
                 //----------------------------
                 console_logLv2(-1, instance.className(), `getById - Instance: ${instance.show()} - OK`);
+                console.log(showData(instance));
                 //----------------------------
                 return instance as T;
             } else {
@@ -533,7 +631,15 @@ export class BaseBackEndMethods {
             //----------------------------
             console_logLv2(1, Entity.className(), `getOneByParams - Options: ${showData(optionsGet)} - Init`);
             //----------------------------
-            const instances = await this.getByParams<T>(Entity, paramsFilter, { ...optionsGet, limit: 1 }, restricFilter);
+            const instances = await this.getByParams<T>(
+                Entity,
+                paramsFilter,
+                {
+                    ...optionsGet,
+                    limit: 1,
+                },
+                restricFilter
+            );
             //----------------------------
             console_logLv2(-1, Entity.className(), `getOneByParams - OK`);
             //----------------------------
@@ -667,7 +773,7 @@ export class BaseBackEndMethods {
                 const documents = await MongoDatabaseService.getByParams(Entity, filters, fieldsForSelectForMongo, useOptionGet);
                 // console_log (`post getByParams ${Entity.className()}`)
 
-                await PostgreSQLDatabaseService.getByParams(Entity, filters, fieldsForSelectForMongo, useOptionGet);
+                // await PostgreSQLDatabaseService.getByParams(Entity, filters, fieldsForSelectForMongo, useOptionGet);
                 //----------------------------
                 const instances: T[] = [];
                 //----------------------------
@@ -693,7 +799,7 @@ export class BaseBackEndMethods {
                     if (doc._doc !== undefined) {
                         console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS _DOC`);
                         doc = doc._doc;
-                    }else{
+                    } else {
                         console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS NO _DOC`);
                     }
                     //----------------------------
@@ -734,13 +840,238 @@ export class BaseBackEndMethods {
                         const cascadeUpdateCheckAllRelationsExists = await this.checkIfAllRelationsExists(instance);
                         if (cascadeUpdateCheckAllRelationsExists.swUpdate) {
                             console_logLv2(0, Entity.className(), `getByParams -${index}/${documents.length} -  updating because checkIfAllRelationsExists...`);
-                            cascadeUpdate = { swUpdate: true, updatedFields: { ...cascadeUpdate.updatedFields, ...cascadeUpdateCheckAllRelationsExists.updatedFields } };
+                            cascadeUpdate = {
+                                swUpdate: true,
+                                updatedFields: {
+                                    ...cascadeUpdate.updatedFields,
+                                    ...cascadeUpdateCheckAllRelationsExists.updatedFields,
+                                },
+                            };
                         }
                     }
                     //-----------------------
                     if (cascadeUpdate.swUpdate === true && cascadeUpdate.updatedFields !== undefined) {
                         //-----------------------
-                        const optionsCreateOrUpdate: OptionsCreateOrUpdate = { doCallbackAfterLoad: false, loadRelations: {}, saveRelations: {} };
+                        const optionsCreateOrUpdate: OptionsCreateOrUpdate = {
+                            doCallbackAfterLoad: false,
+                            loadRelations: {},
+                            saveRelations: {},
+                        };
+                        //-----------------------
+                        const updatedFields = Object.entries(cascadeUpdate.updatedFields).reduce((acc, [key, value]) => {
+                            acc[key] = value.to; // Assign the 'to' value to the field
+                            return acc;
+                        }, {} as Record<string, any>); // Add index signature to allow indexing with a string
+                        //-----------------------
+                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - updating because cascadeUpdate...`);
+                        //-----------------------
+                        await this.updateMeWithParams<T>(instance, updatedFields, optionsCreateOrUpdate);
+                        //-----------------------
+                    }
+                    //-----------------------
+                    instances.push(instance);
+                    //-----------------------
+                    if (documents.length > 1 && documents.length < 10) {
+                        console_logLv2(-1, instance.className(), `getByParams - ${index}/${documents.length} - Iterating document - OK`);
+                    }
+                    //----------------------------
+                }
+                //-----------------------
+                console_logLv2(
+                    -1,
+                    Entity.className(),
+                    `getByParams - len: ${instances.length} - show firts 5: ${instances
+                        .slice(0, 5)
+                        .map((item: T) => item.show())
+                        .join(', ')} - OK`
+                );
+                //-----------------------
+                return instances as T[];
+            }
+            if (process.env.USE_DATABASE === 'postgresql') {
+                //----------------------------
+                let useOptionGet = optionsGetDefault;
+                if (optionsGet !== undefined) {
+                    useOptionGet = optionsGet;
+                }
+                //----------------------------
+                if (useOptionGet.fieldsForSelect === undefined) {
+                    useOptionGet.fieldsForSelect = Entity.defaultFieldsWhenUndefined;
+                }
+                //----------------------------
+                let fieldsForSelectForPostgreSQL: Record<string, number> = {};
+                if (useOptionGet.fieldsForSelect !== undefined) {
+                    fieldsForSelectForPostgreSQL = Object.fromEntries(Object.keys(useOptionGet.fieldsForSelect).map((key) => [key, useOptionGet.fieldsForSelect![key] ? 1 : 0]));
+                }
+                //----------------------------
+                console_logLv2(0, Entity.className(), `getByParams - fieldsForSelect before always selects: ${showData(fieldsForSelectForPostgreSQL, false)}`);
+                //----------------------------
+                if (isEmptyObject(fieldsForSelectForPostgreSQL)) {
+                    // si esta vacio, lo dejo asi, por que eso signifca que trae todos los campos y a veces quiero usarlo asi
+                    // para eso el usuario lo deja en fieldsForSelect: {}, o lo setea undefined, y aqui se llama a Entity.defaultFieldsWhenUndefined(),
+                    //que en la mayoria de las clases es {}, lo que significa todos.
+                    // En algunas clases esta seteado en algunos campos, por que la clase tiene mucho y no quiero permitir ese tipo de carga
+                    // tiene que elegir campos si o si o quedarse con los que estan en Entity.defaultFieldsWhenUndefined();, es el caso de funds y protocols
+                } else {
+                    // me aseguro que los campos que vienen esten bien seteados
+                    // y luego me aseguro de agregar todo lo que es necesario cuando se pide algun campo, es decir los vcampos minimos que se necesitan
+                    const isProjectionInclusionOrExclusion =
+                        isEmptyObject(fieldsForSelectForPostgreSQL) || Object.values(fieldsForSelectForPostgreSQL).every((value) => value === 1 || value === 0);
+                    if (!isProjectionInclusionOrExclusion) {
+                        throw `Invalid projection, must be all 1 or 0: ${JSON.stringify(fieldsForSelectForPostgreSQL)}`;
+                    }
+                    //----------------------------
+                    const alwaysFieldsForSelect: Record<string, boolean> = Entity.alwaysFieldsForSelect;
+                    //----------------------------
+                    const alwaysFieldsForCallbackOnAfterLoad: Record<string, boolean> = useOptionGet.doCallbackAfterLoad === true ? Entity.alwaysFieldsForCallbackOnAfterLoad : {};
+                    //----------------------------
+                    const alwaysFieldsForLoadRelations: Record<string, boolean> = {};
+                    //----------------------------
+                    if (useOptionGet.loadRelations !== undefined) {
+                        Object.keys(useOptionGet.loadRelations).forEach((key) => {
+                            if (useOptionGet.loadRelations![key] === true) {
+                                alwaysFieldsForLoadRelations[key] = true;
+                            }
+                        });
+                    }
+                    //----------------------------
+                    const unifiedAlwaysFields = {
+                        ...alwaysFieldsForSelect,
+                        ...alwaysFieldsForCallbackOnAfterLoad,
+                        ...alwaysFieldsForLoadRelations,
+                    };
+                    // Check if all values are either 1 or 0
+                    if (Object.values(fieldsForSelectForPostgreSQL).every((value) => value === 1)) {
+                        // si es una lista de inclusion me encargo de agregar los elementso que van always
+                        Object.keys(unifiedAlwaysFields)
+                            .filter((key) => unifiedAlwaysFields[key])
+                            .forEach((key) => {
+                                if (!fieldsForSelectForPostgreSQL.hasOwnProperty(key)) {
+                                    fieldsForSelectForPostgreSQL[key] = 1;
+                                }
+                            });
+                    } else if (Object.values(fieldsForSelectForPostgreSQL).every((value) => value === 0)) {
+                        // si es una lista de exclusion, me aseguro de sacar los elementos que tiene que estar siempre si o si
+                        Object.keys(unifiedAlwaysFields)
+                            .filter((key) => unifiedAlwaysFields[key])
+                            .forEach((key) => {
+                                if (fieldsForSelectForPostgreSQL.hasOwnProperty(key)) {
+                                    delete fieldsForSelectForPostgreSQL[key];
+                                }
+                            });
+                    }
+                }
+                //----------------------------
+                console_logLv2(0, Entity.className(), `getByParams - fieldsForSelect after always selects: ${showData(fieldsForSelectForPostgreSQL, false)}`);
+                //----------------------------
+                if (paramsFilter === undefined) {
+                    paramsFilter = {};
+                } else {
+                    console_logLv2(0, Entity.className(), `getByParams - paramsFilter: ${showData(paramsFilter)}`);
+                }
+                //----------------------------
+                if (restricFilter === undefined) {
+                    restricFilter = {};
+                } else {
+                    console_logLv2(0, Entity.className(), `getByParams - restricFilter: ${showData(restricFilter)}`);
+                }
+                //----------------------------
+                let filters;
+                if (!isEmptyObject(paramsFilter) && !isEmptyObject(restricFilter)) {
+                    filters = { $and: [paramsFilter, restricFilter] };
+                } else {
+                    filters = { ...paramsFilter, ...restricFilter };
+                }
+                //----------------------------
+                if (useOptionGet.sort === undefined) {
+                    useOptionGet.sort = Entity.defaultSortForSelect;
+                }
+                //----------------------------
+                // console_log (`pre getByParams ${Entity.className()}`)
+                const documents = await PostgreSQLDatabaseService.getByParams(Entity, filters, fieldsForSelectForPostgreSQL, useOptionGet);
+                // console_log (`post getByParams ${Entity.className()}`)
+                const instances: T[] = [];
+                //----------------------------
+                console_logLv2(
+                    0,
+                    Entity.className(),
+                    `getByParams - Processing ${documents.length} document(s)... - show firts 5: ${documents
+                        .slice(0, 5)
+                        .map((item: any) => toJson({ _id: item._id, name: item.name ?? '' }))
+                        .join(', ')}`
+                );
+                //----------------------------
+                let index = 0;
+                //----------------------------
+                for (let doc of documents) {
+                    //-----------------------
+                    index++;
+                    //-----------------------
+                    if (documents.length > 1 && documents.length < 10) {
+                        console_logLv2(1, Entity.className(), `getByParams - ${index}/${documents.length} - Processing document`);
+                    }
+                    //----------------------------
+                    if (doc._doc !== undefined) {
+                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS _DOC`);
+                        doc = doc._doc;
+                    } else {
+                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS NO _DOC`);
+                    }
+                    //----------------------------
+                    console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields: ${showData(Object.keys(doc), false)}`);
+                    console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields len: ${Object.keys(doc).length}`);
+                    //-----------------------
+                    const instance = (await Entity.getPostgreSQL().fromPostgreSQLInterface(doc)) as T;
+                    //-----------------------
+                    if (useOptionGet.lookUpFields !== undefined && useOptionGet.lookUpFields.length > 0) {
+                        for (let lookUpField of useOptionGet.lookUpFields) {
+                            const EntityClass =
+                                RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from) !== undefined
+                                    ? RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from)
+                                    : RegistryManager.getFromEntitiesRegistry(lookUpField.from);
+                            if (EntityClass !== undefined) {
+                                console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - LookUpField: ${lookUpField.from} - Loading...`);
+                                const instance_ = await EntityClass.getPostgreSQL().fromPostgreSQLInterface(doc[lookUpField.as]);
+                                if (instance_ !== undefined) {
+                                    instance[lookUpField.as as keyof typeof instance] = instance_;
+                                }
+                            }
+                        }
+                    }
+                    //-----------------------
+                    await this.getBack(instance.getStatic()).cascadeLoadRelations(instance, useOptionGet);
+                    //-----------------------
+                    let cascadeUpdate: CascadeUpdate = { swUpdate: false };
+                    //-----------------------
+                    if (useOptionGet.doCallbackAfterLoad === true) {
+                        const cascadeUpdateCallBackAfterLoad: CascadeUpdate = await this.getBack(instance.getStatic()).callbackOnAfterLoad(instance, cascadeUpdate);
+                        if (cascadeUpdateCallBackAfterLoad.swUpdate) {
+                            console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - updating because some callbackOnAfterLoad...`);
+                            cascadeUpdate = cascadeUpdateCallBackAfterLoad;
+                        }
+                    }
+                    //-----------------------
+                    if (useOptionGet.checkRelations === true) {
+                        const cascadeUpdateCheckAllRelationsExists = await this.checkIfAllRelationsExists(instance);
+                        if (cascadeUpdateCheckAllRelationsExists.swUpdate) {
+                            console_logLv2(0, Entity.className(), `getByParams -${index}/${documents.length} -  updating because checkIfAllRelationsExists...`);
+                            cascadeUpdate = {
+                                swUpdate: true,
+                                updatedFields: {
+                                    ...cascadeUpdate.updatedFields,
+                                    ...cascadeUpdateCheckAllRelationsExists.updatedFields,
+                                },
+                            };
+                        }
+                    }
+                    //-----------------------
+                    if (cascadeUpdate.swUpdate === true && cascadeUpdate.updatedFields !== undefined) {
+                        //-----------------------
+                        const optionsCreateOrUpdate: OptionsCreateOrUpdate = {
+                            doCallbackAfterLoad: false,
+                            loadRelations: {},
+                            saveRelations: {},
+                        };
                         //-----------------------
                         const updatedFields = Object.entries(cascadeUpdate.updatedFields).reduce((acc, [key, value]) => {
                             acc[key] = value.to; // Assign the 'to' value to the field
@@ -830,7 +1161,34 @@ export class BaseBackEndMethods {
                 console_logLv2(-1, Entity.className(), `getCount: ${count} - OK`);
                 //-----------------------
                 return count;
-            } else {
+            } else if (process.env.USE_DATABASE === 'postgresql') {
+                //----------------------------
+                if (paramsFilter === undefined) {
+                    paramsFilter = {};
+                } else {
+                    console_logLv2(0, Entity.className(), `getCount - paramsFilter: ${showData(paramsFilter)}`);
+                }
+                //----------------------------
+                if (restricFilter === undefined) {
+                    restricFilter = {};
+                } else {
+                    console_logLv2(0, Entity.className(), `getCount - restricFilter: ${showData(restricFilter)}`);
+                }
+                //----------------------------
+                let filters;
+                if (!isEmptyObject(paramsFilter) && !isEmptyObject(restricFilter)) {
+                    filters = { $and: [paramsFilter, restricFilter] };
+                } else {
+                    filters = { ...paramsFilter, ...restricFilter };
+                }
+                //----------------------------
+                const count = await PostgreSQLDatabaseService.getCount(Entity, filters);
+                //-----------------------
+                console_logLv2(-1, Entity.className(), `getCount: ${count} - OK`);
+                //-----------------------
+                return count;
+            }
+            {
                 throw 'Database not defined';
             }
         } catch (error) {
@@ -935,7 +1293,27 @@ export class BaseBackEndMethods {
                 console_logLv2(-1, Entity.className(), `deleteByParams - deletedCount: ${deletedCount} - OK`);
                 //----------------------------
                 return true;
-            } else {
+            } else if (process.env.USE_DATABASE === 'postgresql') {
+                //----------------------------
+                if (paramsFilter === undefined) {
+                    paramsFilter = {};
+                } else {
+                    console_logLv2(0, Entity.className(), `deleteByParams - paramsFilter: ${showData(paramsFilter)}`);
+                }
+                //----------------------------
+                const deletedCount = await PostgreSQLDatabaseService.deleteByParams<T>(Entity, paramsFilter);
+                if (deletedCount === undefined) {
+                    console_errorLv2(-1, Entity.className(), `deleteByParams - Error`);
+                    return false;
+                }
+                //----------------------------
+                // TODO: ver useOptionDelete.deleteRelation y tambien agregar cascadeDelete en conversions
+                //----------------------------
+                console_logLv2(-1, Entity.className(), `deleteByParams - deletedCount: ${deletedCount} - OK`);
+                //----------------------------
+                return true;
+            }
+            {
                 throw `Database not defined`;
             }
         } catch (error) {
@@ -978,7 +1356,23 @@ export class BaseBackEndMethods {
                 console_logLv2(-1, instance.className(), `delete - OK`);
                 //----------------------------
                 return true;
-            } else {
+            } else if (process.env.USE_DATABASE === 'postgresql') {
+                const document = await PostgreSQLDatabaseService.delete<T>(instance);
+                if (!document) {
+                    console_errorLv2(-1, instance.className(), `delete - id: ${instance._DB_id} - Error`);
+                    return false;
+                }
+                //----------------------------
+                // TODO: ver useOptionDelete.deleteRelation y tambien agregar cascadeDelete en conversions
+                // a partir de eso revisar las relaciones y eliminar aquellas atomaticamente
+                //----------------------------
+                await this.getBack(instance.getStatic()).cascadeDeleteRelations(instance, useOptionDelete.deleteRelations);
+                //----------------------------
+                console_logLv2(-1, instance.className(), `delete - OK`);
+                //----------------------------
+                return true;
+            }
+            {
                 throw `Database not defined`;
             }
         } catch (error) {
