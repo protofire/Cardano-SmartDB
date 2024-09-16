@@ -218,7 +218,7 @@ export class BaseEntityPostgreSQL {
                                     }
                                     for (let i = 0; i < value_ids.length; i++) {
                                         let value_id = value_ids[i];
-                                        if (process.env.USE_DATABASE === 'postgreSQL' && value_id && value_id.toString) {
+                                        if (process.env.USE_DATABASE === 'postgresql' && value_id && value_id.toString) {
                                             value_id = value_id.toString();
                                         }
                                         if (value_id) {
@@ -231,7 +231,7 @@ export class BaseEntityPostgreSQL {
                                 // OneToOne es una relacion de un registro de una tabla con un registro de otra tabla
                                 // ManyToOne es una relacion de muchos registros de esta tabla con un registro de otra tabla
                                 let value_id = plainDataInterface[conversions.interfaceName || propertyKey];
-                                if (process.env.USE_DATABASE === 'postgreSQL' && value_id && value_id.toString) {
+                                if (process.env.USE_DATABASE === 'postgresql' && value_id && value_id.toString) {
                                     value_id = value_id.toString();
                                 }
                                 (instance as any)[propertyKey] = value_id;
@@ -246,7 +246,7 @@ export class BaseEntityPostgreSQL {
                                     for (let i = 0; i < value.length; i++) {
                                         let value_ = value[i];
                                         if (conversions.isDB_id) {
-                                            if (process.env.USE_DATABASE === 'postgreSQL') {
+                                            if (process.env.USE_DATABASE === 'postgresql') {
                                                 value_ = value_?.toString ? value_.toString() : value_;
                                             }
                                         }
@@ -257,7 +257,7 @@ export class BaseEntityPostgreSQL {
                                 value = array;
                             } else {
                                 if (conversions.isDB_id) {
-                                    if (process.env.USE_DATABASE === 'postgreSQL') {
+                                    if (process.env.USE_DATABASE === 'postgresql') {
                                         value = value?.toString ? value.toString() : value;
                                     }
                                 }

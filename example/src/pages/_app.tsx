@@ -79,16 +79,15 @@ export default function MyApp({ Component, pageProps }: AppProps<{ session?: Ses
         siteSettings.oracle_internal_wallet_publickey_cborhex = 'Clave pública de la billetera interna del oráculo';
 
         // Crear el registro en la base de datos
-        await SiteSettingsFrontEndApiCalls.createApi(siteSettings);
+        const entity = await SiteSettingsFrontEndApiCalls.createApi(siteSettings);
+        const id = entity._DB_id
         // // Actualizar campos de la instancia creada
         siteSettings.name = 'Nombre actualizado';
         siteSettings.debug = false;
+        //
+        // // Utilizar updateApi para actualizar la entidad en la base de datos
+        await SiteSettingsFrontEndApiCalls.updateWithParamsApi(SiteSettingsEntity, id,siteSettings);
 
-        // Utilizar updateApi para actualizar la entidad en la base de datos
-        await SiteSettingsFrontEndApiCalls.updateApi(siteSettings);
-
-        const list2: SiteSettingsEntity[] = await SiteSettingsFrontEndApiCalls.getAllApi_();
-        console.log(list2.length);
         // console.log('Entidad actualizada correctamente'); // Verificar si existe el registro basado en ciertos parámetros
         // const exists = await SiteSettingsFrontEndApiCalls.checkIfExistsApi(SiteSettingsEntity, { name: 'Nombre de ejemplo' });
         // console.log(`¿El registro existe?: ${exists}`);
@@ -102,8 +101,21 @@ export default function MyApp({ Component, pageProps }: AppProps<{ session?: Ses
         // console.log(`Registros encontrados:`, siteSettingsList);
         //
         // // Eliminar un registro por ID
-        // const deleted = await SiteSettingsFrontEndApiCalls.deleteByIdApi(SiteSettingsEntity, '1');
-        // console.log(`¿Registro eliminado?: ${deleted}`);
+        //
+        const checkIfExists = SiteSettingsFrontEndApiCalls.checkIfExistsApi(SiteSettingsEntity,id);
+        console.log(`¿Aun existe? ${await checkIfExists}`);
+        const list2: SiteSettingsEntity[] = await SiteSettingsFrontEndApiCalls.getAllApi_();
+        console.log(list2.length);
+        const deleted = await SiteSettingsFrontEndApiCalls.deleteByIdApi(SiteSettingsEntity, id);
+        console.log(`¿Registro eliminado?: ${deleted}`);
+
+        const checkIfExists2 = SiteSettingsFrontEndApiCalls.checkIfExistsApi(SiteSettingsEntity,id);
+        console.log(`¿Aun existe? ${await checkIfExists2}`);
+        const list3: SiteSettingsEntity[] = await SiteSettingsFrontEndApiCalls.getAllApi_();
+        console.log(list3.length);
+
+        const countOriginalName = SiteSettingsFrontEndApiCalls.getCountApi(SiteSettingsEntity, {name: 'Nombre de ejemplo'})
+        console.log(`¿Cantidad de nombres sin cambiar?: ${await countOriginalName}`);
       } catch (e) {
         console.error(e);
       }
