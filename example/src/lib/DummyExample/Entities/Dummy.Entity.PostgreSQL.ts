@@ -5,6 +5,7 @@ import { DummyEntity } from './Dummy.Entity';
 import type { PaymentKeyHash } from 'lucid-cardano';
 import { Maybe } from 'smart-db';
 
+
 @PostgreSQLAppliedFor([DummyEntity])
 @Entity({ name: DummyEntity.className() }) // Nombre de la tabla basado en el nombre de la clase
 @Index(["ddPaymentPKH"])  // Puedes agregar más índices si es necesario
