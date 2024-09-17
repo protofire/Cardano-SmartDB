@@ -1,6 +1,6 @@
 {
     "name": "smart-db",
-    "version": "1.0.683",
+    "version": "1.0.796",
     "description": "Smart DB",
     "type": "module",
     "main": "index.js",
@@ -12,12 +12,12 @@
     "scripts": {
         "build": "rm -rf ./dist ./tsconfig.tsbuildinfo  && tsc -p tsconfig.json ",
         "watchBuild": "tsc -w -p tsconfig.json",
+        "pack": "npm version patch --no-git-tag-version && npm run build && cp package.json ./dist/package.json  && cp -r assets ./dist/assets && cd ./dist && npm pack --pack-destination=../ && cd .. && mv smart-db-*.tgz smart-db.tgz",
         "watchPack": "chokidar \"src/**/*\" -c \"npm run pack\"",
         "clean": "rm -rf ./dist ./tsconfig.tsbuildinfo ",
         "cleanAll": "rm -rf ./dist ./tsconfig.tsbuildinfo  ./node_modules",
         "lint": "eslint 'src/**/*.ts' --fix",
-        "test": "jest --passWithNoTests",
-        "pack": "npm version patch --no-git-tag-version && npm run build && cp package.json ./dist/package.json  && cp -r assets ./dist/assets && cd ./dist && npm pack --pack-destination=../ && cd .. && mv smart-db-*.tgz smart-db.tgz"
+        "test": "jest --passWithNoTests"
     },
     "dependencies": {
         "axios": "^1.6.8",
@@ -29,7 +29,7 @@
         "easy-peasy": "^5.0.4",
         "he": "^1.2.0",
         "jsonwebtoken": "^9.0.2",
-        "lucid-cardano": "^0.10.7",
+        "lucid-cardano": "^0.10.10",
         "mongoose": "^8.3.2",
         "next": "^12.1.6",
         "next-auth": "^4.24.7",

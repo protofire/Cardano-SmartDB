@@ -23,6 +23,7 @@
         "outDir": "./dist", // Output directory for build files
         "rootDir": "./src", // Source directory for build files
         "sourceMap": true,
+        "inlineSourceMap": false,
         "inlineSources": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,

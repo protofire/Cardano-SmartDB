@@ -1,12 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn, BaseEntity } from 'typeorm';
-import { PostgreSQLAppliedFor } from "../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js";
-import { PriceEntity } from './Price.Entity.js';
+import type { SignedMessage } from 'lucid-cardano';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
 import type { CS, TN } from '../Commons/index.js';
-import type { SignedMessage } from "lucid-cardano";
-import { BaseEntityPostgreSQL } from "./Base/Base.Entity.PostgreSQL.js";
+import { getPostgreSQLTableName } from '../Commons/utils.js';
+import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js';
+import { PriceEntity } from './Price.Entity.js';
 
 @PostgreSQLAppliedFor([PriceEntity])
-@Entity()
+@Entity({ name: getPostgreSQLTableName(PriceEntity.className()) })
 export class PriceEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = PriceEntity;
 
@@ -53,26 +54,25 @@ export class PriceEntityPostgreSQL extends BaseEntityPostgreSQL {
     // #region fields
 
     @PrimaryGeneratedColumn()
-    id!: number;  // Auto-generated primary key
+    i_d!: number; // Auto-generated primary key
 
     @Column({ type: 'varchar', nullable: true })
-    CS!: CS;  // Currency Symbol (adapted from MongoDB schema)
+    CS!: CS; // Currency Symbol (adapted from MongoDB schema)
 
     @Column({ type: 'varchar', nullable: true })
-    TN_Hex!: TN;  // Token Name (Hex)
+    TN_Hex!: TN; // Token Name (Hex)
 
     @Column({ type: 'varchar', nullable: true })
-    TN_Str!: TN;  // Token Name (String)
+    TN_Str!: TN; // Token Name (String)
 
     @Column({ type: 'timestamp', nullable: true })
-    date!: Date;  // Date of the price entry
+    date!: Date; // Date of the price entry
 
-    @Column({ type: 'varchar', nullable: true })
-    priceADAx1e6!: string;  // Price of the token in ADA, multiplied by 1e6
+    @Column({ type: 'bigint', nullable: true })
+    priceADAx1e6!: bigint; // Price of the token in ADA, multiplied by 1e6
 
     @Column({ type: 'jsonb', nullable: true })
-    signature!: SignedMessage;  // Signature of the price data
+    signature!: SignedMessage; // Signature of the price data
 
     // #endregion fields
 }
-

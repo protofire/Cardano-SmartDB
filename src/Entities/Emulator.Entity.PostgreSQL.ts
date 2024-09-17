@@ -1,16 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn} from "typeorm";
-import type { PrivateKey } from "lucid-cardano";
-import { PostgreSQLAppliedFor } from "../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js";
-import { BaseEntityPostgreSQL } from "./Base/Base.Entity.PostgreSQL.js";
-import { EmulatorEntity } from "./Emulator.Entity.js";
-
+import type { PrivateKey } from 'lucid-cardano';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
+import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js';
+import { EmulatorEntity } from './Emulator.Entity.js';
+import { getPostgreSQLTableName } from '../Commons/utils.js';
 
 @PostgreSQLAppliedFor([EmulatorEntity])
-@Entity()
+@Entity({ name: getPostgreSQLTableName(EmulatorEntity.className()) })
 export class EmulatorEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = EmulatorEntity;
 
-// #region internal class methods
+    // #region internal class methods
 
     public getStatic(): typeof EmulatorEntity {
         return EmulatorEntityPostgreSQL.getStatic();
@@ -40,9 +40,8 @@ export class EmulatorEntityPostgreSQL extends BaseEntityPostgreSQL {
 
     // #region postgreSQLDB
 
-
     @PrimaryGeneratedColumn()
-    id!: number;  // Asume que el campo `id` es generado automáticamente
+    _id!: number; // Asume que el campo `id` es generado automáticamente
 
     @Column({ type: 'varchar', unique: true })
     name!: string;
@@ -51,14 +50,14 @@ export class EmulatorEntityPostgreSQL extends BaseEntityPostgreSQL {
     current!: boolean;
 
     // TODO: Maybe a one to one relation its better
-    @Column({ type: 'jsonb',nullable: true })  // `jsonb` para almacenar objetos en PostgreSQL
+    @Column({ type: 'jsonb', nullable: true }) // `jsonb` para almacenar objetos en PostgreSQL
     emulator!: object;
 
     @Column({ type: 'integer' })
     zeroTime!: number;
 
-    @Column({ type: 'varchar', array: true ,nullable: true})
-    privateKeys!: PrivateKey[];  // Suponiendo que el array de claves privadas se maneja como texto
+    @Column({ type: 'varchar', array: true, nullable: true })
+    privateKeys!: PrivateKey[]; // Suponiendo que el array de claves privadas se maneja como texto
 
-        // #endregion postgreSQLDB
+    // #endregion postgreSQLDB
 }

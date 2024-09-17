@@ -1,10 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, BaseEntity } from 'typeorm';
-import { PostgreSQLAppliedFor } from "../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js";
-import { BaseEntityPostgreSQL } from "./Base/Base.Entity.PostgreSQL.js";  // Change the base class to the TypeORM version
-import { JobEntity } from './Job.Entity.js';  // Assuming JobEntity is implemented in TypeORM
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
+import { getPostgreSQLTableName } from '../Commons/utils.js';
+import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js'; // Change the base class to the TypeORM version
+import { JobEntity } from './Job.Entity.js'; // Assuming JobEntity is implemented in TypeORM
 
 @PostgreSQLAppliedFor([JobEntity])
-@Entity()
+@Entity({ name: getPostgreSQLTableName(JobEntity.className()) })
 export class JobEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = JobEntity;
 
@@ -17,7 +18,6 @@ export class JobEntityPostgreSQL extends BaseEntityPostgreSQL {
     public static getPostgreSQLStatic(): typeof JobEntityPostgreSQL {
         return this as typeof JobEntityPostgreSQL;
     }
-
 
     /**
      * Returns the static instance of JobEntity for this class.
@@ -52,7 +52,7 @@ export class JobEntityPostgreSQL extends BaseEntityPostgreSQL {
     // #region fields
 
     @PrimaryGeneratedColumn()
-    id!: number;  // Assumes the entity has an auto-generated ID column
+    _id!: number; // Assumes the entity has an auto-generated ID column
 
     @Column({ type: 'varchar', nullable: true })
     name!: string;
@@ -71,4 +71,3 @@ export class JobEntityPostgreSQL extends BaseEntityPostgreSQL {
 
     // #endregion fields
 }
-

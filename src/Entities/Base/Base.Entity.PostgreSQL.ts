@@ -1,4 +1,4 @@
-import { ConversionFunctions, deserealizeBigInt, executeFunction, getCombinedConversionFunctions, toJson } from '../../backEnd.js';
+import { ConversionFunctions, deserealizeBigInt, executeFunction, getCombinedConversionFunctions, isNullOrBlank, toJson } from '../../backEnd.js';
 import { PostgreSQLAppliedFor } from '../../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
 import { BaseEntity } from './Base.Entity.js';
 
@@ -42,8 +42,13 @@ export class BaseEntityPostgreSQL {
     }
 
     // #region postgreSQL db
-    public static PostgreSQLModel(): any {
-        throw `${this.Entity.className()} - postgreSQL model not implemented`;
+
+    // public static PostgreSQLModel(): any {
+    //     throw `${this.Entity.className()} - postgreSQL model not implemented`;
+    // }
+
+    public static PostgreSQLModel() {
+        return this;
     }
 
     public MongoModel(): any {
@@ -88,8 +93,10 @@ export class BaseEntityPostgreSQL {
                             value = await executeFunction(type.toPlainObject, value);
                         } else if (value?.toJsonString) {
                             value = JSON.parse(value.toJsonString());
-                        } else if (value !== undefined && conversions.type !== Number && conversions.type !== String && conversions.type !== Boolean) {
+                        } else if (value !== undefined && value !== null && conversions.type !== Number && conversions.type !== String && conversions.type !== Boolean) {
                             value = JSON.parse(toJson(value));
+                        } else if (value === undefined){
+                            value = null;
                         }
                     }
                     return value;
@@ -98,43 +105,39 @@ export class BaseEntityPostgreSQL {
                 }
             };
             for (const [propertyKey, conversions] of conversionFunctions.entries()) {
+                //------------------
                 let value: any = undefined;
                 let swProcessValue = false;
+                //------------------
                 if (instance.hasOwnProperty(propertyKey) || conversions.toPostgreSQLInterface) {
                     value = (instance as any)[propertyKey];
                     swProcessValue = true;
                 }
+                //------------------
                 if (swProcessValue) {
                     if (conversions.relation !== undefined) {
-                        // itero por todas las relaciones que hay
+                        if (conversions.propertyToFill === undefined) {
+                            throw `${this.className()} - ${propertyKey}: propertyToFill is required`;
+                        }
+                        //------------------
+                        value = (instance as any)[conversions.propertyToFill];
+                        //------------------
                         if (conversions.isArray === true) {
-                            // OneToMany es una relacion un registro de esta tabla se relaciona con muchos registros de otra tabla
-                            let array_ids = [];
-                            let value_ids: any = value;
-                            if (value_ids) {
-                                if (Array.isArray(value_ids) === false) {
-                                    throw `${this.className()} - ${propertyKey}: OneToMany value must be an Array`;
+                            let array = [];
+                            if (value) {
+                                if (Array.isArray(value) === false) {
+                                    throw `${this.className()} - ${propertyKey}: value must be an array`;
                                 }
-                                for (let i = 0; i < value_ids.length; i++) {
-                                    let value_id = value_ids[i];
-                                    if (value_id !== undefined) {
-                                        // if (value_id !== undefined) {
-                                        //     value_id = new Types.ObjectId(value_id);
-                                        // }
-                                        array_ids.push(value_id);
-                                    }
+                                for (let i = 0; i < value.length; i++) {
+                                    const item = await processValue(propertyKey, conversions, value[i]);
+                                    array.push(item);
                                 }
                             }
-                            (interfaceObj as any)[conversions.interfaceName || propertyKey] = array_ids;
+                            value = array;
                         } else {
-                            // OneToOne es una relacion de un registro de una tabla con un registro de otra tabla
-                            // ManyToOne es una relacion de muchos registros de esta tabla con un registro de otra tabla
-                            let value_id: any = value;
-                            // if (value_id !== undefined) {
-                            //     value_id = new Types.ObjectId(value_id);
-                            // }
-                            (interfaceObj as any)[conversions.interfaceName || propertyKey] = value_id;
+                            value = await processValue(propertyKey, conversions, value);
                         }
+                        (interfaceObj as any)[conversions.interfaceName || conversions.propertyToFill] = value;
                     } else {
                         if (conversions.isArray === true) {
                             let array = [];
@@ -173,7 +176,7 @@ export class BaseEntityPostgreSQL {
                         if (conversions.fromPostgreSQLInterface) {
                             value = conversions.fromPostgreSQLInterface.call(instance, value);
                         } else if (type.fromPostgreSQLInterface) {
-                            if (type.PostgreSQLModel === undefined || value !== undefined) {
+                            if (type.PostgreSQLModel === undefined || (value !== undefined && value !== null)) {
                                 value = await executeFunction(type.fromPostgreSQLInterface, value);
                             }
                         } else if (conversions.type === BigInt) {
@@ -181,17 +184,19 @@ export class BaseEntityPostgreSQL {
                         } else if (conversions.fromPlainObject) {
                             value = conversions.fromPlainObject.call(instance, value);
                         } else if (type.fromPlainObject) {
-                            if (type.PostgreSQLModel === undefined || value !== undefined) {
+                            if (type.PostgreSQLModel === undefined || (value !== undefined && value !== null)) {
                                 value = await executeFunction(type.fromPlainObject, value);
                             }
                         } else if (
-                            value !== undefined &&
+                            value !== undefined && value !== null &&
                             conversions.type !== Number &&
                             conversions.type !== String &&
                             conversions.type !== Boolean &&
                             conversions.type !== Object
                         ) {
                             value = new type(value);
+                        } else if (value === null){
+                            value = undefined;
                         }
                         return value;
                     } catch (error) {
@@ -218,8 +223,8 @@ export class BaseEntityPostgreSQL {
                                     }
                                     for (let i = 0; i < value_ids.length; i++) {
                                         let value_id = value_ids[i];
-                                        if (process.env.USE_DATABASE === 'postgresql' && value_id && value_id.toString) {
-                                            value_id = value_id.toString();
+                                        if (process.env.USE_DATABASE === 'postgresql') {
+                                            value_id = value_id?.toString ? value_id.toString() : value_id;
                                         }
                                         if (value_id) {
                                             array_ids.push(value_id);
@@ -231,8 +236,8 @@ export class BaseEntityPostgreSQL {
                                 // OneToOne es una relacion de un registro de una tabla con un registro de otra tabla
                                 // ManyToOne es una relacion de muchos registros de esta tabla con un registro de otra tabla
                                 let value_id = plainDataInterface[conversions.interfaceName || propertyKey];
-                                if (process.env.USE_DATABASE === 'postgresql' && value_id && value_id.toString) {
-                                    value_id = value_id.toString();
+                                if (process.env.USE_DATABASE === 'postgresql') {
+                                    value_id = value_id?.toString ? value_id.toString() : value_id;
                                 }
                                 (instance as any)[propertyKey] = value_id;
                             }

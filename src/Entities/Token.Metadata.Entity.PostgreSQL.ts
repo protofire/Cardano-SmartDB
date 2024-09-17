@@ -1,12 +1,12 @@
-
-import { Entity, Column, PrimaryGeneratedColumn, BaseEntity } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
-import { TokenMetadataEntity } from './Token.Metadata.Entity.js';
 import type { CS, TN } from '../Commons/index.js';
+import { getPostgreSQLTableName } from '../Commons/utils.js';
 import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js';
+import { TokenMetadataEntity } from './Token.Metadata.Entity.js';
 
 @PostgreSQLAppliedFor([TokenMetadataEntity])
-@Entity()
+@Entity(getPostgreSQLTableName(TokenMetadataEntity.className()))
 export class TokenMetadataEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = TokenMetadataEntity;
 
@@ -41,7 +41,7 @@ export class TokenMetadataEntityPostgreSQL extends BaseEntityPostgreSQL {
     // #region fields
 
     @PrimaryGeneratedColumn()
-    id!: number;  // Assuming the entity has an auto-generated ID
+    _id!: number; // Assuming the entity has an auto-generated ID
 
     @Column({ type: 'varchar', nullable: true })
     CS!: CS;
@@ -69,4 +69,3 @@ export class TokenMetadataEntityPostgreSQL extends BaseEntityPostgreSQL {
 
     // #endregion fields
 }
-

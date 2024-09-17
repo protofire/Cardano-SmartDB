@@ -99,9 +99,9 @@ export class BaseSmartDBEntity extends BaseEntity {
     smartUTxO_id!: string | undefined;
     smartUTxO!: SmartUTxOEntity | undefined;
 
-    @Convertible({ propertyToFill: 'addressToFollow', relation: 'OneToOne', typeRelation: AddressToFollowEntity })
-    addressToFollow_id!: string;
-    addressToFollow!: AddressToFollowEntity | undefined;
+    // @Convertible({ propertyToFill: 'addressToFollow', relation: 'OneToOne', typeRelation: AddressToFollowEntity })
+    // addressToFollow_id!: string;
+    // addressToFollow!: AddressToFollowEntity | undefined;
 
     // #endregion fields
 

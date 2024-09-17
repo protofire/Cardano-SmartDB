@@ -213,6 +213,12 @@ export class BaseBackEndMethods {
                 `checkRelationAndLoadIt - ${RelatedClassType.className()} in field ${conversions.propertyToFill} - using ${propertyKey} as id  ${value_id} - Loading...`
             );
             value_object = await this.getById<R>(RelatedClassType, value_id, optionsGet, restricFilter);
+        } else{
+            console_logLv2(
+                0,
+                instance.className(),
+                `checkRelationAndLoadIt - ${RelatedClassType.className()} in field ${conversions.propertyToFill} - using ${propertyKey} as id  ${value_id} - Not found`
+            );
         }
         return value_object;
     }
@@ -249,25 +255,27 @@ export class BaseBackEndMethods {
                     // se hace unicamente al crear el registro
                     await this.getBack(instance.getStatic()).cascadeSaveParentRelations(instance_, useOptionCreate);
                     //-----------------------
-                    console_logLv2(-1, instance.className(), `create - Instance: ${instance.show()} - OK`);
+                    console_logLv2(-1, instance.className(), `create - Instance: ${instance_.show()} - OK`);
                     return instance_;
                 } else {
                     throw `unknown Mongo`;
                 }
-            } else if (process.env.USE_DATABASE === 'postgresql') {
-                const _id_Postgres = await PostgreSQLDatabaseService.create<T>(instance);
 
-                if (_id_Postgres) {
-                    const instance_ = await this.getById<T>(instance.getStatic(), _id_Postgres, optionsCreate, undefined);
+            } else if (process.env.USE_DATABASE === 'postgresql') {
+                const _id = await PostgreSQLDatabaseService.create<T>(instance);
+                // console_logLv2(0, instance.className(), `id postgres: ${_id}`);
+                if (_id) {
+                    const instance_ = await this.getById<T>(instance.getStatic(), _id, optionsCreate, undefined);
                     if (instance_ === undefined) {
-                        throw `${instance.className()} - Not found after created - id: ${_id_Postgres.toString()}`;
+                        throw `${instance.className()} - Not found after created - id: ${_id.toString()}`;
                     }
                     //-----------------------
                     // se hace despues por que necesita el id de este registro para actualizar en el padre
                     // se hace unicamente al crear el registro
                     await this.getBack(instance.getStatic()).cascadeSaveParentRelations(instance_, useOptionCreate);
                     //-----------------------
-                    console_logLv2(-1, instance.className(), `create - Instance: ${instance.show()} - OK`);
+                    console_logLv2(-1, instance.className(), `create - Instance: ${instance_.show()} - OK`);
+                    //-----------------------
                     return instance_;
                 } else {
                     throw `unknown PostgreSQL`;
@@ -596,12 +604,12 @@ export class BaseBackEndMethods {
                 },
                 restricFilter
             );
-            console.log(instance?._DB_id);
-            // console.log(instance?.name)
+            //----------------------------
+            console_logLv2(0, Entity.className(), `getById - id: ${id} - ${instance?._DB_id}`);
+            //----------------------------
             if (instance) {
                 //----------------------------
                 console_logLv2(-1, instance.className(), `getById - Instance: ${instance.show()} - OK`);
-                console.log(showData(instance));
                 //----------------------------
                 return instance as T;
             } else {
@@ -772,8 +780,6 @@ export class BaseBackEndMethods {
                 // console_log (`pre getByParams ${Entity.className()}`)
                 const documents = await MongoDatabaseService.getByParams(Entity, filters, fieldsForSelectForMongo, useOptionGet);
                 // console_log (`post getByParams ${Entity.className()}`)
-
-                // await PostgreSQLDatabaseService.getByParams(Entity, filters, fieldsForSelectForMongo, useOptionGet);
                 //----------------------------
                 const instances: T[] = [];
                 //----------------------------
@@ -839,7 +845,7 @@ export class BaseBackEndMethods {
                     if (useOptionGet.checkRelations === true) {
                         const cascadeUpdateCheckAllRelationsExists = await this.checkIfAllRelationsExists(instance);
                         if (cascadeUpdateCheckAllRelationsExists.swUpdate) {
-                            console_logLv2(0, Entity.className(), `getByParams -${index}/${documents.length} -  updating because checkIfAllRelationsExists...`);
+                            console_logLv2(0, Entity.className(), `getByParams -${index}/${documents.length} - updating because checkIfAllRelationsExists...`);
                             cascadeUpdate = {
                                 swUpdate: true,
                                 updatedFields: {
@@ -989,7 +995,8 @@ export class BaseBackEndMethods {
                 //----------------------------
                 // console_log (`pre getByParams ${Entity.className()}`)
                 const documents = await PostgreSQLDatabaseService.getByParams(Entity, filters, fieldsForSelectForPostgreSQL, useOptionGet);
-                // console_log (`post getByParams ${Entity.className()}`)
+                // console_logLv2(0, Entity.className(),  `post getByParams ${toJson(documents)}`)
+                //----------------------------
                 const instances: T[] = [];
                 //----------------------------
                 console_logLv2(
@@ -1011,33 +1018,34 @@ export class BaseBackEndMethods {
                         console_logLv2(1, Entity.className(), `getByParams - ${index}/${documents.length} - Processing document`);
                     }
                     //----------------------------
-                    if (doc._doc !== undefined) {
-                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS _DOC`);
-                        doc = doc._doc;
-                    } else {
-                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS NO _DOC`);
-                    }
+                    // if (doc._doc !== undefined) {
+                    //     console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS _DOC`);
+                    //     doc = doc._doc;
+                    // } else {
+                    //     console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS NO _DOC`);
+                    // }
                     //----------------------------
                     console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields: ${showData(Object.keys(doc), false)}`);
                     console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields len: ${Object.keys(doc).length}`);
                     //-----------------------
                     const instance = (await Entity.getPostgreSQL().fromPostgreSQLInterface(doc)) as T;
+                    console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - instance: ${showData(instance, false)}`);
                     //-----------------------
-                    if (useOptionGet.lookUpFields !== undefined && useOptionGet.lookUpFields.length > 0) {
-                        for (let lookUpField of useOptionGet.lookUpFields) {
-                            const EntityClass =
-                                RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from) !== undefined
-                                    ? RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from)
-                                    : RegistryManager.getFromEntitiesRegistry(lookUpField.from);
-                            if (EntityClass !== undefined) {
-                                console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - LookUpField: ${lookUpField.from} - Loading...`);
-                                const instance_ = await EntityClass.getPostgreSQL().fromPostgreSQLInterface(doc[lookUpField.as]);
-                                if (instance_ !== undefined) {
-                                    instance[lookUpField.as as keyof typeof instance] = instance_;
-                                }
-                            }
-                        }
-                    }
+                    // if (useOptionGet.lookUpFields !== undefined && useOptionGet.lookUpFields.length > 0) {
+                    //     for (let lookUpField of useOptionGet.lookUpFields) {
+                    //         const EntityClass =
+                    //             RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from) !== undefined
+                    //                 ? RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from)
+                    //                 : RegistryManager.getFromEntitiesRegistry(lookUpField.from);
+                    //         if (EntityClass !== undefined) {
+                    //             console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - LookUpField: ${lookUpField.from} - Loading...`);
+                    //             const instance_ = await EntityClass.getPostgreSQL().fromPostgreSQLInterface(doc[lookUpField.as]);
+                    //             if (instance_ !== undefined) {
+                    //                 instance[lookUpField.as as keyof typeof instance] = instance_;
+                    //             }
+                    //         }
+                    //     }
+                    // }
                     //-----------------------
                     await this.getBack(instance.getStatic()).cascadeLoadRelations(instance, useOptionGet);
                     //-----------------------
@@ -1054,7 +1062,7 @@ export class BaseBackEndMethods {
                     if (useOptionGet.checkRelations === true) {
                         const cascadeUpdateCheckAllRelationsExists = await this.checkIfAllRelationsExists(instance);
                         if (cascadeUpdateCheckAllRelationsExists.swUpdate) {
-                            console_logLv2(0, Entity.className(), `getByParams -${index}/${documents.length} -  updating because checkIfAllRelationsExists...`);
+                            console_logLv2(0, Entity.className(), `getByParams -${index}/${documents.length} - updating because checkIfAllRelationsExists...`);
                             cascadeUpdate = {
                                 swUpdate: true,
                                 updatedFields: {

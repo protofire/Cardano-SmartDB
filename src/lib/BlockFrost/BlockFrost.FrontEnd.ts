@@ -1,6 +1,24 @@
-
-import { C, applyDoubleCborEncoding, fromHex, toHex, Credential, UTxO, Provider, Address, Unit, OutRef, RewardAddress, Delegation, DatumHash, Datum, TxHash, Transaction, Blockfrost } from 'lucid-cardano';
+import {
+    C,
+    applyDoubleCborEncoding,
+    fromHex,
+    toHex,
+    Credential,
+    UTxO,
+    Provider,
+    Address,
+    Unit,
+    OutRef,
+    RewardAddress,
+    Delegation,
+    DatumHash,
+    Datum,
+    TxHash,
+    Transaction,
+    Blockfrost,
+} from 'lucid-cardano';
 import { fetchWrapper } from '../FetchWrapper/FetchWrapper.FrontEnd.js';
+import { toJson } from '../../Commons/utils.js';
 
 const lucid = '0.10.7'; // Lucid version
 
@@ -32,6 +50,7 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
             collateralPercentage: parseInt(result.collateral_percent),
             maxCollateralInputs: parseInt(result.max_collateral_inputs),
             costModels: result.cost_models,
+            minfeeRefscriptCostPerByte: parseInt(result.min_fee_ref_script_cost_per_byte),
         };
     }
     async getUtxos(addressOrCredential: string | Credential): Promise<UTxO[]> {
@@ -53,7 +72,7 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
                 if (pageResult.status_code === 404) {
                     return [];
                 } else {
-                    throw new Error('Could not fetchWrapper UTxOs from Blockfrost. Try again.');
+                    throw new Error(`Could not fetchWrapper UTxOs from Blockfrost. ${toJson(pageResult.error)}. Try again.`);
                 }
             }
             result = result.concat(pageResult);
@@ -81,7 +100,7 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
                 if (pageResult.status_code === 404) {
                     return [];
                 } else {
-                    throw new Error('Could not fetchWrapper UTxOs from Blockfrost. Try again.');
+                    throw new Error(`Could not fetchWrapper UTxOs from Blockfrost. ${toJson(pageResult.error)}.Try again.`);
                 }
             }
             result = result.concat(pageResult);
@@ -105,7 +124,7 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
         }
         return utxos[0];
     }
-    async getUtxosByOutRef(outRefs: OutRef[]): Promise<UTxO[]>{
+    async getUtxosByOutRef(outRefs: OutRef[]): Promise<UTxO[]> {
         // TODO: Make sure old already spent UTxOs are not retrievable.
         const queryHashes = [...new Set(outRefs.map((outRef) => outRef.txHash))];
         const utxos = await Promise.all(
@@ -151,7 +170,7 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
         }
         return datum;
     }
-    awaitTx(txHash: TxHash, checkInterval = 3000) : Promise<boolean>{
+    awaitTx(txHash: TxHash, checkInterval = 3000): Promise<boolean> {
         return new Promise((res) => {
             const confirmation = setInterval(async () => {
                 const isConfirmed = await fetchWrapper(`${this.url}/txs/${txHash}`, {
@@ -181,7 +200,7 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
         }
         return result;
     }
-    private async blockfrostUtxosToUtxos2(result: any[]) : Promise<UTxO[]>{
+    private async blockfrostUtxosToUtxos2(result: any[]): Promise<UTxO[]> {
         return await Promise.all(
             result.map(async (r) => ({
                 txHash: r.tx_hash,
@@ -214,7 +233,6 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
 }
 
 export class BlockFrostFrontEnd {
-
     // public static async getSlotApi(): Promise<number | undefined> {
     //     try {
     //         //----------------------------

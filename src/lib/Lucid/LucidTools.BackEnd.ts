@@ -69,7 +69,7 @@ export class LucidToolsBackEnd extends LucidToolsFrontEnd {
             let lucid;
             //--------------------------------------
             if (isEmulator) {
-                // const EmulatorBackEndApplied = (await import('../MayzSmartDB/BackEnd/index.exports.js')).EmulatorBackEndApplied;
+                // const EmulatorBackEndApplied = (await import('../BackEnd/index.exports.js')).EmulatorBackEndApplied;
                 // emulatorDB = await EmulatorBackEndApplied.getOneByParams_({ current: true });
                 if (globalEmulator.emulatorDB === undefined) {
                     throw `globalEmulator emulatorDB current not found`;
@@ -96,7 +96,7 @@ export class LucidToolsBackEnd extends LucidToolsFrontEnd {
     // public static async syncEmulatorAfterTx(lucid: Lucid, emulatorDB: EmulatorEntity) {
     //     console_log(0, `Lucid`, `syncEmulatorAfterTx - Saving emulator ledger...`);
     //     emulatorDB.emulator = lucid.provider as any;
-    //     const EmulatorBackEndApplied = (await import('../MayzSmartDB/BackEnd/index.exports.js')).EmulatorBackEndApplied;
+    //     const EmulatorBackEndApplied = (await import('../BackEnd/index.exports.js')).EmulatorBackEndApplied;
     //     await EmulatorBackEndApplied.update(emulatorDB);
     // }
 

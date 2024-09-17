@@ -1,22 +1,19 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
-import { PostgreSQLAppliedFor } from 'smart-db';
-import { BaseSmartDBEntityPostgreSQL } from 'smart-db/backEnd';
-import { DummyEntity } from './Dummy.Entity';
 import type { PaymentKeyHash } from 'lucid-cardano';
-import { Maybe } from 'smart-db';
-
-
+import { getPostgreSQLTableName, Maybe, PostgreSQLAppliedFor } from 'smart-db';
+import { BaseSmartDBEntityPostgreSQL } from 'smart-db/backEnd';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { DummyEntity } from './Dummy.Entity';
 
 @PostgreSQLAppliedFor([DummyEntity])
-@Entity({ name: DummyEntity.className() }) // Nombre de la tabla basado en el nombre de la clase
-@Index(["ddPaymentPKH"])  // Puedes agregar más índices si es necesario
+@Entity({ name: getPostgreSQLTableName(DummyEntity.className()) }) // Nombre de la tabla basado en el nombre de la clase
+@Index(['ddPaymentPKH']) // Puedes agregar más índices si es necesario
 export class DummyEntityPostgreSQL extends BaseSmartDBEntityPostgreSQL {
     protected static Entity = DummyEntity;
 
     // #region fields
 
     @PrimaryGeneratedColumn()
-    id!: number;
+    _id!: number;
 
     @Column({ type: 'varchar', nullable: true })
     ddPaymentPKH?: PaymentKeyHash;
@@ -57,4 +54,3 @@ export class DummyEntityPostgreSQL extends BaseSmartDBEntityPostgreSQL {
 
     // #endregion internal class methods
 }
-

@@ -1,18 +1,19 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
-import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
-import { WalletEntity } from './Wallet.Entity.js';
-import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js';
 import type { PaymentKeyHash, StakeKeyHash } from 'lucid-cardano';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
+import { getPostgreSQLTableName } from '../Commons/utils.js';
+import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js';
+import { WalletEntity } from './Wallet.Entity.js';
 
 @PostgreSQLAppliedFor([WalletEntity])
-@Entity()
+@Entity(getPostgreSQLTableName(WalletEntity.className()))
 export class WalletEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = WalletEntity;
 
     // #region fields
 
     @PrimaryGeneratedColumn()
-    id!: number;  // Asume que cada registro tiene un ID autogenerado
+    _id!: number; // Asume que cada registro tiene un ID autogenerado
 
     @Column({ type: 'timestamptz', nullable: true })
     createdAt?: Date;
@@ -81,4 +82,3 @@ export class WalletEntityPostgreSQL extends BaseEntityPostgreSQL {
 
     // #endregion internal class methods
 }
-

@@ -21,8 +21,6 @@ export class SiteSettingsEntity extends BaseEntity {
     @Convertible({})
     corsAllowedOrigin!: string;
 
-
-    
     @Convertible({})
     debug!: boolean;
 

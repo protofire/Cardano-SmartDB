@@ -262,7 +262,7 @@ export const useList = <T>(props: ListProps<T>) => {
                     dispatch({ type: 'finish_loading', payload: list });
                 } catch (error) {
                     console.log(`${nameList ? '[' + nameList + ']' + ' - ' : ''}[List] Error fetching list: ${error}`);
-                    pushWarningNotification('MAYZ Protocol', 'Error fetching list: ' + error);
+                    pushWarningNotification('SmartDB', 'Error fetching list: ' + error);
                     dispatch({ type: 'finish_loading', payload: [] });
                 }
             };

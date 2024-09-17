@@ -1,15 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
-import { PostgreSQLAppliedFor } from "../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js";
-import { SmartUTxOEntity } from './SmartUTxO.Entity.js';  // Assuming SmartUTxOEntity is implemented in TypeORM
-
-import type { Datum, Script } from "lucid-cardano";
-import { SmartUTxOWithDetailsEntity } from './SmartUTxO.WithDetails.Entity.js';  // Assuming SmartUTxOWithDetailsEntity is implemented in TypeORM
-import { BaseEntityPostgreSQL } from "./Base/Base.Entity.PostgreSQL.js";  // Change the base class to the TypeORM version
+import type { Datum, Script } from 'lucid-cardano';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
+import { getPostgreSQLTableName } from '../Commons/utils.js';
+import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js'; // Change the base class to the TypeORM version
+import { SmartUTxOEntity } from './SmartUTxO.Entity.js'; // Assuming SmartUTxOEntity is implemented in TypeORM
+import { SmartUTxOWithDetailsEntity } from './SmartUTxO.WithDetails.Entity.js'; // Assuming SmartUTxOWithDetailsEntity is implemented in TypeORM
 
 @PostgreSQLAppliedFor([SmartUTxOEntity, SmartUTxOWithDetailsEntity])
-@Entity()
-@Index(["txHash", "outputIndex"])  // Composite index
-@Index(["isPreparing", "isConsuming"])  // Additional index
+@Entity(getPostgreSQLTableName(SmartUTxOEntity.className()))
+@Index(['txHash', 'outputIndex']) // Composite index
+@Index(['isPreparing', 'isConsuming']) // Additional index
 export class SmartUTxOEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = SmartUTxOEntity;
 
@@ -44,7 +44,7 @@ export class SmartUTxOEntityPostgreSQL extends BaseEntityPostgreSQL {
     // #region fields
 
     @PrimaryGeneratedColumn()
-    id!: number;  // Assumes the entity has an auto-generated ID column
+    _id!: number; // Assumes the entity has an auto-generated ID column
 
     @Column({ type: 'varchar', nullable: false })
     @Index()
@@ -92,4 +92,3 @@ export class SmartUTxOEntityPostgreSQL extends BaseEntityPostgreSQL {
 
     // #endregion fields
 }
-

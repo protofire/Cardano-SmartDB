@@ -124,6 +124,7 @@ export const blockfrostProxyApiHandlerWithContext = async (req: NextApiRequestAu
                     collateral_percent: parsedData.collateral_percent.toString(),
                     max_collateral_inputs: parsedData.max_collateral_inputs.toString(),
                     cost_models: parsedData.cost_models,
+                    min_fee_ref_script_cost_per_byte: parsedData.min_fee_ref_script_cost_per_byte.toString(),
                 });
             } catch (error) {
                 console_error(0, `Blockfrost proxy`, `Error reading protocol-parameters.json: ${error}`);

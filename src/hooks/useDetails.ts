@@ -184,7 +184,7 @@ export const useDetails = <T>(props: DetailsProps<T>) => {
                     dispatch({ type: 'finish_loading', payload: details });
                 } catch (error) {
                     console.log(`${nameDetails ? '[' + nameDetails + ']' + ' - ' : ''}[Details] Error fetching details: ${error}`);
-                    pushWarningNotification('MAYZ Protocol', 'Error fetching details: ' + error);
+                    pushWarningNotification('SmartDB', 'Error fetching details: ' + error);
                     dispatch({ type: 'finish_loading', payload: undefined });
                 }
             };

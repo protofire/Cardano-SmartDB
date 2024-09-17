@@ -96,6 +96,29 @@ export default function Home() {
                 await generateScripts(lucid);
                 const list: DummyEntity[] = await DummyApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
                 setList(list);
+
+                // const result1 = 1;
+                // const result2 = await DummyApi.checkIfExistsApi_( '11' );
+                // const result3 = await DummyApi.checkIfExistsApi_( { ddValue: 1 } );
+                // const result4 = await DummyApi.checkIfExistsApi_({  ddValue: 111 });
+                
+                // const count1 = await DummyApi.getCountApi_({  _creator: 'internal' } );
+                // const count2 = await DummyApi.getCountApi_({  ddValue: 19 } );
+                // const count3 = await DummyApi.getCountApi_({  ddValue: 1 } );
+                // const count4 = await DummyApi.getCountApi_({  ddValue: 111 } );
+                // const count5 = await DummyApi.getCountApi_({  $or: [{ ddValue: 111 }, { ddValue: 333 }] } );
+                
+                // alert(result1);
+                // alert(`exist: ${result2}`);
+                // alert(`exist2: ${result3}`);
+                // alert(`exist2: ${result4}`);
+                
+                // alert(`count: ${count1}`);
+                // alert(`count: ${count2}`);
+                // alert(`count: ${count3}`);
+                // alert(`count: ${count4}`);
+                // alert(`count: ${count5}`);
+                
             } catch (e) {
                 console.error(e);
             }

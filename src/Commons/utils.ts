@@ -52,6 +52,30 @@ export function showData(data: any, swCut: boolean = true): string {
 
 //----------------------------------------------------------------------
 
+export function getPostgreSQLTableName(baseName: string): string {
+    return baseName
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join('');
+}
+
+export function getMongoTableName(baseName: string): string {
+    baseName = baseName.toLowerCase();
+    // Check if the class name ends with 'y' (but not 'ay', 'ey', 'iy', 'oy', 'uy' which typically just add 's')
+    if (baseName.endsWith('y') && !['a', 'e', 'i', 'o', 'u'].includes(baseName.charAt(baseName.length - 2))) {
+        // Replace 'y' with 'ies'
+        return baseName.substring(0, baseName.length - 1) + 'ies';
+    } else if (!baseName.endsWith('s')) {
+        // If it does not end with 's', simply add 's'
+        return baseName + 's';
+    }
+    // If it ends with 's', return as is (assuming it's already plural)
+    return baseName;
+}
+
+//----------------------------------------------------------------------
+
 export const sanitizeForDatabase = (input: any): any => {
     const allowedMongoDBOperators = new Set([
         '$eq',
@@ -818,7 +842,7 @@ export function isObject(object: any) {
 }
 
 export const isNullOrBlank = (value: string | undefined): boolean => {
-    return value === undefined || value.trim() === '';
+    return value === undefined || value === null || value.trim() === '';
 };
 
 //----------------------------------------------------------------------

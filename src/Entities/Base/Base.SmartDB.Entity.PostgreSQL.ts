@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Entity, Column, Index, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, Index, ManyToOne, JoinColumn, RelationId } from 'typeorm';
 import type { PaymentKeyHash } from 'lucid-cardano';
 import { BaseEntityPostgreSQL } from './Base.Entity.PostgreSQL.js';  // Usa la base de TypeORM para PostgreSQL
 import { SmartUTxOEntityPostgreSQL } from '../SmartUTxO.Entity.PostgreSQL.js';
@@ -26,6 +26,9 @@ export class BaseSmartDBEntityPostgreSQL extends BaseEntityPostgreSQL {
     @ManyToOne(() => SmartUTxOEntityPostgreSQL, { nullable: true })
     @JoinColumn({ name: 'smartUTxO_id' })
     smartUTxO?: SmartUTxOEntityPostgreSQL;  // Define the relation if needed
+
+    @RelationId((c: BaseSmartDBEntityPostgreSQL) => c.smartUTxO)
+    smartUTxO_id!: number;
 
     // Other methods and logic as needed
 }

@@ -1,9 +1,8 @@
-
-import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
-import { BaseEntityPostgreSQL } from 'smart-db/backEnd';
+import { BaseEntityPostgreSQL, getPostgreSQLTableName } from 'smart-db/backEnd';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 import { TestEntity } from './Test.Entity';
 
-@Entity()
+@Entity({ name: getPostgreSQLTableName(TestEntity.className()) })
 @Index(['name']) // Add indices as needed
 export class TestEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = TestEntity;
@@ -39,7 +38,7 @@ export class TestEntityPostgreSQL extends BaseEntityPostgreSQL {
     // #region fields
 
     @PrimaryGeneratedColumn()
-    id!: number; // Auto-generated primary key
+    _id!: number; // Auto-generated primary key
 
     @Column({ type: 'varchar', length: 255, nullable: false })
     name!: string;
@@ -49,4 +48,3 @@ export class TestEntityPostgreSQL extends BaseEntityPostgreSQL {
 
     // #endregion fields
 }
-

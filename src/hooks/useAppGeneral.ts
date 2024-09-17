@@ -204,7 +204,7 @@ export const useAppGeneral = () => {
                 // add_AppTokensMetadata();
             } catch (error) {
                 console.log(`[App] - init - Error: ${error}`);
-                pushWarningNotification(`MAYZ Protocol`, `Error initializing: ${error}`);
+                pushWarningNotification(`SmartDB`, `Error initializing: ${error}`);
             }
         };
         init();

@@ -1,14 +1,13 @@
-
-import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
-import { PostgreSQLAppliedFor } from "../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js";
-import { TransactionEntity } from './Transaction.Entity.js';  // Assuming TransactionEntity is implemented in TypeORM
-import { BaseEntityPostgreSQL } from "./Base/Base.Entity.PostgreSQL.js";  // Assuming you have a BaseEntityPostgreSQL class
-
-import type { PaymentKeyHash, UTxO} from "lucid-cardano";
+import type { PaymentKeyHash, UTxO } from 'lucid-cardano';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
 import { TransactionDatum, TransactionRedeemer } from '../Commons/index.js';
+import { getPostgreSQLTableName } from '../Commons/utils.js';
+import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js'; // Assuming you have a BaseEntityPostgreSQL class
+import { TransactionEntity } from './Transaction.Entity.js'; // Assuming TransactionEntity is implemented in TypeORM
 
 @PostgreSQLAppliedFor([TransactionEntity])
-@Entity()
+@Entity(getPostgreSQLTableName(TransactionEntity.className()))
 @Index(['paymentPKH', 'date'])
 @Index(['type', 'date'])
 @Index(['status', 'date'])
@@ -47,7 +46,7 @@ export class TransactionEntityPostgreSQL extends BaseEntityPostgreSQL {
     // #region fields
 
     @PrimaryGeneratedColumn()
-    id!: number;  // ID auto-generado
+    _id!: number; // ID auto-generado
 
     @Column({ type: 'varchar', nullable: false })
     @Index()
@@ -86,4 +85,3 @@ export class TransactionEntityPostgreSQL extends BaseEntityPostgreSQL {
 
     // #endregion fields
 }
-
