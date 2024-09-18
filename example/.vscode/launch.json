@@ -45,6 +45,23 @@
             //     "*/(api)/*": "${workspaceFolder}/*"
             // }
         },
+        
+       
+              {
+                "type": "node",
+                "request": "attach",
+                "name": "Attach to Next.js library",
+                "port": 9229,
+                "restart": true,
+                "sourceMaps": true,
+                "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+                "resolveSourceMapLocations": [
+                  "${workspaceFolder}/**",
+                  "!**/node_modules/**"
+                ]
+              },
+           
+
         {
             "name": "Next.js: debug full stack2",
             "type": "node-terminal",

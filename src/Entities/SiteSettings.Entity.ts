@@ -11,10 +11,11 @@ export class SiteSettingsEntity extends BaseEntity {
 
     // #region fields
 
-    @Convertible({ isUnique: true })
+    // @Convertible({ isUnique: true })
+     @Convertible({})
     name!: string;
 
-    @Convertible({})
+    @Convertible({})    
     siteSecret!: string;
 
     @Convertible({})

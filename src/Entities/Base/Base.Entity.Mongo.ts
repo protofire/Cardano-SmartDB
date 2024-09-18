@@ -126,9 +126,7 @@ export class BaseEntityMongo {
                                     let value_id = value_ids[i];
                                     if (value_id !== undefined) {
                                         if (process.env.USE_DATABASE === 'mongo') {
-                                            if (value_id !== undefined) {
-                                                value_id = new Types.ObjectId(value_id);
-                                            }
+                                            value_id = new Types.ObjectId(value_id);
                                         }
                                         array_ids.push(value_id);
                                     }
@@ -140,7 +138,9 @@ export class BaseEntityMongo {
                             // ManyToOne es una relacion de muchos registros de esta tabla con un registro de otra tabla
                             let value_id: any = value;
                             if (value_id !== undefined) {
-                                value_id = new Types.ObjectId(value_id);
+                                if (process.env.USE_DATABASE === 'mongo') {
+                                    value_id = new Types.ObjectId(value_id);
+                                }
                             }
                             (interfaceObj as any)[conversions.interfaceName || propertyKey] = value_id;
                         }
@@ -227,8 +227,8 @@ export class BaseEntityMongo {
                                     }
                                     for (let i = 0; i < value_ids.length; i++) {
                                         let value_id = value_ids[i];
-                                        if (process.env.USE_DATABASE === 'mongo' && value_id && value_id.toString) {
-                                            value_id = value_id.toString();
+                                        if (process.env.USE_DATABASE === 'mongo' ) {
+                                            value_id = value_id?.toString ? value_id.toString() : value_id;
                                         }
                                         if (value_id) {
                                             array_ids.push(value_id);
@@ -240,8 +240,8 @@ export class BaseEntityMongo {
                                 // OneToOne es una relacion de un registro de una tabla con un registro de otra tabla
                                 // ManyToOne es una relacion de muchos registros de esta tabla con un registro de otra tabla
                                 let value_id = plainDataInterface[conversions.interfaceName || propertyKey];
-                                if (process.env.USE_DATABASE === 'mongo' && value_id && value_id.toString) {
-                                    value_id = value_id.toString();
+                                if (process.env.USE_DATABASE === 'mongo') {
+                                    value_id = value_id?.toString ? value_id.toString() : value_id;
                                 }
                                 (instance as any)[propertyKey] = value_id;
                             }

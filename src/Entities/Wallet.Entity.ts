@@ -3,8 +3,6 @@ import 'reflect-metadata';
 import { Convertible, asEntity } from '../Commons/index.js';
 import { BaseEntity } from './Base/Base.Entity.js';
 
-//FIXME no puede derivar normalMayz por que normal MAYZ usa WalletEntity para controlar y se arma dependencia circular
-
 @asEntity()
 export class WalletEntity extends BaseEntity {
     protected static _apiRoute: string = 'wallets';
@@ -41,10 +39,6 @@ export class WalletEntity extends BaseEntity {
 
     @Convertible()
     isCoreTeam!: boolean;
-
-    isCoreTeam2!: boolean;
-
-    isCoreTeam3?: boolean;
 
     @Convertible()
     testnet_address!: string;

@@ -12,6 +12,11 @@ export interface IEntityMongo {
     toMongoInterface<T extends BaseEntity>(instance: T, cascadeSave?: boolean): Promise<any>;
     fromMongoInterface<T extends BaseEntity>(dataInterface: any): Promise<T>;
 }
+export interface IEntityPostgreSQL {
+    PostgreSQLModel(): any;
+    toPostgreSQLInterface<T extends BaseEntity>(instance: T, cascadeSave?: boolean): Promise<any>;
+    fromPostgreSQLInterface<T extends BaseEntity>(dataInterface: any): Promise<T>;
+}
 
 // export interface IBackendMethods {
 //     checkIfExists_<T extends BaseEntity>(paramsFilter: Record<string, any> | string): Promise<boolean>;
@@ -88,6 +93,21 @@ export class BaseEntity extends BaseConstructor {
         return this.getStatic().getMongo();
     }
 
+    
+    public static getPostgreSQL(): IEntityPostgreSQL {
+        const result = RegistryManager.getFromPostgreSQLAppliedRegistry(this);
+        if (!result) {
+            throw `PostgreSQL Methods Applied for ${this} not found in registry.`;
+        } else {
+            // console.error (`----- get PostgreSQL for ${this.className()} found`)
+            // console.error (`${result} ----`)
+        }
+        return result;
+    }
+
+    public getPostgreSQL(): IEntityPostgreSQL {
+        return this.getStatic().getPostgreSQL();
+    }
     // #endregion internal class methods
 
     // #region db

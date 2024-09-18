@@ -3,10 +3,9 @@ import mongoose from 'mongoose';
 import { Types } from 'mongoose';
 import { connectMongoDB } from '../../Commons/BackEnd/dbMongo.js';
 import { console_error, console_log } from '../../Commons/BackEnd/globalLogs.js';
-import { isEmptyObject, isString, toJson } from '../../Commons/utils.js';
+import { getMongoTableName, isEmptyObject, isString, toJson } from '../../Commons/utils.js';
 import { OptionsGet } from '../../Commons/types.js';
 import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
-
 
 export class MongoDatabaseService {
     public static async create<T extends BaseEntity>(instance: T): Promise<string> {
@@ -112,21 +111,6 @@ export class MongoDatabaseService {
             console_error(0, `Mongo`, `checkIfExists - Error: ${error}`);
             throw `${error}`;
         }
-    }
-
-    public static getMongoTableName(baseName: string): string {
-        baseName = baseName.toLowerCase();
-
-        // Check if the class name ends with 'y' (but not 'ay', 'ey', 'iy', 'oy', 'uy' which typically just add 's')
-        if (baseName.endsWith('y') && !['a', 'e', 'i', 'o', 'u'].includes(baseName.charAt(baseName.length - 2))) {
-            // Replace 'y' with 'ies'
-            return baseName.substring(0, baseName.length - 1) + 'ies';
-        } else if (!baseName.endsWith('s')) {
-            // If it does not end with 's', simply add 's'
-            return baseName + 's';
-        }
-        // If it ends with 's', return as is (assuming it's already plural)
-        return baseName;
     }
 
     public static async getByParams<T extends BaseEntity>(
@@ -323,7 +307,7 @@ export class MongoDatabaseService {
                     }
                     if (lookupField.foreignField === '_id' || lookupField.foreignField.endsWith('_id')) {
                         let lookup: Record<string, any> = {
-                            from: this.getMongoTableName(lookupField.from),
+                            from: getMongoTableName(lookupField.from),
                             localField: convertedFieldNames[lookupField.localField],
                             foreignField: lookupField.foreignField,
                             as: lookupField.as,
@@ -336,7 +320,7 @@ export class MongoDatabaseService {
                         });
                     } else {
                         let lookup: Record<string, any> = {
-                            from: this.getMongoTableName(lookupField.from),
+                            from: getMongoTableName(lookupField.from),
                             localField: lookupField.localField,
                             foreignField: lookupField.foreignField,
                             as: lookupField.as,

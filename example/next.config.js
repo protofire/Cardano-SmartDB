@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 
 const path = require('path');
+const webpack = require('webpack');
 
 const nextConfig = {
     //-------------
@@ -45,6 +46,37 @@ const nextConfig = {
         // config.resolve.alias['easy-peasy'] = path.resolve(__dirname, 'node_modules/easy-peasy');
         // config.resolve.alias['react-notifications-component'] = path.resolve(__dirname, 'node_modules/react-notifications-component');
         // config.resolve.alias['mongosee'] = path.resolve(__dirname, 'node_modules/mongosee');
+
+        // config.resolve.fallback = {
+        //     ...config.resolve.fallback,
+        //    '@mongodb-js/zstd': false,
+        //     'kerberos': false,
+        //     'aws4': false,
+        //     'snappy': false,
+        //     '@aws-sdk/credential-providers': false,
+        //     'mongodb-client-encryption': false,
+        //     '@google-cloud/spanner': false,
+        //     '@sap/hana-client': false,
+        //     'hdb-pool': false,
+        //     'mysql': false,
+        //     'mysql2': false,
+        //     'oracledb': false,
+        //     'pg-native': false,
+        //     'pg-query-stream': false,
+        //     'typeorm-aurora-data-api-driver': false,
+        //     'redis': false,
+        //     'ioredis': false,
+        //     'better-sqlite3': false,
+        //     'sqlite3': false,
+        //     'sql.js': false,
+        //     'mssql': false,
+        //   };
+          
+        // config.module.rules.push({
+        //     test: /typeorm\/.+\.js$/,
+        //     loader: 'ignore-loader',
+        // });
+
         return config;
     },
     async headers() {

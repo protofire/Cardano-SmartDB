@@ -27,13 +27,6 @@ export class EndpointsManager {
         return (globalState as any).endpointsManagerInstance;
     }
 
-    // public static getInstance(): EndpointsManager {
-    //     if (!EndpointsManager.instance) {
-    //         EndpointsManager.instance = new EndpointsManager();
-    //     }
-    //     return EndpointsManager.instance;
-    // }
-
     public getPublicEndPointsLocal(): RegExp[] {
         return this.endPointsLocal;
     }

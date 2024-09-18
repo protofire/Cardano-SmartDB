@@ -16,11 +16,6 @@ import yup from '../Commons/yupLocale.js';
 export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
     protected static _Entity = AddressToFollowEntity;
     protected static _BackEndApplied = AddressToFollowBackEndApplied;
-    //protected static _BackEndMethods = this._BackEndApplied.getBack();
-
-    // protected static _SmartDBEntities: Record<string, typeof BaseSmartDBEntity> = {
-    //     // definido en la implementacion de la libreria en la carpeta Mayz/SmartDB
-    // };
 
     // #region custom api handlers
     protected static _ApiHandlers: string[] = ['by-address', 'sync-all', 'clean'];
@@ -229,9 +224,9 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
                     // await TimeBackEnd.syncBlockChainWithServerTime()
                 }
                 //--------------------------------------
-                // // TODO: estoy usandod esde la libreria generica esto que usa entidades de MAYZ... deberia hacer este metodo en una clase de mayz directamente
-                // const ProtocolBackEndApplied = (await import('../../MayzSmartDB/backEnd.js')).ProtocolBackEndApplied;
-                // const FundBackEndApplied = (await import('../../MayzSmartDB/backEnd.js')).FundBackEndApplied;
+                // // TODO: estoy usandod esde la libreria generica esto que usa entidades de example... deberia hacer este metodo en una clase de example directamente
+                // const ProtocolBackEndApplied = (await import('../../example/backEnd.js')).ProtocolBackEndApplied;
+                // const FundBackEndApplied = (await import('../../example/backEnd.js')).FundBackEndApplied;
                 // //--------------------------------------
                 // const protocols: ProtocolEntity[] = await ProtocolBackEndApplied.getAll_();
                 // const funds: FundEntity[] = await FundBackEndApplied.getAll_();

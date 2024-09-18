@@ -2,6 +2,7 @@ import { console_logLv2 } from '../../Commons/BackEnd/globalLogs.js';
 import { BackEndAppliedFor } from '../../Commons/Decorators/Decorator.BackEndAppliedFor.js';
 import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
 import { CascadeUpdate, OptionsCreateOrUpdate, OptionsDelete, OptionsGet, OptionsGetOne } from '../../Commons/types.js';
+import { isNullOrBlank, toJson } from '../../Commons/utils.js';
 import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
 import { BaseBackEndMethods } from './Base.BackEnd.Methods.js';
 
@@ -189,11 +190,15 @@ export class BaseBackEndApplied {
                                         if (value_id !== undefined && !array_ids.includes(value_id)) {
                                             array_ids.push(value_id);
                                         }
+                                        (value_objects as any)[i] = value_object;
                                     }
                                 }
                             }
                             //--------------------------------------
                             instance[propertyKey as keyof typeof instance] = array_ids as any;
+                            //--------------------------------------
+                            (instance as any)[conversions.propertyToFill! as keyof typeof instance] = value_objects;
+                            //--------------------------------------
                         } else {
                             // OneToOne es una relacion de un registro de una tabla con un registro de otra tabla
                             // ManyToOne es una relacion de muchos registros de esta tabla con un registro de otra tabla
@@ -234,11 +239,16 @@ export class BaseBackEndApplied {
                                     conversions,
                                     optionsCreateOrUpdateForRelation
                                 );
+                                console_logLv2(
+                                    0,
+                                    instance.className(),
+                                    `cascadeSaveChildRelations - created child: ${toJson(value_object)}`
+                                );
                             }
                             //--------------------------------------
                             const value_id2 = value_object?._DB_id;
                             //--------------------------------------
-                            if (value_id === undefined) {
+                            if (isNullOrBlank(value_id)) {
                                 value_id = value_id2;
                             } else {
                                 // si value id esta seteado, voy a controlar que sea el mismo id del objeto
@@ -246,9 +256,21 @@ export class BaseBackEndApplied {
                                 //     throw `${this.className()} - ${propertyKey}: Relation id ${value_id} is different from ${conversions.propertyToFill} id ${value_id2}`;
                                 // }
                             }
+                            console_logLv2(
+                                0,
+                                instance.className(),
+                                `cascadeSaveChildRelations - saving child in parent ${propertyKey}: ${value_id}`
+                            );
                             //--------------------------------------
                             instance[propertyKey as keyof typeof instance] = value_id;
                             //--------------------------------------
+                            (instance as any)[conversions.propertyToFill! as keyof typeof instance] = value_object;
+                            //--------------------------------------
+                            console_logLv2(
+                                0,
+                                instance.className(),
+                                `cascadeSaveChildRelations - saved child in parent ${propertyKey}: ${instance[propertyKey as keyof typeof instance] }`
+                            );
                         }
                     }
                 }
