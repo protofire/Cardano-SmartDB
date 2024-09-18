@@ -1,4 +1,4 @@
-import { initBackEnd } from '@example/src/lib/DummyExample/backEnd';
+import { initBackEnd } from '@example/src/lib/SmartDB/backEnd';
 import { smartDBMainApiHandler } from 'smart-db/backEnd';
 initBackEnd();
 

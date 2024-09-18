@@ -203,10 +203,10 @@ The example includes a new normal entity called "Test Entity". This is a simple 
 
 ##### Test Entity Files
 
-- **Entity Definition**: Located at `example/src/lib/DummyExample/Entities/Test.Entity.ts`
-- **MongoDB Model**: Located at `example/src/lib/DummyExample/Entities/Test.Entity.Mongo.ts`
-- **Backend Handlers**: Located at `example/src/lib/DummyExample/BackEnd/Test.BackEnd.Api.Handlers.ts`
-- **Frontend API Calls**: Located at `example/src/lib/DummyExample/FrontEnd/Test.FrontEnd.Api.Calls.ts`
+- **Entity Definition**: Located at `example/src/lib/SmartDB/Entities/Test.Entity.ts`
+- **MongoDB Model**: Located at `example/src/lib/SmartDB/Entities/Test.Entity.Mongo.ts`
+- **Backend Handlers**: Located at `example/src/lib/SmartDB/BackEnd/Test.BackEnd.Api.Handlers.ts`
+- **Frontend API Calls**: Located at `example/src/lib/SmartDB/FrontEnd/Test.FrontEnd.Api.Calls.ts`
 
 **Test.Entity.ts**
 
@@ -345,10 +345,10 @@ The example includes a smartDb entity called "Dummy Entity".
 
 ##### Dummy Entity Files
 
-- **Entity Definition**: Located at `example/src/lib/DummyExample/Entities/Dummy.Entity.ts`
-- **MongoDB Model**: Located at `example/src/lib/DummyExample/Entities/Dummy.Entity.Mongo.ts`
-- **Backend Handlers**: Located at `example/src/lib/DummyExample/BackEnd/Dummy.BackEnd.Api.Handlers.Tx.ts`
-- **Frontend API Calls**: Located at `example/src/lib/DummyExample/FrontEnd/Dummy.FrontEnd.Api.Calls.ts`
+- **Entity Definition**: Located at `example/src/lib/SmartDB/Entities/Dummy.Entity.ts`
+- **MongoDB Model**: Located at `example/src/lib/SmartDB/Entities/Dummy.Entity.Mongo.ts`
+- **Backend Handlers**: Located at `example/src/lib/SmartDB/BackEnd/Dummy.BackEnd.Api.Handlers.Tx.ts`
+- **Frontend API Calls**: Located at `example/src/lib/SmartDB/FrontEnd/Dummy.FrontEnd.Api.Calls.ts`
 
 **Dummy.Entity.ts**
 
@@ -532,7 +532,7 @@ To configure the backend for projects using our library, create a root backend f
 
 #### Root Backend File Example
 
-The example includes a Root Backend File in `example/src/lib/DummyExample/backEnd.ts`. 
+The example includes a Root Backend File in `example/src/lib/SmartDB/backEnd.ts`. 
 
 It is important to import `initBackEnd` from `smart-db/backEnd` so all registries are filled in the backend environment using the decorators that all classes have.
 

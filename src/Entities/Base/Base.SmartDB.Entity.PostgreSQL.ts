@@ -27,7 +27,7 @@ export class BaseSmartDBEntityPostgreSQL extends BaseEntityPostgreSQL {
     @JoinColumn({ name: 'smartUTxO_id' })
     smartUTxO?: SmartUTxOEntityPostgreSQL;  // Define the relation if needed
 
-    @RelationId((c: BaseSmartDBEntityPostgreSQL) => c.smartUTxO)
+    @RelationId((relatedEntity: BaseSmartDBEntityPostgreSQL) => relatedEntity.smartUTxO)
     smartUTxO_id!: number;
 
     // Other methods and logic as needed

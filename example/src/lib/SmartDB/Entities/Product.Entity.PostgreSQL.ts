@@ -1,30 +1,30 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
-import { ProductoEntity } from './Producto.Entity';
+import { ProductEntity } from './Product.Entity';
 import { PostgreSQLAppliedFor, getPostgreSQLTableName } from 'smart-db';
 import { BaseEntityPostgreSQL  } from 'smart-db/backEnd';
 
-@PostgreSQLAppliedFor([ProductoEntity])
-@Entity({ name: getPostgreSQLTableName(ProductoEntity.className()) })
-@Index(["Product"]) // Add indices as needed
-export class ProductoEntityPostgreSQL extends BaseEntityPostgreSQL  {
-    protected static Entity = ProductoEntity;
+@PostgreSQLAppliedFor([ProductEntity])
+@Entity({ name: getPostgreSQLTableName(ProductEntity.className()) })
+@Index([]) // Add indices as needed
+export class ProductEntityPostgreSQL extends BaseEntityPostgreSQL  {
+    protected static Entity = ProductEntity;
 
     // #region internal class methods
 
-    public getPostgreSQLStatic(): typeof ProductoEntityPostgreSQL {
-        return this.constructor as typeof ProductoEntityPostgreSQL;
+    public getPostgreSQLStatic(): typeof ProductEntityPostgreSQL {
+        return this.constructor as typeof ProductEntityPostgreSQL;
     }
 
-    public static getPostgreSQLStatic(): typeof ProductoEntityPostgreSQL {
-        return this as typeof ProductoEntityPostgreSQL;
+    public static getPostgreSQLStatic(): typeof ProductEntityPostgreSQL {
+        return this as typeof ProductEntityPostgreSQL;
     }
 
-    public getStatic(): typeof ProductoEntity {
-        return ProductoEntityPostgreSQL.getPostgreSQLStatic().getStatic() as typeof ProductoEntity;
+    public getStatic(): typeof ProductEntity {
+        return ProductEntityPostgreSQL.getPostgreSQLStatic().getStatic() as typeof ProductEntity;
     }
 
-    public static getStatic(): typeof ProductoEntity {
-        return this.Entity as typeof ProductoEntity;
+    public static getStatic(): typeof ProductEntity {
+        return this.Entity as typeof ProductEntity;
     }
 
     public className(): string {

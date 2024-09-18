@@ -6,9 +6,9 @@ import {  } from 'lucid-cardano';
 
 @asEntity()
 
-export class ProductoEntity extends BaseEntity {
-    protected static _apiRoute: string = 'producto';
-    protected static _className: string = 'Producto';
+export class ProductEntity extends BaseEntity {
+    protected static _apiRoute: string = 'product';
+    protected static _className: string = 'Product';
 
     // #region fields
 

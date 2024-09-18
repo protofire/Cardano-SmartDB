@@ -3,12 +3,12 @@ import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
 import { MongoAppliedFor  } from 'smart-db';
 import { BaseEntityMongo  } from 'smart-db/backEnd';
-import { ProductoEntity } from './Producto.Entity';
+import { ProductEntity } from './Product.Entity';
 
-@MongoAppliedFor([ProductoEntity])
-export class ProductoEntityMongo extends BaseEntityMongo  {
-    protected static Entity = ProductoEntity;
-    protected static _mongoTableName: string = ProductoEntity.className();
+@MongoAppliedFor([ProductEntity])
+export class ProductEntityMongo extends BaseEntityMongo  {
+    protected static Entity = ProductEntity;
+    protected static _mongoTableName: string = ProductEntity.className();
 
     // #region fields
 
@@ -20,20 +20,20 @@ export class ProductoEntityMongo extends BaseEntityMongo  {
 
     // #region internal class methods
 
-    public getMongoStatic(): typeof ProductoEntityMongo {
-        return this.constructor as typeof ProductoEntityMongo;
+    public getMongoStatic(): typeof ProductEntityMongo {
+        return this.constructor as typeof ProductEntityMongo;
     }
 
-    public static getMongoStatic(): typeof ProductoEntityMongo {
-        return this as typeof ProductoEntityMongo;
+    public static getMongoStatic(): typeof ProductEntityMongo {
+        return this as typeof ProductEntityMongo;
     }
 
-    public getStatic(): typeof ProductoEntity {
-        return this.getMongoStatic().getStatic() as typeof ProductoEntity;
+    public getStatic(): typeof ProductEntity {
+        return this.getMongoStatic().getStatic() as typeof ProductEntity;
     }
 
-    public static getStatic(): typeof ProductoEntity {
-        return this.Entity as typeof ProductoEntity;
+    public static getStatic(): typeof ProductEntity {
+        return this.Entity as typeof ProductEntity;
     }
 
     public className(): string {

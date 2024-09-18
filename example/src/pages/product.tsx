@@ -1,15 +1,15 @@
 import type { NextPage } from 'next';
 import styles from './index.module.scss';
-import Products from '../components/public/Products/Products';
+import Product from '../components/public/Product/Product';
 
-const ProductsPage: NextPage = () => {
+const ProductPage: NextPage = () => {
     return (
         <>
             <main >
-                <Products />
+                <Product />
             </main>
         </>
     );
 };
 
-export default ProductsPage;
+export default ProductPage;

@@ -180,7 +180,7 @@ The example code is organized to showcase the usage of the Smart DB library, pro
 │       ├── Commons
 │       |   ├── Constants
 │       |   │   ├── transactions.ts
-│       └── DummyExample
+│       └── SmartDB
 │           ├── BackEnd
 │           │   ├── Dummy.BackEnd.Api.Handlers.ts
 │           │   ├── Test.BackEnd.Api.Handlers.ts
@@ -223,7 +223,7 @@ The example code is organized to showcase the usage of the Smart DB library, pro
 - `src/pages`: New pages can be added within this directory. Essential files like `_app.tsx`, `_document.tsx`, and `index.tsx` are set up to load the `Home` component by default.
 
 ### Library Implementation and Entities files
-- `src/lib/DummyExample`: Sample implementation directory for creating entities that are synced with the blockchain. This directory should contain all entity models required by a project, whether they are synced with the blockchain (like the Dummy Entity) or simply database-backed entities with full API support for the frontend and backend.
+- `src/lib/SmartDB`: Sample implementation directory for creating entities that are synced with the blockchain. This directory should contain all entity models required by a project, whether they are synced with the blockchain (like the Dummy Entity) or simply database-backed entities with full API support for the frontend and backend.
 
 Read this section for further clarifications:
 [Setting Up New Projects](#setting-up-new-projects)
@@ -314,10 +314,10 @@ The example includes a new normal entity called "Test Entity". This is a simple 
 
 ##### Test Entity Files
 
-- **Entity Definition**: Located at `exame/src/lib/DummyExample/Entities/Test.Entity.ts`
-- **MongoDB Model**: Located at `src/lib/DummyExample/Entities/Test.Entity.Mongo.ts`
-- **Backend Handlers**: Located at `src/lib/DummyExample/BackEnd/Test.BackEnd.Api.Handlers.ts`
-- **Frontend API Calls**: Located at `src/lib/DummyExample/FrontEnd/Test.FrontEnd.Api.Calls.ts`
+- **Entity Definition**: Located at `exame/src/lib/SmartDB/Entities/Test.Entity.ts`
+- **MongoDB Model**: Located at `src/lib/SmartDB/Entities/Test.Entity.Mongo.ts`
+- **Backend Handlers**: Located at `src/lib/SmartDB/BackEnd/Test.BackEnd.Api.Handlers.ts`
+- **Frontend API Calls**: Located at `src/lib/SmartDB/FrontEnd/Test.FrontEnd.Api.Calls.ts`
 
 **Test.Entity.ts**
 
@@ -454,10 +454,10 @@ The example includes a smartDb entity called "Dummy Entity".
 
 ##### Dummy Entity Files
 
-- **Entity Definition**: Located at `src/lib/DummyExample/Entities/Dummy.Entity.ts`
-- **MongoDB Model**: Located at `src/lib/DummyExample/Entities/Dummy.Entity.Mongo.ts`
-- **Backend Handlers**: Located at `src/lib/DummyExample/BackEnd/Dummy.BackEnd.Api.Handlers.ts`
-- **Frontend API Calls**: Located at `src/lib/DummyExample/FrontEnd/Dummy.FrontEnd.Api.Calls.ts`
+- **Entity Definition**: Located at `src/lib/SmartDB/Entities/Dummy.Entity.ts`
+- **MongoDB Model**: Located at `src/lib/SmartDB/Entities/Dummy.Entity.Mongo.ts`
+- **Backend Handlers**: Located at `src/lib/SmartDB/BackEnd/Dummy.BackEnd.Api.Handlers.ts`
+- **Frontend API Calls**: Located at `src/lib/SmartDB/FrontEnd/Dummy.FrontEnd.Api.Calls.ts`
 
 **Dummy.Entity.ts**
 
@@ -648,7 +648,7 @@ To configure the backend for projects using our library, create a root backend f
 
 #### Root Backend File Example
 
-The example includes a Root Backend File in `src/lib/DummyExample/backEnd.ts`.
+The example includes a Root Backend File in `src/lib/SmartDB/backEnd.ts`.
 
 It is important to import `initBackEnd` from `smart-db/backEnd` so all registries are filled in the backend environment using the decorators that all classes have.
 

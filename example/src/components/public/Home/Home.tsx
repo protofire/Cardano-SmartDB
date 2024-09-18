@@ -1,5 +1,5 @@
-import { DummyEntity } from '@example/src/lib/DummyExample/Entities/Dummy.Entity';
-import { DummyApi } from '@example/src/lib/DummyExample/FrontEnd/Dummy.FrontEnd.Api.Calls';
+import { DummyEntity } from '@example/src/lib/SmartDB/Entities/Dummy.Entity';
+import { DummyApi } from '@example/src/lib/SmartDB/FrontEnd/Dummy.FrontEnd.Api.Calls';
 import { Address, Lucid, Script, SpendingValidator } from 'lucid-cardano';
 import { useEffect, useState } from 'react';
 import Modal from 'react-modal';
