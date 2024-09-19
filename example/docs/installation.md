@@ -23,6 +23,15 @@
       - [Docker](#docker)
       - [WSL (Windows Subsystem for Linux)](#wsl-windows-subsystem-for-linux)
       - [Remote MongoDB Server](#remote-mongodb-server)
+  - [Installing PostgreSQLDB](#installing-postgresql)
+    - [Windows](#windows-3)
+    - [macOS](#macos-2)
+    - [Ubuntu](#ubuntu-2)
+    - [Setting up PostgreSQLDB connection string](#setting-up-postgresql-connection)
+      - [Localhost (default)](#localhost-default-1)
+      - [Docker](#docker-1)
+      - [WSL (Windows Subsystem for Linux)](#wsl-windows-subsystem-for-linux-1)
+      - [Remote PostgreSQLDB Server](#remote-postgresql-server)
 - [Installation of the example Project](#installation-of-the-example-project)
 - [Environment Setup](#environment-setup)
 - [Run the Application in developer mode](#run-the-application-in-developer-mode)
@@ -37,7 +46,8 @@ Before you begin, ensure you have:
 - npm (version 10.1.0 or later) or Yarn
 - Basic knowledge of React and Next.js
 - Blockfrost API Keys
-- MongoDB (installation instructions below)
+- Mongo or PostgreSQL database (installation instructions below)
+- [Cardano-SmartDB-Scaffold](https://github.com/protofire/Cardano-SmartDB-Scaffold) (installation instructions below)
 
 ### Installing Node.js and npm
 
@@ -330,6 +340,129 @@ Replace `<remote-server-ip>` with the actual IP address of your remote MongoDB s
 
 After setting these variables, your application will be configured to communicate with the specified Cardano network and utilize the necessary services and databases.
 
+### Installing PostgreSQL
+
+#### Windows
+
+1. Download the PostgreSQL installer from the [official PostgreSQL website](https://www.postgresql.org/download/windows/).
+2. Run the installer and follow the prompts.
+3. During installation, make sure to install pgAdmin as it provides a graphical interface for managing your PostgreSQL databases.
+4. Configure PostgreSQL as a Windows service (this is usually done by default).
+
+#### macOS
+
+1. If Homebrew is not installed, install it first from [Homebrew's website](https://brew.sh/).
+2. Install PostgreSQL using Homebrew:
+
+   ```
+   brew install postgresql
+   ```
+
+3. Start PostgreSQL:
+
+   ```
+   brew services start postgresql
+   ```
+
+4. Initialize the database (if required):
+
+   ```
+   initdb /usr/local/var/postgres
+   ```
+
+#### Ubuntu
+
+1. Update your package list:
+
+   ```
+   sudo apt update
+   ```
+
+2. Install PostgreSQL:
+
+   ```
+   sudo apt install postgresql postgresql-contrib
+   ```
+
+3. Start PostgreSQL:
+
+   ```
+   sudo systemctl start postgresql
+   sudo systemctl enable postgresql
+   ```
+
+4. Optionally, switch to the PostgreSQL user to create a new database:
+
+   ```
+   sudo -i -u postgres
+   ```
+
+   And create a new database:
+
+   ```
+   createdb your-database-name
+   ```
+
+#### Setting up PostgreSQL connection
+
+You need to configure the following environment variables to connect to your PostgreSQL database:
+
+- `POSTGRES_HOST`: The host where PostgreSQL is running (e.g., `localhost` or an IP address).
+- `POSTGRES_PORT`: The port PostgreSQL is listening on (default is `5432`).
+- `POSTGRES_USER`: The username used to connect to the database.
+- `POSTGRES_PASS`: The password for the PostgreSQL user.
+- `POSTGRES_DB`: The name of the database you want to connect to.
+
+Here are examples of how to set these variables in different environments:
+
+##### Localhost (default)
+If PostgreSQL is installed locally on your machine:
+```
+POSTGRES_HOST="localhost"
+POSTGRES_PORT=5432
+POSTGRES_USER="your-username"
+POSTGRES_PASS="your-password"
+POSTGRES_DB="your-database-name"
+```
+
+##### Docker
+If you are running PostgreSQL inside a Docker container:
+```
+POSTGRES_HOST="<docker-container-ip>"
+POSTGRES_PORT=5432
+POSTGRES_USER="your-username"
+POSTGRES_PASS="your-password"
+POSTGRES_DB="your-database-name"
+```
+Replace `<docker-container-ip>` with the actual IP address of your Docker container.
+
+##### WSL (Windows Subsystem for Linux)
+To get the IP address of the Windows host from WSL, use the following command:
+```
+cat /etc/resolv.conf
+```
+Use the IP address found in the output to set up the PostgreSQL connection:
+```
+POSTGRES_HOST="<windows-ip>"
+POSTGRES_PORT=5432
+POSTGRES_USER="your-username"
+POSTGRES_PASS="your-password"
+POSTGRES_DB="your-database-name"
+```
+
+##### Remote PostgreSQL Server
+If you are connecting to a remote PostgreSQL server:
+```
+POSTGRES_HOST="<remote-server-ip>"
+POSTGRES_PORT=5432
+POSTGRES_USER="your-username"
+POSTGRES_PASS="your-password"
+POSTGRES_DB="your-database-name"
+```
+Replace `<remote-server-ip>` with the actual IP address of your remote PostgreSQL server.
+
+After setting these variables, your application will be configured to communicate with the specified PostgreSQL database.
+
 ## Installation of the example Project
 
 1. **Clone the Repository**
@@ -367,6 +500,8 @@ npm install ../smart-db.tgz --force
 
 [Download, Build and Pack the library](../../docs/installation.md#download-build-and-pack-the-library)
 
+## Installation of the [Cardano-SmartDB-Scaffold](https://github.com/protofire/Cardano-SmartDB-Scaffold)
+Refer to [Cardano-SmartDB-Scaffold installation](https://github.com/protofire/Cardano-SmartDB-Scaffold/blob/main/README.md#installation)
 ## Environment Setup
 
 Create a `.env.local` file at the root of your project by copying the contents from the `.env` template file. 
@@ -391,8 +526,14 @@ Adjust the environment variables according to your project's needs:
 - `NEXTAUTH_SECRET`: A secret used by NextAuth for session tokens; changing it invalidates all active sessions.
 - `LOGIN_JWT_SECRET_KEY`: A secret used to create challenge tokens and our session tokens; changing it invalidates these tokens and associated sessions.
 - `NEXT_PUBLIC_USE_BLOCKCHAIN_TIME`: Boolean flag to decide if blockchain time should be used.
-- `USE_DATABASE`: Type of database used, such as 'mongo' for MongoDB.
+- `USE_DATABASE`: Type of database used, such as 'mongo' for MongoDB or 'postgresql' for PostgreSQL.
 - `MONGO_URLDB`: MongoDB connection string.
+- `POSTGRES_HOST`: The host where PostgreSQL is running (e.g., `localhost` or an IP address).
+- `POSTGRES_PORT`: The port PostgreSQL is listening on (default is `5432`).
+- `POSTGRES_USER`: The username used to connect to the database.
+- `POSTGRES_PASS`: The password for the PostgreSQL user.
+- `POSTGRES_DB`: The name of the database you want to connect to.
+
 - `SWAGGER_PORT`: The Swagger server port
 
 **Note:** Only one Blockfrost API key is needed, corresponding to the network set in `NEXT_PUBLIC_CARDANO_NET`.

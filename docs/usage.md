@@ -85,7 +85,7 @@ The Smart DB library is organized to offer clear, modular access to its function
 ### BackEnd
 - `/src/BackEnd`: Contains backend logic for blockchain interactions and API handling.
   - `Base`: Base classes providing foundational backend functionality.
-  - `DatabaseService`: Modules that interface with the database services like MongoDB.
+  - `DatabaseService`: Modules that interface with the database services like MongoDB or PostgreSQL.
   - `ApiHandlers`: Handlers for API endpoints that interact with blockchain and database.
   - `Applied`: Applied logic that binds the handlers with the blockchain and database for transactions and other operations.
 
@@ -98,7 +98,7 @@ The Smart DB library is organized to offer clear, modular access to its function
 - `/src/Commons`: Shared resources and utilities across the library.
   - `BackEnd`: Contains backend utilities and handlers.
     - `apiHandlers`: Specific API handlers like `blockFrostApiHandler.ts`, `healthApiHandler.ts`, `initApiHandler.ts`, `initApiRequestWithContext.ts`, and `smartDBMainApiHandler.ts`.
-    - Other backend utilities: `dbMongo.ts`, `endPointsManager.ts`, `globalBlockchainTime.ts`, `globalContext.ts`, `globalEmulator.ts`, `globalLogs.ts`, `globalLucid.ts`, `globalSettings.ts`, `globalTransactionStatusUpdater.ts`, `initGlobals.ts`, `utils.BackEnd.ts`.
+    - Other backend utilities: `dbPostgreSQL.ts`,`dbMongo.ts`, `endPointsManager.ts`, `globalBlockchainTime.ts`, `globalContext.ts`, `globalEmulator.ts`, `globalLogs.ts`, `globalLucid.ts`, `globalSettings.ts`, `globalTransactionStatusUpdater.ts`, `initGlobals.ts`, `utils.BackEnd.ts`.
   - `Constants`: Contains constant definitions like `constants.ts`, `endpoints.ts`, `images.ts`, and `wallets.ts`.
   - `Decorators`: Decorators to enhance entities with additional functionalities and integration capabilities.
   - Other common utilities: `classes.ts`, `conversions.ts`, `data.ts`, `explainError.ts`, `helpers.ts`, `index.BackEnd.ts`, `index.ts`, `pushNotification.tsx`, `show_AmountAndPrices.ts`, `types.ts`, `utils.ts`, `yupLocale.ts`.
@@ -189,7 +189,7 @@ Visit `http://localhost:3000` in your browser to view the example project in act
 For detailed instructions on how to use the example project, refer to its [README](../example/README.md) file located within the `example` folder.
 
 - More information about installing and running the example is provided in the [README](../example/README.md) file.
-- The example requires a MongoDB database. For instructions on how to install and set up MongoDB, refer to the [README](../example/README.md) file.
+- The example requires a Mongo or PostgreSQL database. For instructions on how to install and set up, refer to the [README](../example/README.md) file.
 
 ### Custom Entities
 
@@ -205,6 +205,7 @@ The example includes a new normal entity called "Test Entity". This is a simple 
 
 - **Entity Definition**: Located at `example/src/lib/SmartDB/Entities/Test.Entity.ts`
 - **MongoDB Model**: Located at `example/src/lib/SmartDB/Entities/Test.Entity.Mongo.ts`
+- **PostgreSQL Model**: Located at `example/src/lib/SmartDB/Entities/Test.Entity.PostgreSQL.ts`
 - **Backend Handlers**: Located at `example/src/lib/SmartDB/BackEnd/Test.BackEnd.Api.Handlers.ts`
 - **Frontend API Calls**: Located at `example/src/lib/SmartDB/FrontEnd/Test.FrontEnd.Api.Calls.ts`
 
@@ -295,6 +296,69 @@ export class TestEntityMongo extends BaseEntityMongo {
 }
 ```
 
+**Test.Entity.PostgreSQL.ts**
+
+Classes for PostgreSQL Schemma should extend `BaseEntityPostgreSQL` and use the `@PostgreSQLAppliedFor` decorator.  
+
+```
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { TestEntity } from './Test.Entity';
+import { PostgreSQLAppliedFor, getPostgreSQLTableName, Maybe } from 'smart-db';
+import { BaseEntityPostgreSQL  } from 'smart-db/backEnd';
+import { type PaymentKeyHash,  } from 'lucid-cardano';
+
+@PostgreSQLAppliedFor([TestEntity])
+@Entity({ name: getPostgreSQLTableName(TestEntity.className()) })
+@Index(['testIndex', ]) // Add indices as needed
+export class TestEntityPostgreSQL extends BaseEntityPostgreSQL  {
+    protected static Entity = TestEntity;
+
+    // #region internal class methods
+
+    public getPostgreSQLStatic(): typeof TestEntityPostgreSQL {
+        return this.constructor as typeof TestEntityPostgreSQL;
+    }
+
+    public static getPostgreSQLStatic(): typeof TestEntityPostgreSQL {
+        return this as typeof TestEntityPostgreSQL;
+    }
+
+    public getStatic(): typeof TestEntity {
+        return TestEntityPostgreSQL.getPostgreSQLStatic().getStatic() as typeof TestEntity;
+    }
+
+    public static getStatic(): typeof TestEntity {
+        return this.Entity as typeof TestEntity;
+    }
+
+    public className(): string {
+        return this.getStatic().className();
+    }
+
+    public static className(): string {
+        return this.getStatic().className();
+    }
+
+    // #endregion internal class methods
+
+    // #region fields
+
+    @PrimaryGeneratedColumn()
+    _id!: number; // Auto-generated primary key
+
+    @Column({ type: "varchar", length: 255  })
+    name!: PaymentKeyHash ;
+    @Column({ type: "varchar", length: 255  })
+    description!: Maybe<PaymentKeyHash> ;
+
+    public static PostgreSQLModel() {
+        return this;
+    }
+    // #endregion fields
+}
+```
+
+
 **Test.BackEnd.Api.Handlers.ts**
 
 The backend for new entities must extend both `BaseBackEndApplied` and `BaseBackEndApiHandlers` and use the `@BackEndAppliedFor` and `@BackEndApiHandlersFor` decorators.   
@@ -347,6 +411,7 @@ The example includes a smartDb entity called "Dummy Entity".
 
 - **Entity Definition**: Located at `example/src/lib/SmartDB/Entities/Dummy.Entity.ts`
 - **MongoDB Model**: Located at `example/src/lib/SmartDB/Entities/Dummy.Entity.Mongo.ts`
+- **PostgreSQL Model**: Located at `example/src/lib/SmartDB/Entities/Dummy.Entity.PostgreSQL.ts`
 - **Backend Handlers**: Located at `example/src/lib/SmartDB/BackEnd/Dummy.BackEnd.Api.Handlers.Tx.ts`
 - **Frontend API Calls**: Located at `example/src/lib/SmartDB/FrontEnd/Dummy.FrontEnd.Api.Calls.ts`
 
@@ -485,6 +550,72 @@ export class DummyEntityMongo extends BaseSmartDBEntityMongo {
 }
 
 ```
+**Dummy.Entity.PostgreSQL.ts**
+
+Classes for PostgreSQL Schemma should extend `BaseSmartDBEntityPostgreSQL` and use the `@PostgreSQLAppliedFor` decorator.  
+
+```
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { DummyEntity } from './Dummy.Entity';
+import { PostgreSQLAppliedFor, getPostgreSQLTableName, Maybe, StakeCredentialPubKeyHash } from 'smart-db';
+import {  BaseSmartDBEntityPostgreSQL } from 'smart-db/backEnd';
+import { type PaymentKeyHash,  } from 'lucid-cardano';
+
+@PostgreSQLAppliedFor([DummyEntity])
+@Entity({ name: getPostgreSQLTableName(DummyEntity.className()) })
+@Index(['ddPaymentPKH', ]) // Add indices as needed
+export class DummyEntityPostgreSQL extends  BaseSmartDBEntityPostgreSQL {
+    protected static Entity = DummyEntity;
+
+    // #region internal class methods
+
+    public getPostgreSQLStatic(): typeof DummyEntityPostgreSQL {
+        return this.constructor as typeof DummyEntityPostgreSQL;
+    }
+
+    public static getPostgreSQLStatic(): typeof DummyEntityPostgreSQL {
+        return this as typeof DummyEntityPostgreSQL;
+    }
+
+    public getStatic(): typeof DummyEntity {
+        return DummyEntityPostgreSQL.getPostgreSQLStatic().getStatic() as typeof DummyEntity;
+    }
+
+    public static getStatic(): typeof DummyEntity {
+        return this.Entity as typeof DummyEntity;
+    }
+
+    public className(): string {
+        return this.getStatic().className();
+    }
+
+    public static className(): string {
+        return this.getStatic().className();
+    }
+
+    // #endregion internal class methods
+
+    // #region fields
+
+    @PrimaryGeneratedColumn()
+    _id!: number; // Auto-generated primary key
+
+    @Column({ type: "varchar", length: 255  })
+    _NET_id_TN!:string;
+    @Column({ type: "varchar", length: 255  })
+    ddPaymentPKH!: PaymentKeyHash ;
+    @Column({ type: "varchar", length: 255  })
+    ddStakePKH!: Maybe<StakeCredentialPubKeyHash> ;
+    @Column({ type: "int"  })
+    ddValue!:number;
+
+    public static PostgreSQLModel() {
+        return this;
+    }
+    // #endregion fields
+}
+```
+
 
 **Dummy.BackEnd.Api.Handlers.Tx.ts**
 

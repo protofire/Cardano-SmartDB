@@ -406,6 +406,68 @@ export class TestEntityMongo extends BaseEntityMongo {
 }
 ```
 
+**Test.Entity.PostgreSQL.ts**
+
+Classes for PostgreSQL Schemma should extend `BaseEntityPostgreSQL` and use the `@PostgreSQLAppliedFor` decorator.  
+```
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { TestEntity } from './Test.Entity';
+import { PostgreSQLAppliedFor, getPostgreSQLTableName, Maybe } from 'smart-db';
+import { BaseEntityPostgreSQL  } from 'smart-db/backEnd';
+import { type PaymentKeyHash,  } from 'lucid-cardano';
+
+@PostgreSQLAppliedFor([TestEntity])
+@Entity({ name: getPostgreSQLTableName(TestEntity.className()) })
+@Index(['testIndex', ]) // Add indices as needed
+export class TestEntityPostgreSQL extends BaseEntityPostgreSQL  {
+    protected static Entity = TestEntity;
+
+    // #region internal class methods
+
+    public getPostgreSQLStatic(): typeof TestEntityPostgreSQL {
+        return this.constructor as typeof TestEntityPostgreSQL;
+    }
+
+    public static getPostgreSQLStatic(): typeof TestEntityPostgreSQL {
+        return this as typeof TestEntityPostgreSQL;
+    }
+
+    public getStatic(): typeof TestEntity {
+        return TestEntityPostgreSQL.getPostgreSQLStatic().getStatic() as typeof TestEntity;
+    }
+
+    public static getStatic(): typeof TestEntity {
+        return this.Entity as typeof TestEntity;
+    }
+
+    public className(): string {
+        return this.getStatic().className();
+    }
+
+    public static className(): string {
+        return this.getStatic().className();
+    }
+
+    // #endregion internal class methods
+
+    // #region fields
+
+    @PrimaryGeneratedColumn()
+    _id!: number; // Auto-generated primary key
+
+    @Column({ type: "varchar", length: 255  })
+    name!: PaymentKeyHash ;
+    @Column({ type: "varchar", length: 255  })
+    description!: Maybe<PaymentKeyHash> ;
+
+    public static PostgreSQLModel() {
+        return this;
+    }
+    // #endregion fields
+}
+```
+
+
 **Test.BackEnd.Api.Handlers.ts**
 
 The backend for new entities must extend both `BaseBackEndApplied` and `BaseBackEndApiHandlers` and use the `@BackEndAppliedFor` and `@BackEndApiHandlersFor` decorators.
@@ -593,6 +655,72 @@ export class DummyEntityMongo extends BaseSmartDBEntityMongo {
     // #endregion mongo db
 }
 ```
+**Dummy.Entity.PostgreSQL.ts**
+
+Classes for PostgreSQL Schemma should extend `BaseSmartDBEntityPostgreSQL` and use the `@PostgreSQLAppliedFor` decorator.  
+
+```
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { DummyEntity } from './Dummy.Entity';
+import { PostgreSQLAppliedFor, getPostgreSQLTableName, Maybe, StakeCredentialPubKeyHash } from 'smart-db';
+import {  BaseSmartDBEntityPostgreSQL } from 'smart-db/backEnd';
+import { type PaymentKeyHash,  } from 'lucid-cardano';
+
+@PostgreSQLAppliedFor([DummyEntity])
+@Entity({ name: getPostgreSQLTableName(DummyEntity.className()) })
+@Index(['ddPaymentPKH', ]) // Add indices as needed
+export class DummyEntityPostgreSQL extends  BaseSmartDBEntityPostgreSQL {
+    protected static Entity = DummyEntity;
+
+    // #region internal class methods
+
+    public getPostgreSQLStatic(): typeof DummyEntityPostgreSQL {
+        return this.constructor as typeof DummyEntityPostgreSQL;
+    }
+
+    public static getPostgreSQLStatic(): typeof DummyEntityPostgreSQL {
+        return this as typeof DummyEntityPostgreSQL;
+    }
+
+    public getStatic(): typeof DummyEntity {
+        return DummyEntityPostgreSQL.getPostgreSQLStatic().getStatic() as typeof DummyEntity;
+    }
+
+    public static getStatic(): typeof DummyEntity {
+        return this.Entity as typeof DummyEntity;
+    }
+
+    public className(): string {
+        return this.getStatic().className();
+    }
+
+    public static className(): string {
+        return this.getStatic().className();
+    }
+
+    // #endregion internal class methods
+
+    // #region fields
+
+    @PrimaryGeneratedColumn()
+    _id!: number; // Auto-generated primary key
+
+    @Column({ type: "varchar", length: 255  })
+    _NET_id_TN!:string;
+    @Column({ type: "varchar", length: 255  })
+    ddPaymentPKH!: PaymentKeyHash ;
+    @Column({ type: "varchar", length: 255  })
+    ddStakePKH!: Maybe<StakeCredentialPubKeyHash> ;
+    @Column({ type: "int"  })
+    ddValue!:number;
+
+    public static PostgreSQLModel() {
+        return this;
+    }
+    // #endregion fields
+}
+```
+
 
 **Dummy.BackEnd.Api.Handlers.ts**
 
@@ -718,3 +846,5 @@ export const config = {
 export default smartDBMainApiHandler.bind(smartDBMainApiHandler);
 ```
 
+### Automatic entity generator  
+Refer to [Cardano-SmartDB-Scaffold Usage](https://github.com/protofire/Cardano-SmartDB-Scaffold/blob/main/README.md#usage)

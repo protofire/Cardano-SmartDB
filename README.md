@@ -26,6 +26,7 @@ The Smart DB Library is a Node.js package designed to simplify the interaction b
 - **API Handling**: The library handles all API routes, reducing the complexity in the projects that use our library.
 - **Example Project**: Includes a comprehensive example project in the `example` folder demonstrating the use of the library.
 - **Node.js Dependency**: This is a Node.js library to add as a dependency in dApps projects.
+- **Database Flexibility**: Now supports both non-relational databases (using MongoDB via Mongoose) and relational databases (using PostgreSQL via TypeORM), giving developers the flexibility to choose the most appropriate database solution for their project.
 
 ### Automatic Synchronization
 
@@ -77,3 +78,5 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 ## Acknowledgements
 
 We express our deepest gratitude to the Cardano community for their unwavering support and valuable contributions to this project. This work is part of a funded project through Cardano Catalyst, a community-driven innovation platform. For more details on the proposal and its progress, please visit our proposal page on [IdeaScale](https://cardano.ideascale.com/c/idea/110478).
+
+

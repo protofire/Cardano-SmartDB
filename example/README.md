@@ -29,7 +29,7 @@ With the new library version, synchronization is handled dynamically. The manual
 - **Swagger Server**: Provides a Swagger UI for testing API endpoints.
 - **Test API**: The project includes Jest tests for the API.
 - **Validator Script Logic**: The example validator script only permits the creator of the datum to consume it for updates or claims, demonstrating the implementation of custom business logic on the blockchain.
-
+- **Automatic Entity Generation Toolkit**: Provides a toolkit to automatically generate entities and the necessary files for both the backend and frontend of the system, streamlining the development process.
 ## Documentation
 
 **Gitbook**
