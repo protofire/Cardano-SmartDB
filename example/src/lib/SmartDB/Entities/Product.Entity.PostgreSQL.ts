@@ -5,7 +5,7 @@ import { BaseEntityPostgreSQL  } from 'smart-db/backEnd';
 
 @PostgreSQLAppliedFor([ProductEntity])
 @Entity({ name: getPostgreSQLTableName(ProductEntity.className()) })
-@Index([]) // Add indices as needed
+// @Index([]) // Add indices as needed //TODO: el problema esta en que no pueden quedar vacios
 export class ProductEntityPostgreSQL extends BaseEntityPostgreSQL  {
     protected static Entity = ProductEntity;
 

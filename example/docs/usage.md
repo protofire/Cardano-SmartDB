@@ -39,7 +39,7 @@
     - [Root Backend File Example](#root-backend-file-example)
     - [Endpoints Configuration](#endpoints-configuration)
   - [NextJs Api Handler Files](#nextjs-api-handler-files)
-  
+  - [Automatic entity generator](#automatic-entity-generator)
 ## Usage
 
 ### Familiarize Yourself

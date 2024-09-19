@@ -11,5 +11,5 @@ export function initBackEnd() {
     initBackEndSmartDB();
     const endpointsManager = EndpointsManager.getInstance();
     // endpointsManager.setPublicEndPointsInternet([/^\/api\/blockfrost\/.+/]);
-    // endpointsManager.setPublicEndPointsInternet([/^\/api\/dummy\/all/]);
+    endpointsManager.setPublicEndPointsInternet([/^\/api\/product\/all/]);
 }

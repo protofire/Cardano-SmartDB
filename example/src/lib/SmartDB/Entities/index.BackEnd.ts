@@ -6,6 +6,5 @@ export * from './Test.Entity.PostgreSQL';
 
 export * from './index';
 
-export * from './index';
 export * from './Product.Entity.Mongo';
 export * from './Product.Entity.PostgreSQL';
