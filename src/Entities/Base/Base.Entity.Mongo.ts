@@ -1,10 +1,10 @@
-import 'reflect-metadata';
 import { Types } from 'mongoose';
+import 'reflect-metadata';
 import { deserealizeBigInt } from '../../Commons/conversions.js';
 import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
 import { MongoAppliedFor } from '../../Commons/Decorators/Decorator.MongoAppliedFor.js';
-import { BaseEntity } from './Base.Entity.js';
 import { ConversionFunctions, executeFunction, toJson } from '../../Commons/index.js';
+import { BaseEntity } from './Base.Entity.js';
 
 @MongoAppliedFor([BaseEntity])
 export class BaseEntityMongo {
@@ -80,11 +80,11 @@ export class BaseEntityMongo {
                         let type = conversions.type as any;
                         // if (value?.toMongoInterface) {
                         //     value = await executeFunction(value.toMongoInterface, value, cascadeSave);
-                        // } else 
+                        // } else
                         if (conversions.toMongoInterface) {
                             value = conversions.toMongoInterface.call(instance, value);
-                        // } else if (type.toMongoInterface) {
-                        //     value = await executeFunction(type.toMongoInterface, value, cascadeSave);
+                            // } else if (type.toMongoInterface) {
+                            //     value = await executeFunction(type.toMongoInterface, value, cascadeSave);
                             // } else if (conversions.type === BigInt) {
                             //     value = serializeBigInt(value)
                         } else if (value?.toPlainObject) {
@@ -227,7 +227,7 @@ export class BaseEntityMongo {
                                     }
                                     for (let i = 0; i < value_ids.length; i++) {
                                         let value_id = value_ids[i];
-                                        if (process.env.USE_DATABASE === 'mongo' ) {
+                                        if (process.env.USE_DATABASE === 'mongo') {
                                             value_id = value_id?.toString ? value_id.toString() : value_id;
                                         }
                                         if (value_id) {

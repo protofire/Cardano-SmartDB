@@ -1,5 +1,5 @@
 import { Lucid } from 'lucid-cardano';
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Modal from 'react-modal';
 import { useWalletActions } from 'smart-db';
 import LoaderButton from '../LoaderButton/LoaderButton';

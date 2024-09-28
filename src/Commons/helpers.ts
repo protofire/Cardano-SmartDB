@@ -1,8 +1,8 @@
-import { Assets, C, Lucid, PaymentKeyHash, Script, SignedMessage, UTxO, fromHex, toHex } from 'lucid-cardano';
-import { AC, CS, Decimals, PaymentAndStakePubKeyHash, StakeCredentialPubKeyHash, Token_With_Metadata_And_Amount } from './types.js';
-import { formatAmount, hexToStr, isNullOrBlank, searchValueInArray, strToHex } from './utils.js';
-import { ADA_DECIMALS, ADA_TX_FEE_MARGIN, ADA_UI, LUCID_NETWORK_MAINNET_INT, LUCID_NETWORK_TESTNET_INT, LucidLUCID_NETWORK_MAINNET_NAME } from './Constants/constants.js';
+import { Assets, C, Lucid, OutRef, PaymentKeyHash, Script, SignedMessage, UTxO, fromHex, toHex } from 'lucid-cardano';
+import { ADA_TX_FEE_MARGIN, ADA_UI, LUCID_NETWORK_MAINNET_INT, LUCID_NETWORK_TESTNET_INT, LucidLUCID_NETWORK_MAINNET_NAME } from './Constants/constants.js';
 import { TxOutRef } from './classes.js';
+import { AC, CS, PaymentAndStakePubKeyHash, StakeCredentialPubKeyHash, Token_With_Metadata_And_Amount } from './types.js';
+import { hexToStr, isNullOrBlank, searchValueInArray, strToHex } from './utils.js';
 
 //---------------------------------------------------------------
 
@@ -61,6 +61,12 @@ export function formatAddress(address: string, isSmall: boolean = true) {
 
 export function formatUTxO(txHash: string, outputIndex: number) {
     return `${formatHash(txHash)}#${outputIndex}`;
+}
+
+//---------------------------------------------------------------
+
+export function getOutRef(txOut: UTxO): OutRef {
+    return { txHash: txOut.txHash, outputIndex: txOut.outputIndex } as OutRef;
 }
 
 //---------------------------------------------------------------
@@ -207,7 +213,7 @@ function addressFromHexOrBech32(address: any) {
 }
 
 export function getAddressFromKeyCborHex(publicKeyCborHex: string) {
-    const publicKeyBytes = Buffer.from(publicKeyCborHex, 'hex');
+    const publicKeyBytes = new Uint8Array(Buffer.from(publicKeyCborHex, 'hex'));
     const publicKey = C.PublicKey.from_bytes(publicKeyBytes);
     const publicKeyHash = publicKey.hash();
     const address = Ed25519KeyHashToAddress(LUCID_NETWORK_MAINNET_INT, publicKeyHash);
@@ -1030,7 +1036,7 @@ export async function signMessage(lucid: Lucid, privateKeyCborHex: string, dataS
     //--------------------------------------
     const dataHex = strToHex(dataStr);
     //--------------------------------------
-    const privateKeyBytes = Buffer.from(privateKeyCborHex, 'hex');
+    const privateKeyBytes = new Uint8Array(Buffer.from(privateKeyCborHex, 'hex'));
     const privateKey = C.PrivateKey.from_bytes(privateKeyBytes);
     const privateKeyBench32 = privateKey.to_bech32();
     lucid.selectWalletFromPrivateKey(privateKeyBench32);

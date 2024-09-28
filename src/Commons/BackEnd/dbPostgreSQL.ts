@@ -1,13 +1,4 @@
 import { DataSource } from 'typeorm';
-import {
-    AddressToFollowEntityPostgreSQL,
-    EmulatorEntityPostgreSQL,
-    JobEntityPostgreSQL,
-    SiteSettingsEntityPostgreSQL,
-    SmartUTxOEntityPostgreSQL,
-    TransactionEntityPostgreSQL,
-    WalletEntityPostgreSQL,
-} from '../../Entities/index.BackEnd.js';
 import { RegistryManager } from '../Decorators/registerManager.js';
 
 // Define a new DataSource for connecting to the default database (postgres)
@@ -31,11 +22,10 @@ export async function connectPostgres(): Promise<void> {
     if (databasePostgreSQL !== null) {
         return; // Already connected
     }
-
     try {
-
+        //--------------------
         const registeredEntities = Array.from(RegistryManager.getAllFromPosgreSQLAppliedRegistry().values());
-
+        //--------------------
         const AppDataSource = new DataSource({
             type: 'postgres',
             host: process.env.POSTGRES_HOST,
@@ -44,34 +34,32 @@ export async function connectPostgres(): Promise<void> {
             password: process.env.POSTGRES_PASS,
             database: process.env.POSTGRES_DB,
             synchronize: true,
-            logging: true,
-            entities: [
-                ...registeredEntities
-            ],
+            logging: ['error', 'schema', 'warn'],
+            entities: [...registeredEntities],
             subscribers: [],
             migrations: [],
         });
-
+        //--------------------
         // Connect to the default database and create the target database if it doesn't exist
         await DefaultDataSource.initialize();
         const queryRunner = DefaultDataSource.createQueryRunner();
         await queryRunner.connect();
         const dbName = process.env.POSTGRES_DB;
-
+        //--------------------
         const dbExists = await queryRunner.query(`SELECT 1 FROM pg_database WHERE datname = $1`, [dbName]);
-
+        //--------------------
         if (dbExists.length === 0) {
             await queryRunner.query(`CREATE DATABASE "${dbName}"`);
             console.log(`Database ${dbName} created successfully.`);
         }
-
+        //--------------------
         await queryRunner.release();
         await DefaultDataSource.destroy();
-
+        //--------------------
         // Now initialize the AppDataSource
         databasePostgreSQL = await AppDataSource.initialize();
         console.log('postgres: Conexión exitosa a la base de datos');
-
+        //--------------------
         // Simple query to test connection
         await databasePostgreSQL.query('SELECT NOW()');
         console.log('Connected to postgreSQL database');

@@ -5,9 +5,17 @@ import { signIn, signOut } from 'next-auth/react';
 import { EmulatorEntity } from '../Entities/Emulator.Entity.js';
 import { CardanoWallet, ConnectedWalletInfo } from '../Commons/types.js';
 import { CARDANO_WALLETS } from '../Commons/Constants/wallets.js';
-import { LUCID_NETWORK_MAINNET_INT, LUCID_NETWORK_TESTNET_INT, isEmulator, isMainnet, isTestnet } from '../Commons/Constants/constants.js';
+import {
+    LUCID_NETWORK_MAINNET_INT,
+    LUCID_NETWORK_TESTNET_INT,
+    WAIT_FOR_WALLET_ENABLING,
+    WAIT_FOR_WALLET_EXTENSIONS,
+    isEmulator,
+    isMainnet,
+    isTestnet,
+} from '../Commons/Constants/constants.js';
 import { EmulatorDBFrontEndApiCalls, WalletFrontEndApiCalls } from '../FrontEnd/index.js';
-import { toJson } from '../Commons/utils.js';
+import { delay, toJson } from '../Commons/utils.js';
 import { LucidToolsFrontEnd } from '../lib/Lucid/LucidTools.FrontEnd.js';
 import { explainError } from '../Commons/explainError.js';
 import { Credentials } from '../lib/Auth/types.js';
@@ -164,7 +172,7 @@ export const WalletStoreModel: IWalletStoreModel = {
                 // Use 2 since count starts from 0 (0, 1, 2)
                 setTimeout(() => {
                     pollWallets(pollWalletsCount + 1);
-                }, 1000);
+                }, WAIT_FOR_WALLET_EXTENSIONS);
             } else {
                 // Ensure setIsGettingWalletsDone is called even when no wallets are found
                 const state = helpers.getState();
@@ -600,7 +608,7 @@ export const WalletStoreModel: IWalletStoreModel = {
                         const maxError = tryAgain ? 2 : 1;
                         while (countError < maxError) {
                             try {
-                                if (countError > 0) await new Promise((r) => setTimeout(r, 4000)); //espero 4 segundos para que se cargue la wallet
+                                if (countError > 0) await delay(WAIT_FOR_WALLET_ENABLING); //espero segundos para que se cargue la wallet
                                 walletApi = await window.cardano[walletNameOrSeedOrKey].enable();
                                 break;
                             } catch (error) {

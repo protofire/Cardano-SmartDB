@@ -1,9 +1,9 @@
-import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
-import { console_error, console_log } from '../../Commons/BackEnd/globalLogs.js';
-import { isEmptyObject, showData, toJson } from '../../Commons/utils.js';
-import { OptionsGet } from '../../Commons/types.js';
+import { SelectQueryBuilder } from 'typeorm';
 import { connectPostgres, databasePostgreSQL } from '../../Commons/BackEnd/dbPostgreSQL.js';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { console_error, console_log } from '../../Commons/BackEnd/globalLogs.js';
+import { OptionsGet } from '../../Commons/types.js';
+import { isEmptyObject, toJson } from '../../Commons/utils.js';
+import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
 
 export class PostgreSQLDatabaseService {
     public static async create<T extends BaseEntity>(instance: T): Promise<string> {
@@ -114,51 +114,51 @@ export class PostgreSQLDatabaseService {
         useOptionGet: OptionsGet
     ) {
         try {
-            console_log(0, `PostgreSQL`, `getByParams - Connecting to PostgreSQL...`);
+            // console_log(0, `PostgreSQL`, `getByParams - Connecting to PostgreSQL...`);
             await connectPostgres();
             const postgreSQLEntity = await Entity.getPostgreSQL().PostgreSQLModel();
             const repository = databasePostgreSQL!.manager.getRepository(postgreSQLEntity);
             let queryBuilder = repository.createQueryBuilder('entity');
             //--------------------------
-            console.log('Initial Query:', queryBuilder.getQuery());
+            // console.log('Initial Query:', queryBuilder.getQuery());
             //--------------------------
             if (!isEmptyObject(paramsFilter)) {
-                console_log(0, `PostgreSQL`, `getByParams - Applying filters: ${toJson(paramsFilter)}`);
+                // console_log(0, `PostgreSQL`, `getByParams - Applying filters: ${toJson(paramsFilter)}`);
                 queryBuilder = this.applyFilters(queryBuilder, paramsFilter);
             }
             //--------------------------
-            console.log('After filter Query:', queryBuilder.getQuery());
+            // console.log('After filter Query:', queryBuilder.getQuery());
             //--------------------------
             if (!isEmptyObject(fieldsForSelect)) {
                 const selectedFields = Object.keys(fieldsForSelect)
                     .filter((key) => fieldsForSelect[key] === 1)
                     .map((key) => `entity.${key}`);
-                console_log(0, `PostgreSQL`, `getByParams - Selecting fields: ${selectedFields}`);
+                // console_log(0, `PostgreSQL`, `getByParams - Selecting fields: ${selectedFields}`);
                 queryBuilder.select(selectedFields);
             }
             //--------------------------
-            console.log('After Select Query:', queryBuilder.getQuery());
+            // console.log('After Select Query:', queryBuilder.getQuery());
             //--------------------------
             if (!isEmptyObject(useOptionGet.sort)) {
                 for (const [field, order] of Object.entries(useOptionGet!.sort!)) {
-                    console_log(0, `PostgreSQL`, `getByParams - Sorting by ${field} in ${order === 1 ? 'ASC' : 'DESC'} order`);
+                    // console_log(0, `PostgreSQL`, `getByParams - Sorting by ${field} in ${order === 1 ? 'ASC' : 'DESC'} order`);
                     queryBuilder.addOrderBy(`entity.${field}`, order === 1 ? 'ASC' : 'DESC');
                 }
             }
             //--------------------------
             if (useOptionGet.skip !== undefined) {
-                console_log(0, `PostgreSQL`, `getByParams - Skipping ${useOptionGet.skip} records`);
+                // console_log(0, `PostgreSQL`, `getByParams - Skipping ${useOptionGet.skip} records`);
                 queryBuilder.skip(useOptionGet.skip);
             }
             if (useOptionGet.limit !== undefined) {
-                console_log(0, `PostgreSQL`, `getByParams - Limiting results to ${useOptionGet.limit}`);
+                // console_log(0, `PostgreSQL`, `getByParams - Limiting results to ${useOptionGet.limit}`);
                 queryBuilder.take(useOptionGet.limit);
             }
             //--------------------------
-            console.log('Final Query:', queryBuilder.getQuery());
+            // console.log('Final Query:', queryBuilder.getQuery());
             //--------------------------
             let results = await queryBuilder.getRawMany();
-            console_log(0, `PostgreSQL`, `getByParams - Raw results: ${toJson(results)}`);
+            // console_log(0, `PostgreSQL`, `getByParams - Raw results: ${toJson(results)}`);
             //--------------------------
             // Process the results to ensure consistent field naming
             results = results.map((result) => {
@@ -173,8 +173,8 @@ export class PostgreSQLDatabaseService {
                 return processedResult;
             });
             //--------------------------
-            console_log(0, `PostgreSQL`, `getByParams - Found ${results.length} document(s)`);
-            results.forEach((result) => console_log(0, `PostgreSQL`, `getByParams - Found ${toJson(result)}`));
+            // console_log(0, `PostgreSQL`, `getByParams - Found ${results.length} document(s)`);
+            // results.forEach((result) => console_log(0, `PostgreSQL`, `getByParams - Found ${toJson(result)}`));
             //--------------------------
             return results;
         } catch (error) {
@@ -201,35 +201,36 @@ export class PostgreSQLDatabaseService {
         }
     }
     private static applyFilters(queryBuilder: SelectQueryBuilder<any>, filters: Record<string, any>): SelectQueryBuilder<any> {
-        console.log('Entering applyFilters with filters:', JSON.stringify(filters, null, 2));
+        // console.log('Entering applyFilters with filters:', toJson(filters, null, 2));
         //--------------------------
         const applyFilter = (key: string, value: any, parentKey: string = '', index: number = 0): string => {
             const fullKey = parentKey ? `${parentKey}.${key}` : key;
-            console.log(`Processing filter: ${fullKey} = ${JSON.stringify(value)}`);
-    
+            // console.log(`Processing filter: ${fullKey} = ${toJson(value)}`);
+
             const createParam = (paramKey: string, paramValue: any) => {
                 // Append index to make each parameter unique
                 const safeParamKey = `${paramKey.replace(/[^a-zA-Z0-9_]/g, '_')}_${index}`;
                 queryBuilder.setParameter(safeParamKey, paramValue);
                 return safeParamKey;
             };
-    
+
             const quoteColumnName = (columnName: string) => {
                 return columnName
                     .split('.')
                     .map((part) => `"${part}"`)
                     .join('.');
             };
-    
+
             if (key.startsWith('$')) {
                 switch (key) {
                     case '$or':
                     case '$and':
                         if (!Array.isArray(value)) throw new Error(`${key} must be an array`);
-                        const conditions = value.map((condition, i) =>
-                            `(${Object.entries(condition)
-                                .map(([subKey, subValue]) => applyFilter(subKey, subValue, parentKey, i))
-                                .join(' AND ')})`
+                        const conditions = value.map(
+                            (condition, i) =>
+                                `(${Object.entries(condition)
+                                    .map(([subKey, subValue]) => applyFilter(subKey, subValue, parentKey, i))
+                                    .join(' AND ')})`
                         );
                         return `(${conditions.join(key === '$or' ? ' OR ' : ' AND ')})`;
                     case '$not':
@@ -239,10 +240,11 @@ export class PostgreSQLDatabaseService {
                     case '$nor':
                         if (!Array.isArray(value)) throw new Error('$nor must be an array');
                         return `NOT (${value
-                            .map((condition, i) =>
-                                `(${Object.entries(condition)
-                                    .map(([subKey, subValue]) => applyFilter(subKey, subValue, `nor_${i}`, i))
-                                    .join(' AND ')})`
+                            .map(
+                                (condition, i) =>
+                                    `(${Object.entries(condition)
+                                        .map(([subKey, subValue]) => applyFilter(subKey, subValue, `nor_${i}`, i))
+                                        .join(' AND ')})`
                             )
                             .join(' OR ')})`;
                     default:
@@ -290,8 +292,8 @@ export class PostgreSQLDatabaseService {
             .join(' AND ');
         queryBuilder.where(whereClause);
         //--------------------------
-        console.log('Filter Query:', queryBuilder.getQuery());
-        console.log('Filter parameters:', JSON.stringify(queryBuilder.getParameters(), null, 2));
+        // console.log('Filter Query:', queryBuilder.getQuery());
+        // console.log('Filter parameters:', toJson(queryBuilder.getParameters(), null, 2));
         //--------------------------
         return queryBuilder;
     }

@@ -1,5 +1,4 @@
-import { throws } from 'assert';
-import { console_error, console_errorLv2, console_log, console_logLv2 } from '../../Commons/BackEnd/globalLogs.js';
+import { console_error, console_errorLv2, console_logLv2 } from '../../Commons/BackEnd/globalLogs.js';
 import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
 import { RegistryManager } from '../../Commons/Decorators/registerManager.js';
 import {
@@ -210,14 +209,14 @@ export class BaseBackEndMethods {
             console_logLv2(
                 0,
                 instance.className(),
-                `checkRelationAndLoadIt - ${RelatedClassType.className()} in field ${conversions.propertyToFill} - using ${propertyKey} as id  ${value_id} - Loading...`
+                `checkRelationAndLoadIt - ${RelatedClassType.className()} - in field: ${conversions.propertyToFill} - using ${propertyKey} as id: ${value_id} - Loading...`
             );
             value_object = await this.getById<R>(RelatedClassType, value_id, optionsGet, restricFilter);
-        } else{
+        } else {
             console_logLv2(
                 0,
                 instance.className(),
-                `checkRelationAndLoadIt - ${RelatedClassType.className()} in field ${conversions.propertyToFill} - using ${propertyKey} as id  ${value_id} - Not found`
+                `checkRelationAndLoadIt - ${RelatedClassType.className()} - in field: ${conversions.propertyToFill} - using ${propertyKey} as id: ${value_id} - Not found`
             );
         }
         return value_object;
@@ -260,7 +259,6 @@ export class BaseBackEndMethods {
                 } else {
                     throw `unknown Mongo`;
                 }
-
             } else if (process.env.USE_DATABASE === 'postgresql') {
                 const _id = await PostgreSQLDatabaseService.create<T>(instance);
                 // console_logLv2(0, instance.className(), `id postgres: ${_id}`);
@@ -605,7 +603,7 @@ export class BaseBackEndMethods {
                 restricFilter
             );
             //----------------------------
-            console_logLv2(0, Entity.className(), `getById - id: ${id} - ${instance?._DB_id}`);
+            // console_logLv2(0, Entity.className(), `getById - id: ${id} - ${instance?._DB_id}`);
             //----------------------------
             if (instance) {
                 //----------------------------
@@ -694,7 +692,7 @@ export class BaseBackEndMethods {
                     fieldsForSelectForMongo = Object.fromEntries(Object.keys(useOptionGet.fieldsForSelect).map((key) => [key, useOptionGet.fieldsForSelect![key] ? 1 : 0]));
                 }
                 //----------------------------
-                console_logLv2(0, Entity.className(), `getByParams - fieldsForSelect before always selects: ${showData(fieldsForSelectForMongo, false)}`);
+                // console_logLv2(0, Entity.className(), `getByParams - fieldsForSelect before always selects: ${showData(fieldsForSelectForMongo, false)}`);
                 //----------------------------
                 if (isEmptyObject(fieldsForSelectForMongo)) {
                     // si esta vacio, lo dejo asi, por que eso signifca que trae todos los campos y a veces quiero usarlo asi
@@ -708,7 +706,7 @@ export class BaseBackEndMethods {
                     const isProjectionInclusionOrExclusion =
                         isEmptyObject(fieldsForSelectForMongo) || Object.values(fieldsForSelectForMongo).every((value) => value === 1 || value === 0);
                     if (!isProjectionInclusionOrExclusion) {
-                        throw `Invalid projection, must be all 1 or 0: ${JSON.stringify(fieldsForSelectForMongo)}`;
+                        throw `Invalid projection, must be all 1 or 0: ${toJson(fieldsForSelectForMongo)}`;
                     }
                     //----------------------------
                     const alwaysFieldsForSelect: Record<string, boolean> = Entity.alwaysFieldsForSelect;
@@ -803,14 +801,14 @@ export class BaseBackEndMethods {
                     }
                     //----------------------------
                     if (doc._doc !== undefined) {
-                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS _DOC`);
+                        // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS _DOC`);
                         doc = doc._doc;
                     } else {
-                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS NO _DOC`);
+                        // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS NO _DOC`);
                     }
                     //----------------------------
-                    console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields: ${showData(Object.keys(doc), false)}`);
-                    console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields len: ${Object.keys(doc).length}`);
+                    // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields: ${showData(Object.keys(doc), false)}`);
+                    // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields len: ${Object.keys(doc).length}`);
                     //-----------------------
                     const instance = (await Entity.getMongo().fromMongoInterface(doc)) as T;
                     //-----------------------
@@ -910,7 +908,7 @@ export class BaseBackEndMethods {
                     fieldsForSelectForPostgreSQL = Object.fromEntries(Object.keys(useOptionGet.fieldsForSelect).map((key) => [key, useOptionGet.fieldsForSelect![key] ? 1 : 0]));
                 }
                 //----------------------------
-                console_logLv2(0, Entity.className(), `getByParams - fieldsForSelect before always selects: ${showData(fieldsForSelectForPostgreSQL, false)}`);
+                // console_logLv2(0, Entity.className(), `getByParams - fieldsForSelect before always selects: ${showData(fieldsForSelectForPostgreSQL, false)}`);
                 //----------------------------
                 if (isEmptyObject(fieldsForSelectForPostgreSQL)) {
                     // si esta vacio, lo dejo asi, por que eso signifca que trae todos los campos y a veces quiero usarlo asi
@@ -924,7 +922,7 @@ export class BaseBackEndMethods {
                     const isProjectionInclusionOrExclusion =
                         isEmptyObject(fieldsForSelectForPostgreSQL) || Object.values(fieldsForSelectForPostgreSQL).every((value) => value === 1 || value === 0);
                     if (!isProjectionInclusionOrExclusion) {
-                        throw `Invalid projection, must be all 1 or 0: ${JSON.stringify(fieldsForSelectForPostgreSQL)}`;
+                        throw `Invalid projection, must be all 1 or 0: ${toJson(fieldsForSelectForPostgreSQL)}`;
                     }
                     //----------------------------
                     const alwaysFieldsForSelect: Record<string, boolean> = Entity.alwaysFieldsForSelect;
@@ -1018,18 +1016,11 @@ export class BaseBackEndMethods {
                         console_logLv2(1, Entity.className(), `getByParams - ${index}/${documents.length} - Processing document`);
                     }
                     //----------------------------
-                    // if (doc._doc !== undefined) {
-                    //     console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS _DOC`);
-                    //     doc = doc._doc;
-                    // } else {
-                    //     console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS NO _DOC`);
-                    // }
-                    //----------------------------
-                    console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields: ${showData(Object.keys(doc), false)}`);
-                    console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields len: ${Object.keys(doc).length}`);
+                    // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields: ${showData(Object.keys(doc), false)}`);
+                    // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields len: ${Object.keys(doc).length}`);
                     //-----------------------
                     const instance = (await Entity.getPostgreSQL().fromPostgreSQLInterface(doc)) as T;
-                    console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - instance: ${showData(instance, false)}`);
+                    // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - instance: ${showData(instance, false)}`);
                     //-----------------------
                     // if (useOptionGet.lookUpFields !== undefined && useOptionGet.lookUpFields.length > 0) {
                     //     for (let lookUpField of useOptionGet.lookUpFields) {

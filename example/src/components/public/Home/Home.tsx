@@ -1,13 +1,25 @@
+import { ClaimDummyTxParams, CreateDummyTxParams, UpdateDummyTxParams } from '@example/src/lib/Commons/Constants/transactions';
 import { DummyEntity } from '@example/src/lib/SmartDB/Entities/Dummy.Entity';
 import { DummyApi } from '@example/src/lib/SmartDB/FrontEnd/Dummy.FrontEnd.Api.Calls';
 import { Address, Lucid, Script, SpendingValidator } from 'lucid-cardano';
 import { useEffect, useState } from 'react';
 import Modal from 'react-modal';
-import { ADA_UI, BaseSmartDBFrontEndApiCalls, BaseSmartDBFrontEndBtnHandlers, CS, LucidToolsFrontEnd, formatHash, formatTokenAmount, formatUTxO, pushSucessNotification, pushWarningNotification, useWalletStore } from 'smart-db';
+import {
+    ADA_UI,
+    BaseSmartDBFrontEndApiCalls,
+    BaseSmartDBFrontEndBtnHandlers,
+    CS,
+    LucidToolsFrontEnd,
+    formatHash,
+    formatTokenAmount,
+    formatUTxO,
+    pushSucessNotification,
+    pushWarningNotification,
+    useWalletStore,
+} from 'smart-db';
 import LoaderButton from '../../Commons/LoaderButton/LoaderButton';
 import WalletConnector from '../../Commons/WalletConnector/WalletConnector';
 import styles from './Home.module.scss';
-import { ClaimTxParams, CreateTxParams, UpdateTxParams } from '@example/src/lib/Commons/Constants/transactions';
 
 export default function Home() {
     //--------------------------------------
@@ -96,29 +108,6 @@ export default function Home() {
                 await generateScripts(lucid);
                 const list: DummyEntity[] = await DummyApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
                 setList(list);
-
-                // const result1 = 1;
-                // const result2 = await DummyApi.checkIfExistsApi_( '11' );
-                // const result3 = await DummyApi.checkIfExistsApi_( { ddValue: 1 } );
-                // const result4 = await DummyApi.checkIfExistsApi_({  ddValue: 111 });
-                
-                // const count1 = await DummyApi.getCountApi_({  _creator: 'internal' } );
-                // const count2 = await DummyApi.getCountApi_({  ddValue: 19 } );
-                // const count3 = await DummyApi.getCountApi_({  ddValue: 1 } );
-                // const count4 = await DummyApi.getCountApi_({  ddValue: 111 } );
-                // const count5 = await DummyApi.getCountApi_({  $or: [{ ddValue: 111 }, { ddValue: 333 }] } );
-                
-                // alert(result1);
-                // alert(`exist: ${result2}`);
-                // alert(`exist2: ${result3}`);
-                // alert(`exist2: ${result4}`);
-                
-                // alert(`count: ${count1}`);
-                // alert(`count: ${count2}`);
-                // alert(`count: ${count3}`);
-                // alert(`count: ${count4}`);
-                // alert(`count: ${count5}`);
-                
             } catch (e) {
                 console.error(e);
             }
@@ -184,28 +173,25 @@ export default function Home() {
         }
     };
     //--------------------------------------
-        const startEditing = (item: DummyEntity) => {
-            setSelectedItem(item);
-            setIsEditingValue(true);
-            setEditValue(item.ddValue.toString());
-        };
-        const finishEditing = () => {
-            setSelectedItem(undefined);
-            setIsEditingValue(false);
-            setEditValue('');
-        };
-        //-------------------------------------
-
+    const startEditing = (item: DummyEntity) => {
+        setSelectedItem(item);
+        setIsEditingValue(true);
+        setEditValue(item.ddValue.toString());
+    };
+    const finishEditing = () => {
+        setSelectedItem(undefined);
+        setIsEditingValue(false);
+        setEditValue('');
+    };
+    //-------------------------------------
     const handleBtnFaucet = async () => {
-        //----------------------------
-        //open link https://docs.cardano.org/cardano-testnet/tools/faucet/
-        //----------------------------
         window.open('https://docs.cardano.org/cardano-testnet/tools/faucet/');
     };
+    //----------------------------
     const handleBtnBalance = async () => {
         await getBalance();
     };
-
+    //----------------------------
     const handleBtnSync = async () => {
         //----------------------------
         if (lucid === undefined) return;
@@ -253,26 +239,13 @@ export default function Home() {
             setIsTxError(false);
             setTxMessage('Creating Transaction...');
             //----------------------------
-            const txParams: CreateTxParams = {
+            const txParams: CreateDummyTxParams = {
                 datumID_CS,
                 datumID_TN,
                 validatorAddress,
                 mintingIdDummy,
                 ddValue: Number(inputValue),
             };
-            //--------------------------------------
-            // const { lucid, emulatorDB, walletTxParams } = await LucidToolsFrontEnd.prepareLucidFrontEndForTx(walletStore);
-            // //--------------------------------------
-            // const txApiCall = DummyApi.callGenericTxApi_.bind(DummyApi, 'create-dummy-tx', walletTxParams, txParams);
-            // const result = await BaseSmartDBFrontEndBtnHandlers.handleBtnDoTransaction(
-            //     DummyEntity,
-            //     'Creating Dummy...',
-            //     'Create Dummy Tx',
-            //     lucid,
-            //     emulatorDB,
-            //     txApiCall,  setTxMessage,
-            //     setTxHash,walletStore
-            // );
             //--------------------------------------
             const result = await BaseSmartDBFrontEndBtnHandlers.handleBtnDoTransactionV1(
                 DummyEntity,
@@ -329,7 +302,7 @@ export default function Home() {
             setIsTxError(false);
             setTxMessage('Creating Transaction...');
             //----------------------------
-            const txParams: ClaimTxParams = {
+            const txParams: ClaimDummyTxParams = {
                 datumID_CS,
                 datumID_TN,
                 mintingIdDummy,
@@ -394,7 +367,7 @@ export default function Home() {
             setIsTxError(false);
             setTxMessage('Creating Transaction...');
             //----------------------------
-            const txParams: UpdateTxParams = {
+            const txParams: UpdateDummyTxParams = {
                 datumID_CS,
                 datumID_TN,
                 validatorAddress,
@@ -439,7 +412,7 @@ export default function Home() {
         <div className={styles.content}>
             <div>
                 <div className={styles.title}>
-                    Smart DB - Dummy test case example{' '}
+                    Smart DB - Dummy Entity{' '}
                     {isLoading && (
                         <>
                             <LoaderButton />
@@ -449,18 +422,18 @@ export default function Home() {
             </div>
             <div>
                 <div className={styles.subTitle}>Validator Address:</div>
-                <div>{validatorAddress}</div>
+                <div className={styles.text}>{validatorAddress}</div>
             </div>
             {isLoading === false && lucid !== undefined && <WalletConnector lucid={lucid} />}
             {walletStore.isConnected === true ? (
                 <>
                     <div>
                         <div className={styles.subTitle}>Wallet Address:</div>
-                        <div>{address}</div>
+                        <div className={styles.text}>{address}</div>
                     </div>
                     <div>
                         <div className={styles.subTitle}>Wallet Pkh:</div>
-                        <div>{walletStore.info?.pkh}</div>
+                        <div className={styles.text}>{walletStore.info?.pkh}</div>
                     </div>
                     <div>
                         <div className={styles.subTitle}>1: Faucet to get ADA</div>
@@ -481,18 +454,16 @@ export default function Home() {
                     </div>
                     <div>
                         <div className={styles.subTitle}>3: Make sure you have ADA Balance:</div>
-                        <div>{formatTokenAmount(balance, ADA_UI)}</div>
+                        <div className={styles.text}>{formatTokenAmount(balance, ADA_UI)}</div>
                     </div>
                     <div>
-                        <div className={styles.subTitle}>4: Create Dummy Datum Transaction</div>
+                        <div className={styles.subTitle}>4: Create Dummy Entity</div>
                         <div className={styles.createContainer}>
-                            <div>Dummy value:</div>
-
                             <div>
-                                <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
+                                <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter value"/>
                             </div>
                             <button onClick={handleBtnCreateTx} className={styles.buttonCenterWithLoading}>
-                                Create{' '}
+                                Create Tx{' '}
                                 {isLoadingTxCreate && (
                                     <>
                                         <LoaderButton />
@@ -503,10 +474,10 @@ export default function Home() {
                     </div>
                 </>
             ) : (
-                <>Connect a Wallet to Continue...</>
+                <div className={styles.text}>Connect a Wallet to Continue...</div>
             )}
             <div>
-                <div className={styles.subTitle}>5: Sycn Database</div>
+                <div className={styles.subTitle}>5: Sync DB with Blockchain</div>
                 <button onClick={handleBtnSync} className={styles.buttonCenterWithLoading}>
                     Sync{' '}
                     {isLoadingSync && (
@@ -517,13 +488,13 @@ export default function Home() {
                 </button>
             </div>
             <div>
-                <div className={styles.subTitle}>List</div>
+                <div className={styles.subTitle}>6: Dummy Entities</div>
                 <div className={styles.listContainer}>
                     <div className={styles.item}>
                         <div className={styles.itemID}>DB Id</div>
                         <div className={styles.txHash}>UTxO</div>
-                        <div className={styles.pkh}>Datum PaymentPKH</div>
-                        <div className={styles.pkh}>Datum Value</div>
+                        <div className={styles.pkh}>PaymentPKH</div>
+                        <div className={styles.value}>Value</div>
                     </div>
                     {list?.length === 0 && <div>No data</div>}
                     {list?.map((item, index) => (
@@ -533,7 +504,7 @@ export default function Home() {
                             <div className={styles.pkh}>{formatHash(item.ddPaymentPKH)}</div>
                             <div className={styles.value}>
                                 {isEditingValue && selectedItem === item ? (
-                                    <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} />
+                                    <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} placeholder="Enter new value"/>
                                 ) : (
                                     item.ddValue.toString()
                                 )}
@@ -542,7 +513,7 @@ export default function Home() {
                                 {(isEditingValue || isLoadingTxUpdate) && selectedItem === item ? (
                                     <>
                                         <button onClick={() => handleBtnUpdateTx(item)} className={styles.buttonCenterWithLoading}>
-                                            Save{' '}
+                                            Update Tx{' '}
                                             {item === selectedItem && isLoadingTxUpdate && (
                                                 <>
                                                     <LoaderButton />
@@ -554,10 +525,10 @@ export default function Home() {
                                 ) : (
                                     <>
                                         <button onClick={() => startEditing(item)} className={styles.buttonCenterWithLoading}>
-                                            Update
+                                            Edit
                                         </button>
                                         <button onClick={() => handleBtnClaimTx(item)} className={styles.buttonCenterWithLoading}>
-                                            Claim
+                                            Claim Tx
                                             {item === selectedItem && isLoadingTxClaim && (
                                                 <>
                                                     <LoaderButton />

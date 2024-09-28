@@ -1,9 +1,7 @@
-import { SmartUTxOEntity } from '../../Entities/SmartUTxO.Entity.js';
 import { TransactionEntity } from '../../Entities/Transaction.Entity.js';
 import { BlockFrostBackEnd } from '../../lib/BlockFrost/BlockFrost.BackEnd.js';
 import {
     TRANSACTION_STATUS_CANCELED,
-    TRANSACTION_STATUS_CONFIRMED,
     TRANSACTION_STATUS_FAILED,
     TRANSACTION_STATUS_PENDING,
     TRANSACTION_STATUS_SUBMITTED,
@@ -12,38 +10,16 @@ import {
     TX_CONSUMING_TIME,
     TX_PREPARING_TIME,
     TX_TIMEOUT,
-    isEmulator,
+    TX_WAIT_FOR_SYNC,
+    isEmulator
 } from '../Constants/constants.js';
 import { RegistryManager } from '../Decorators/registerManager.js';
-import { showData, sleep, toJson } from '../utils.js';
+import { delay, showData, toJson } from '../utils.js';
 import { globalEmulator } from './globalEmulator.js';
 import { console_error, console_log } from './globalLogs.js';
 
 export class TransactionStatusUpdater {
     private isRunning = false;
-
-    protected async releaseUTxOs(transaction: TransactionEntity) {
-        //-------------------------
-        const SmartUTxOBackEndApplied = (await import('../../BackEnd/SmartUTxO.BackEnd.Applied.js')).SmartUTxOBackEndApplied;
-        //-------------------------
-        const consuming_UTxOs = transaction.consuming_UTxOs;
-        for (let consuming_UTxO of consuming_UTxOs) {
-            //-------------------------
-            const txHash = consuming_UTxO.txHash;
-            const outputIndex = consuming_UTxO.outputIndex;
-            //-------------------------
-            const smartUTxO: SmartUTxOEntity | undefined = await SmartUTxOBackEndApplied.getOneByParams_({ txHash, outputIndex });
-            //-------------------------
-            if (smartUTxO === undefined) {
-                console_error(0, `TxStatus`, `UpdaterJob - smartUTxO not found for txHash: ${txHash} - outputIndex: ${outputIndex}`);
-            } else {
-                //-------------------------
-                smartUTxO.isConsuming = undefined;
-                smartUTxO.isPreparing = undefined;
-                await SmartUTxOBackEndApplied.update(smartUTxO);
-            }
-        }
-    }
 
     public async transactionUpdater(txHash: string) {
         //-------------------------
@@ -89,33 +65,37 @@ export class TransactionStatusUpdater {
             // busco transacciones submitted que ya hayan pasado el time out, y las pongo en timeout
             // hago lo mismo con las utxo que esten en consuming, dentro de esa transaccion, y las pongo en normal
             while (true) {
-                //-------------------------
-                // busco transacciones pending que ya hayan pasado el time out, y las pongo en canceladas
-                // hago lo mismo con las utxo que esten en pending, dentro de esa transaccion, y las pongo en normal
-                //-------------------------
-                const pendingTransactions: TransactionEntity[] = await TransactionBackEndApplied.getByParams_({ status: TRANSACTION_STATUS_PENDING });
-                //-------------------------
-                const unconfirmedTransactions: TransactionEntity[] = await TransactionBackEndApplied.getByParams_({ status: TRANSACTION_STATUS_SUBMITTED });
-                //-------------------------
-                if (swCheckAgainTxWithTimeOut) {
-                    const timeoutTransactions: TransactionEntity[] = await TransactionBackEndApplied.getByParams_({
-                        $or: [{ status: TRANSACTION_STATUS_TIMEOUT }, { status: TRANSACTION_STATUS_CANCELED }],
-                    });
-                    unconfirmedTransactions.push(...timeoutTransactions);
-                    swCheckAgainTxWithTimeOut = false;
+                try {
+                    //-------------------------
+                    // busco transacciones pending que ya hayan pasado el time out, y las pongo en canceladas
+                    // hago lo mismo con las utxo que esten en pending, dentro de esa transaccion, y las pongo en normal
+                    //-------------------------
+                    const pendingTransactions: TransactionEntity[] = await TransactionBackEndApplied.getByParams_({ status: TRANSACTION_STATUS_PENDING });
+                    //-------------------------
+                    const unconfirmedTransactions: TransactionEntity[] = await TransactionBackEndApplied.getByParams_({ status: TRANSACTION_STATUS_SUBMITTED });
+                    //-------------------------
+                    if (swCheckAgainTxWithTimeOut) {
+                        const timeoutTransactions: TransactionEntity[] = await TransactionBackEndApplied.getByParams_({
+                            $or: [{ status: TRANSACTION_STATUS_TIMEOUT }, { status: TRANSACTION_STATUS_CANCELED }],
+                        });
+                        unconfirmedTransactions.push(...timeoutTransactions);
+                        swCheckAgainTxWithTimeOut = false;
+                    }
+                    //-------------------------
+                    if (unconfirmedTransactions.length === 0 && pendingTransactions.length === 0) {
+                        console_log(0, `TxStatus`, `UpdaterJob - Finish`);
+                        break;
+                    }
+                    //-------------------------
+                    await this.updatePendingTransactions(pendingTransactions);
+                    //-------------------------
+                    await this.updateUnconfirmedTransactions(unconfirmedTransactions);
+                    //-------------------------
+                } catch (error) {
+                    console_error(0, `TxStatus`, `UpdaterJob - Error: ${error} - Retrying...`);
                 }
-                //-------------------------
-                if (unconfirmedTransactions.length === 0 && pendingTransactions.length === 0) {
-                    console_log(0, `TxStatus`, `UpdaterJob - Finish`);
-                    break;
-                }
-                //-------------------------
-                await this.updatePendingTransactions(pendingTransactions);
-                //-------------------------
-                await this.updateUnconfirmedTransactions(unconfirmedTransactions);
-                //-------------------------
-                // Sleep for 5 seconds before the next iteration
-                await new Promise((resolve) => setTimeout(resolve, TX_CHECK_INTERVAL));
+                // Sleep for TX_CHECK_INTERVAL before the next iteration
+                await delay(TX_CHECK_INTERVAL)
             }
         } catch (error) {
             console_error(0, `TxStatus`, `UpdaterJob - Error: ${error}`);
@@ -138,12 +118,7 @@ export class TransactionStatusUpdater {
         for (let pendingTransaction of pendingTransactions) {
             const currentTime = serverTime;
             if (currentTime - pendingTransaction.date.getTime() > TX_PREPARING_TIME) {
-                //-------------------------
-                pendingTransaction.status = TRANSACTION_STATUS_CANCELED;
-                await TransactionBackEndApplied.update(pendingTransaction);
-                //-------------------------
-                await this.releaseUTxOs(pendingTransaction);
-                //-------------------------
+                await TransactionBackEndApplied.updateTransactionStatusAndUTxOs(pendingTransaction, TRANSACTION_STATUS_CANCELED);
             }
         }
     }
@@ -171,7 +146,7 @@ export class TransactionStatusUpdater {
             if (isEmulator) {
                 if (unconfirmedTransaction.status === TRANSACTION_STATUS_SUBMITTED) {
                     isConfirmed = true;
-                    await sleep(5000);
+                    await delay(5000);
                 }
                 // si es emulador la primera vez que se ejecute este job ya va a retornar confirmed, agrego un tiempo solo para simular un poco
             } else {
@@ -212,7 +187,7 @@ export class TransactionStatusUpdater {
             if (process.env.NEXT_PUBLIC_CARDANO_NET !== 'Emulator') {
                 // TODO: a veces el api de query tx dice que la transaccion existe, pero el api de tx count no lo refleja
                 // agrego esto por las dudas, para dar tiempo a blockfrost actualize sus registros
-                await new Promise((resolve) => setTimeout(resolve, TX_CHECK_INTERVAL));
+                await delay(TX_WAIT_FOR_SYNC);
             }
             //--------------------------------------
             const processedAddresses: {
@@ -261,9 +236,7 @@ export class TransactionStatusUpdater {
                     console_log(0, `TxStatus`, `UpdaterJob - confirm transaction: ${confirmedTransaction.hash}`);
                     //--------------------------------------
                     // Update the transaction status in your database here
-                    confirmedTransaction.status = TRANSACTION_STATUS_CONFIRMED;
-                    await TransactionBackEndApplied.update(confirmedTransaction);
-                    await this.releaseUTxOs(confirmedTransaction);
+                    await TransactionBackEndApplied.setConfirmedTransaction(confirmedTransaction);
                 }
             }
             //--------------------------------------
@@ -277,18 +250,15 @@ export class TransactionStatusUpdater {
                     //-------------------------
                     console_log(0, `TxStatus`, `UpdaterJob - unconfirmedTransaction: ${unconfirmedTransaction.hash} - TIMEOUT`);
                     //-------------------------
-                    unconfirmedTransaction.status = TRANSACTION_STATUS_TIMEOUT;
-                    await TransactionBackEndApplied.update(unconfirmedTransaction);
-                    //-------------------------
-                    await this.releaseUTxOs(unconfirmedTransaction);
+                    await TransactionBackEndApplied.updateTransactionStatusAndUTxOs(unconfirmedTransaction, TRANSACTION_STATUS_TIMEOUT);
                     //-------------------------
                 }
-                // Check if maximum time reached
+                // NOTE: aqui no cambio el estado de la transaccion, solo libero los utxos. No importa el estado actual tampoco. Es una medida de seguridad
                 if (currentTime - unconfirmedTransaction.date.getTime() > TX_CONSUMING_TIME) {
                     //-------------------------
                     console_log(0, `TxStatus`, `UpdaterJob - unconfirmedTransaction: ${unconfirmedTransaction.hash} - RELEASE UTXO`);
                     //-------------------------
-                    await this.releaseUTxOs(unconfirmedTransaction);
+                    await TransactionBackEndApplied.relseaseUTxOs(unconfirmedTransaction);
                     //-------------------------
                 }
             }

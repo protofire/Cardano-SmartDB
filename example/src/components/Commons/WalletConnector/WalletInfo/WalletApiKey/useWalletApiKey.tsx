@@ -1,7 +1,6 @@
-
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-import { AuthApi, Credentials, TxComponentProps, pushSucessNotification, useDetails, useWalletStore } from 'smart-db';
+import { AuthApi, Credentials, pushSucessNotification, useDetails, useWalletStore } from 'smart-db';
 
 export const useWalletApiKey = () => {
     //--------------------------------------
@@ -50,7 +49,7 @@ export const useWalletApiKey = () => {
     const handleClose = () => setIsOpen(false);
     //--------------------------------------
     const handleCopy = () => {
-        navigator.clipboard.writeText(apiToken)
+        navigator.clipboard.writeText(apiToken);
         pushSucessNotification(`SmartDB`, `Copied to clipboard!`, false);
     };
     //--------------------------------------

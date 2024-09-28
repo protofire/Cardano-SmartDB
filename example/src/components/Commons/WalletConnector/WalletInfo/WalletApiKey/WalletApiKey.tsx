@@ -1,12 +1,8 @@
-import { Lucid } from 'lucid-cardano';
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import React from 'react';
 import Modal from 'react-modal';
-import { useWalletActions } from 'smart-db';
 import LoaderButton from '../../../LoaderButton/LoaderButton';
-import styles from './WalletApiKey.module.scss'; // Assuming you will create a SCSS module
-import WalletInfo from '../../WalletInfo/WalletInfo';
-import WalletList from '../../WalletList/WalletList';
 import { useWalletApiKey } from './useWalletApiKey';
+import styles from './WalletApiKey.module.scss'; // Assuming you will create a SCSS module
 
 interface Props {}
 

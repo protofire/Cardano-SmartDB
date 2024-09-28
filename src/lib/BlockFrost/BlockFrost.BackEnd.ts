@@ -13,11 +13,11 @@ import {
     UTxO,
     Unit,
     applyDoubleCborEncoding,
-    fromHex
+    fromHex,
 } from 'lucid-cardano';
 import { console_error, console_log } from '../../Commons/BackEnd/globalLogs.js';
 import { API_TIMEOUT } from '../../Commons/Constants/constants.js';
-import { createQueryURLString, isNullOrBlank, toJson } from '../../Commons/utils.js';
+import { createQueryURLString, delay, isNullOrBlank, toJson } from '../../Commons/utils.js';
 import { fetchWrapperBackEnd } from '../FetchWrapper/FetchWrapper.BackEnd.js';
 
 const lucid = '0.10.7'; // Lucid version
@@ -32,9 +32,14 @@ export class BlockfrostCustomProviderBackEnd extends Blockfrost {
     // }
 
     async getProtocolParameters() {
-        const result = await fetchWrapperBackEnd(`${this.url}/epochs/latest/parameters`, {
-            headers: { project_id: this.projectId, lucid },
-        }).then((res) => res.json());
+        const result = await fetchWrapperBackEnd(
+            `${this.url}/epochs/latest/parameters`,
+            {
+                headers: { project_id: this.projectId, lucid },
+            },
+            undefined,
+            3
+        ).then((res) => res.json());
         return {
             minFeeA: parseInt(result.min_fee_a),
             minFeeB: parseInt(result.min_fee_b),
@@ -65,14 +70,17 @@ export class BlockfrostCustomProviderBackEnd extends Blockfrost {
         let result: any[] = [];
         let page = 1;
         while (true) {
-            const pageResult = await fetchWrapperBackEnd(`${this.url}/addresses/${queryPredicate}/utxos?page=${page}`, { headers: { project_id: this.projectId, lucid } }).then(
-                (res) => res.json()
-            );
+            const pageResult = await fetchWrapperBackEnd(
+                `${this.url}/addresses/${queryPredicate}/utxos?page=${page}`,
+                { headers: { project_id: this.projectId, lucid } },
+                undefined,
+                3
+            ).then((res) => res.json());
             if (pageResult.error) {
                 if (pageResult.status_code === 404) {
                     return [];
                 } else {
-                    throw new Error('Could not fetchWrapperBackEnd UTxOs from Blockfrost. Try again.');
+                    throw new Error(`Could not fetchWrapperBackEnd UTxOs from Blockfrost. Error: ${toJson(pageResult.error)}`);
                 }
             }
             result = result.concat(pageResult);
@@ -93,14 +101,19 @@ export class BlockfrostCustomProviderBackEnd extends Blockfrost {
         let result: any[] = [];
         let page = 1;
         while (true) {
-            const pageResult = await fetchWrapperBackEnd(`${this.url}/addresses/${queryPredicate}/utxos/${unit}?page=${page}`, {
-                headers: { project_id: this.projectId, lucid },
-            }).then((res) => res.json());
+            const pageResult = await fetchWrapperBackEnd(
+                `${this.url}/addresses/${queryPredicate}/utxos/${unit}?page=${page}`,
+                {
+                    headers: { project_id: this.projectId, lucid },
+                },
+                undefined,
+                3
+            ).then((res) => res.json());
             if (pageResult.error) {
                 if (pageResult.status_code === 404) {
                     return [];
                 } else {
-                    throw new Error('Could not fetchWrapperBackEnd UTxOs from Blockfrost. Try again.');
+                    throw new Error(`Could not fetchWrapperBackEnd UTxOs from Blockfrost. Error: ${toJson(pageResult.error)}`);
                 }
             }
             result = result.concat(pageResult);
@@ -110,7 +123,9 @@ export class BlockfrostCustomProviderBackEnd extends Blockfrost {
         return this.blockfrostUtxosToUtxos2(result);
     }
     async getUtxoByUnit(unit: Unit): Promise<UTxO> {
-        const addresses = await fetchWrapperBackEnd(`${this.url}/assets/${unit}/addresses?count=2`, { headers: { project_id: this.projectId, lucid } }).then((res) => res.json());
+        const addresses = await fetchWrapperBackEnd(`${this.url}/assets/${unit}/addresses?count=2`, { headers: { project_id: this.projectId, lucid } }, undefined, 3).then((res) =>
+            res.json()
+        );
         if (!addresses || addresses.error) {
             throw new Error('Unit not found.');
         }
@@ -129,7 +144,9 @@ export class BlockfrostCustomProviderBackEnd extends Blockfrost {
         const queryHashes = [...new Set(outRefs.map((outRef) => outRef.txHash))];
         const utxos = await Promise.all(
             queryHashes.map(async (txHash) => {
-                const result = await fetchWrapperBackEnd(`${this.url}/txs/${txHash}/utxos`, { headers: { project_id: this.projectId, lucid } }).then((res) => res.json());
+                const result = await fetchWrapperBackEnd(`${this.url}/txs/${txHash}/utxos`, { headers: { project_id: this.projectId, lucid } }, undefined, 3).then((res) =>
+                    res.json()
+                );
                 if (!result || result.error) {
                     return [];
                 }
@@ -150,7 +167,9 @@ export class BlockfrostCustomProviderBackEnd extends Blockfrost {
             .filter((utxo) => outRefs.some((outRef) => utxo.txHash === outRef.txHash && utxo.outputIndex === outRef.outputIndex));
     }
     async getDelegation(rewardAddress: RewardAddress): Promise<Delegation> {
-        const result = await fetchWrapperBackEnd(`${this.url}/accounts/${rewardAddress}`, { headers: { project_id: this.projectId, lucid } }).then((res) => res.json());
+        const result = await fetchWrapperBackEnd(`${this.url}/accounts/${rewardAddress}`, { headers: { project_id: this.projectId, lucid } }, undefined, 3).then((res) =>
+            res.json()
+        );
         if (!result || result.error) {
             return { poolId: null, rewards: 0n };
         }
@@ -160,9 +179,14 @@ export class BlockfrostCustomProviderBackEnd extends Blockfrost {
         };
     }
     async getDatum(datumHash: DatumHash): Promise<Datum> {
-        const datum = await fetchWrapperBackEnd(`${this.url}/scripts/datum/${datumHash}/cbor`, {
-            headers: { project_id: this.projectId, lucid },
-        })
+        const datum = await fetchWrapperBackEnd(
+            `${this.url}/scripts/datum/${datumHash}/cbor`,
+            {
+                headers: { project_id: this.projectId, lucid },
+            },
+            undefined,
+            3
+        )
             .then((res) => res.json())
             .then((res) => res.cbor);
         if (!datum || datum.error) {
@@ -173,9 +197,14 @@ export class BlockfrostCustomProviderBackEnd extends Blockfrost {
     awaitTx(txHash: TxHash, checkInterval = 3000): Promise<boolean> {
         return new Promise((res) => {
             const confirmation = setInterval(async () => {
-                const isConfirmed = await fetchWrapperBackEnd(`${this.url}/txs/${txHash}`, {
-                    headers: { project_id: this.projectId, lucid },
-                }).then((res) => res.json());
+                const isConfirmed = await fetchWrapperBackEnd(
+                    `${this.url}/txs/${txHash}`,
+                    {
+                        headers: { project_id: this.projectId, lucid },
+                    },
+                    undefined,
+                    3
+                ).then((res) => res.json());
                 if (isConfirmed && !isConfirmed.error) {
                     clearInterval(confirmation);
                     await new Promise((res) => setTimeout(() => res(1), 1000));
@@ -185,18 +214,23 @@ export class BlockfrostCustomProviderBackEnd extends Blockfrost {
         });
     }
     async submitTx(tx: Transaction): Promise<TxHash> {
-        const result = await fetchWrapperBackEnd(`${this.url}/tx/submit`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/cbor',
-                project_id: this.projectId,
-                lucid,
+        const result = await fetchWrapperBackEnd(
+            `${this.url}/tx/submit`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/cbor',
+                    project_id: this.projectId,
+                    lucid,
+                },
+                body: fromHex(tx),
             },
-            body: fromHex(tx),
-        }).then((res) => res.json());
+            undefined,
+            3
+        ).then((res) => res.json());
         if (!result || result.error) {
             if (result?.status_code === 400) throw new Error(result.message);
-            else throw new Error('Could not submit transaction.');
+            else throw new Error(`Could not submit transaction: ${toJson(result)}`);
         }
         return result;
     }

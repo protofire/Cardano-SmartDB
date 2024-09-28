@@ -26,17 +26,34 @@ export const isMainnet = process.env.NEXT_PUBLIC_CARDANO_NET === 'Mainnet'
 
 //----------------------------------------------------------------------
 
-export const ADA_TX_FEE_MARGIN = 10_000_000n
+export const API_TIMEOUT = 1 * 10 * 1000; // = 10 segundos
+export const API_TRY_AGAIN = 1 * 1000; // = 1 segundos
+
+export const WAIT_FOR_WALLET_ENABLING = 1 * 4 * 1000; // = 4 segundos
+export const WAIT_FOR_WALLET_EXTENSIONS  = 1 * 1000; // = 1 segundos
+export const WAIT_FOR_WALLET_ACTIVATION  = 1 * 1000; // = 1 segundos
+
+//----------------------------------------------------------------------
+
+export const MONITOR_JOB_INTERVAL = 1 * 1000; // = 1 segundos
+
+//----------------------------------------------------------------------
+
+export const TIMEOUT_PROXY_BLOCKFROST = 25000; // = 25 segundos
+
+//----------------------------------------------------------------------
 
 //for creating a valid time range tx
 export const VALID_TX_TIME_RANGE = 5 * 60 * 1000; // = 5 minutos
 // export const ValidTimeRangeInSlots = 15 * 60  // = 15 minutos
 
 export const TX_CHECK_INTERVAL = 5 * 1000; // = 5 segundos
-export const TX_PREPARING_TIME = 10 * 60 * 1000; // = 2 minutos
-export const TX_CONSUMING_TIME = 6 * 60 * 1000; // = 15 minutos
-export const TX_TIMEOUT = 30 * 60 * 1000; // = 15 minutos
+export const TX_PREPARING_TIME = 10 * 60 * 1000; // = 10 minutos
+export const TX_CONSUMING_TIME = 6 * 60 * 1000; // = 6 minutos
+export const TX_TIMEOUT = 30 * 60 * 1000; // = 20 minutos
+export const TX_WAIT_FOR_SYNC = 5 * 1000; // = 5 segundos
 
+//----------------------------------------------------------------------
 
 // smart contract
 // oracleData_Valid_Time = 300,000 (5 * 60 * 1000 = 5 minutes)
@@ -60,22 +77,15 @@ export const SYNC_SERVER_TIME_2M_MS = 2 * 60 * 1000; // 2 minute
 
 //------------------------------------------
 
-export const TIME_OUT_TRY_TX = 6000; // = 6 segundos
-export const TIME_OUT_TRY_UPDATESTAKINGPOOL = 5000; // = 4 segundos
-export const TIME_SAFETY_AFTER_TX = 5000; // = 5 segundos
-export const TIME_WAIT_DEPLOY = 4000; // = 4 segundos
-
-//------------------------------------------
-
 export const MAX_TX_EX_MEM = 14_000_000;
 export const MAX_TX_EX_STEPS = 10_000_000_000;
 export const MMAX_TX_SIZE = 16_384;
 
 //----------------------------------------------------------------------
-export const API_TIMEOUT = 1 * 10 * 1000; // = 10 segundos
+
+export const ADA_TX_FEE_MARGIN = 10_000_000n
+
 //----------------------------------------------------------------------
-
-
 
 export const ADA_DECIMALS = 6;
 export const ADA_UI = isTestnet ? 't₳' : '₳';
@@ -97,6 +107,16 @@ export const TRANSACTION_STATUS_FAILED = 'failed';
 export const TRANSACTION_STATUS_TIMEOUT = 'timeout';
 export const TRANSACTION_STATUS_EXPIRED = 'expired';
 export const TRANSACTION_STATUS_UNKNOWN = 'unknown';
+
+export type TransactionStatus =
+    | typeof TRANSACTION_STATUS_PENDING
+    | typeof TRANSACTION_STATUS_CANCELED
+    | typeof TRANSACTION_STATUS_SUBMITTED
+    | typeof TRANSACTION_STATUS_CONFIRMED
+    | typeof TRANSACTION_STATUS_FAILED
+    | typeof TRANSACTION_STATUS_TIMEOUT
+    | typeof TRANSACTION_STATUS_EXPIRED
+    | typeof TRANSACTION_STATUS_UNKNOWN;
 
 //-------------------------------------------------------------
 

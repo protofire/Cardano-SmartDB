@@ -1,6 +1,5 @@
+import { useEffect, useState } from 'react';
 import { useAppStore } from 'smart-db';
-import styles from './Layout.module.scss';
-import { useState, useEffect } from 'react';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     //--------------------------------------

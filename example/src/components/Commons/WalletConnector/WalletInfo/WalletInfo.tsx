@@ -1,8 +1,8 @@
 import Image from 'next/image';
 import React from 'react';
 import { DISCONNECT, IUseWalletStore } from 'smart-db';
-import styles from './WalletInfo.module.scss'; // Assuming you will create a SCSS module
 import WalletApiKey from './WalletApiKey/WalletApiKey';
+import styles from './WalletInfo.module.scss'; // Assuming you will create a SCSS module
 
 interface Props {
     walletStore: IUseWalletStore;

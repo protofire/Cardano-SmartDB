@@ -2,7 +2,7 @@ import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
 import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
 import { TransactionEntity } from './Transaction.Entity.js';
-import { PaymentKeyHash, UTxO } from 'lucid-cardano';
+import { OutRef, PaymentKeyHash, UTxO } from 'lucid-cardano';
 import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
 import { TransactionDatum, TransactionRedeemer } from '../Commons/index.js';
 
@@ -56,7 +56,8 @@ export class TransactionEntityMongo extends BaseEntityMongo {
             ids: Record<string, string>;
             redeemers: Record<string, TransactionRedeemer>;
             datums: Record<string, TransactionDatum>;
-            consuming_UTxOs: UTxO[];
+            consuming_UTxOs: OutRef[];
+            reading_UTxOs: OutRef[];
         }
 
         const schema = new Schema<Interface>(
@@ -71,6 +72,7 @@ export class TransactionEntityMongo extends BaseEntityMongo {
                 redeemers: { type: Object, required: true },
                 datums: { type: Object, required: true },
                 consuming_UTxOs: { type: [Object], required: false },
+                reading_UTxOs: { type: [Object], required: false },
             },
             { timestamps: true }
         );

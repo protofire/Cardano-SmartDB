@@ -1,13 +1,24 @@
-import { ConnectedWalletInfo, TX_CHECK_INTERVAL, isEmulator, isObject, toJson } from '../../Commons/index.js';
-import { Blockfrost, ExternalWallet, Lucid, PrivateKey, TxSigned, WalletApi } from 'lucid-cardano';
-import { TRANSACTION_STATUS_CONFIRMED, TRANSACTION_STATUS_FAILED, TRANSACTION_STATUS_TIMEOUT, WalletTxParams } from '../../Commons/index.js';
+import { ExternalWallet, Lucid, PrivateKey, TxSigned, WalletApi } from 'lucid-cardano';
+import {
+    ConnectedWalletInfo,
+    TRANSACTION_STATUS_CONFIRMED,
+    TRANSACTION_STATUS_FAILED,
+    TRANSACTION_STATUS_TIMEOUT,
+    TX_CHECK_INTERVAL,
+    WalletTxParams,
+    delay,
+    isEmptyObject_usingJson,
+    isEmulator,
+    isObject,
+    toJson,
+} from '../../Commons/index.js';
 import { EmulatorEntity } from '../../Entities/Emulator.Entity.js';
 import { TransactionEntity } from '../../Entities/Transaction.Entity.js';
 import { BaseSmartDBFrontEndApiCalls } from '../../FrontEnd/ApiCalls/Base/Base.SmartDB.FrontEnd.Api.Calls.js';
 import { TransactionFrontEndApiCalls } from '../../FrontEnd/ApiCalls/Transaction.FrontEnd.Api.Calls.js';
-import { TimeApi } from '../Time/index.js';
-import { BlockfrostCustomProviderFrontEnd } from '../BlockFrost/BlockFrost.FrontEnd.js';
 import { IUseWalletStore } from '../../store/types.js';
+import { BlockfrostCustomProviderFrontEnd } from '../BlockFrost/BlockFrost.FrontEnd.js';
+import { TimeApi } from '../Time/index.js';
 
 //--------------------------------------
 
@@ -17,7 +28,10 @@ export class LucidToolsFrontEnd {
     public static initializeLucidWithBlockfrost = async () => {
         console.log(`[Lucid] - initializeLucidWithBlockfrost`);
         try {
-            const lucid = await Lucid.new(new BlockfrostCustomProviderFrontEnd(process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost', 'xxxx'), process.env.NEXT_PUBLIC_CARDANO_NET! as any);
+            const lucid = await Lucid.new(
+                new BlockfrostCustomProviderFrontEnd(process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost', 'xxxx'),
+                process.env.NEXT_PUBLIC_CARDANO_NET! as any
+            );
             return lucid;
         } catch (error) {
             console.log(`[Lucid] - initializeLucidWithBlockfrost - Error: ${error}`);
@@ -244,9 +258,9 @@ export class LucidToolsFrontEnd {
             const transaction = await TransactionFrontEndApiCalls.getOneByParamsApi<TransactionEntity>(TransactionEntity, { hash: txHash });
             //--------------------------------------
             try {
-                console.log(`Tx Complete Resources:`);
+                console.log(`[Lucid] - Tx Resources:`);
                 const txSize = txComplete.txComplete.to_bytes().length;
-                console.error(toJson(this.getTxMemAndStepsUse(txSize, txComplete.txComplete.to_json())));
+                console.info(toJson(this.getTxMemAndStepsUse(txSize, txComplete.txComplete.to_json())));
                 //--------------------------------------
                 let txCompleteSigned: TxSigned;
                 try {
@@ -278,24 +292,27 @@ export class LucidToolsFrontEnd {
                 return txHash;
             } catch (error: any) {
                 if (transaction !== undefined) {
-                    const errorObj = isObject(error) ? { ...error, walletInfo } : { error: error, walletInfo };
-                    await TransactionFrontEndApiCalls.updateFailedTransactionApi(transaction.hash, errorObj);
-                    // await TransactionFrontEndApiCalls.updateMeWithParamsApi(transaction, { status: TRANSACTION_STATUS_FAILED, error: { ...errorObj, walletInfo } });
-                    // //-------------------------
-                    // const consuming_UTxOs = transaction.consuming_UTxOs;
-                    // for (let consuming_UTxO of consuming_UTxOs) {
-                    //     //-------------------------
-                    //     const txHash = consuming_UTxO.txHash;
-                    //     const outputIndex = consuming_UTxO.outputIndex;
-                    //     //-------------------------
-                    //     const smartUTxO: SmartUTxOEntity | undefined = await SmartUTxOApi.getOneByParamsApi_({ txHash, outputIndex });
-                    //     //-------------------------
-                    //     if (smartUTxO === undefined) {
-                    //         throw `smartUTxO not found for txHash: ${txHash} - outputIndex: ${outputIndex}`;
-                    //     }
-                    //     //-------------------------
-                    //     await SmartUTxOApi.updateMeWithParamsApi(smartUTxO, { isConsuming: undefined, isPreparing: undefined });
-                    // }
+                    let errorObj;
+                    if (error instanceof Error) {
+                        // Para errores estándar de JavaScript
+                        errorObj = {
+                            name: error.name,
+                            message: error.message,
+                            stack: error.stack,
+                            // Capturar propiedades adicionales que puedan existir en el error
+                            ...(error as any),
+                        };
+                    } else if (typeof error === 'object' && !isEmptyObject_usingJson(error)) {
+                        errorObj = {
+                            ...JSON.parse(toJson(error)), // Maneja objetos circulares
+                        };
+                    } else {
+                        // Para cualquier otro tipo de error
+                        errorObj = {
+                            error: String(error),
+                        };
+                    }
+                    await TransactionFrontEndApiCalls.updateFailedTransactionApi(transaction.hash, { error: errorObj, walletInfo });
                 }
                 throw error;
             }
@@ -308,7 +325,7 @@ export class LucidToolsFrontEnd {
     public static async awaitTxSimple(lucid: Lucid, txHash: string) {
         try {
             const result = await lucid.awaitTx(txHash);
-            await new Promise((resolve) => setTimeout(resolve, 5000));
+            await delay(TX_CHECK_INTERVAL);
             return result;
         } catch (error) {
             console.log(`[Lucid] - awaitTx - Error: ${error}`);
@@ -318,12 +335,12 @@ export class LucidToolsFrontEnd {
 
     public static async awaitTx(lucid: Lucid, txHash: string) {
         try {
+            await delay(1000);
             // Initialize result
             let result = null;
             // Start checking
             while (true) {
                 // Call your API to check if the transaction is confirmed
-                await new Promise((resolve) => setTimeout(resolve, 1000));
                 const txStatus = await TransactionFrontEndApiCalls.getTransactionStatusApi(txHash);
                 if (txStatus === TRANSACTION_STATUS_CONFIRMED) {
                     result = true;
@@ -337,8 +354,8 @@ export class LucidToolsFrontEnd {
                     console.log(`[Lucid] - awaitTx - Error: ${error}`);
                     throw error;
                 }
-                // Sleep for 5 seconds before the next iteration
-                await new Promise((resolve) => setTimeout(resolve, TX_CHECK_INTERVAL));
+                // Sleep for TX_CHECK_INTERVAL seconds before the next iteration
+                await delay(TX_CHECK_INTERVAL);
             }
             return result;
         } catch (error) {

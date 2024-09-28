@@ -1,4 +1,4 @@
-import type { PaymentKeyHash, UTxO } from 'lucid-cardano';
+import type { OutRef, PaymentKeyHash, UTxO } from 'lucid-cardano';
 import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
 import { TransactionDatum, TransactionRedeemer } from '../Commons/index.js';
@@ -81,7 +81,10 @@ export class TransactionEntityPostgreSQL extends BaseEntityPostgreSQL {
     datums!: Record<string, TransactionDatum>;
 
     @Column({ type: 'jsonb', nullable: true })
-    consuming_UTxOs!: UTxO[] | undefined;
+    consuming_UTxOs!: OutRef[] | undefined;
+
+    @Column({ type: 'jsonb', nullable: true })
+    reading_UTxOs!: OutRef[] | undefined;
 
     // #endregion fields
 }

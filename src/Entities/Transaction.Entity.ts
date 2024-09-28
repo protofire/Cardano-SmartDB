@@ -1,4 +1,4 @@
-import { type PaymentKeyHash } from 'lucid-cardano';
+import { OutRef, type PaymentKeyHash } from 'lucid-cardano';
 import 'reflect-metadata';
 import { Convertible, TransactionDatum, TransactionRedeemer, asEntity } from '../Commons/index.js';
 import { BaseEntity } from './Base/Base.Entity.js';
@@ -29,14 +29,6 @@ export class TransactionEntity extends BaseEntity {
     @Convertible()
     error!: Object;
 
-    // export const TRANSACTION_STATUS_PENDING = 'pending';
-    // export const TRANSACTION_STATUS_CANCELED = 'canceled';
-    // export const TRANSACTION_STATUS_SUBMITTED = 'submitted';
-    // export const TRANSACTION_STATUS_CONFIRMED = 'confirmed';
-    // export const TRANSACTION_STATUS_FAILED = 'failed';
-    // export const TRANSACTION_STATUS_EXPIRED = 'expired';
-    // export const TRANSACTION_STATUS_UNKNOWN = 'unknown';
-
     @Convertible({ type: Object })
     ids!: Record<string, string>;
 
@@ -47,7 +39,10 @@ export class TransactionEntity extends BaseEntity {
     datums!: Record<string, TransactionDatum>;
 
     @Convertible({ type: Object })
-    consuming_UTxOs!: UTxO[];
+    consuming_UTxOs!: OutRef[];
+
+    @Convertible({ type: Object })
+    reading_UTxOs!: OutRef[];
 
     // #endregion fields
 }

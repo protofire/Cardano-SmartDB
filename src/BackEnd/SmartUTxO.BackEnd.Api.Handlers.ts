@@ -1,7 +1,7 @@
 import { NextApiResponse } from 'next';
 import { BackEndApiHandlersFor, OptionsGet, OptionsGetOne, sanitizeForDatabase, showData, yupValidateOptionsGet, yupValidateOptionsGetOne } from '../Commons/index.js';
 import { console_error, console_log } from '../Commons/BackEnd/globalLogs.js';
-import yup from '../Commons/yupLocale.js';
+import { yup }  from '../Commons/yupLocale.js';
 import { SmartUTxOEntity } from '../Entities/SmartUTxO.Entity.js';
 import { NextApiRequestAuthenticated } from '../lib/Auth/types.js';
 import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';

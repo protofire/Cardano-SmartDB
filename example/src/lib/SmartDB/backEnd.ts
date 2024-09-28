@@ -10,6 +10,10 @@ export * from './Entities/index.BackEnd';
 export function initBackEnd() {
     initBackEndSmartDB();
     const endpointsManager = EndpointsManager.getInstance();
-    // endpointsManager.setPublicEndPointsInternet([/^\/api\/blockfrost\/.+/]);
-    endpointsManager.setPublicEndPointsInternet([/^\/api\/product\/all/]);
+    // Set the public endpoints that will be exposed on the internet using the regular expression
+    // NOTE: Uncomment the following line to enable the endpoint for testing purposes, also related with npm run test-api
+    // endpointsManager.setPublicEndPointsInternet([/^\/api\/test\/?.*/]);
+    endpointsManager.setPublicEndPointsInternet([/^\/api\/free\/?.*/]);
+    endpointsManager.setPublicEndPointsInternet([/^\/api\/blockfrost\/.+/]);
+    endpointsManager.setPublicEndPointsInternet([/^\/api\/transactions\/.+/]);
 }

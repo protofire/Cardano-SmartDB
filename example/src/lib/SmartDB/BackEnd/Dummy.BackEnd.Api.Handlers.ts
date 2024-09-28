@@ -1,6 +1,5 @@
 import { Assets, Tx } from 'lucid-cardano';
 import { NextApiResponse } from 'next';
-import yup from 'smart-db/Commons/yupLocale';
 import {
     BackEndApiHandlersFor,
     BackEndAppliedFor,
@@ -28,17 +27,18 @@ import {
     sanitizeForDatabase,
     showData,
     strToHex,
-    walletTxParamsSchema
+    walletTxParamsSchema,
+    yup,
 } from 'smart-db/backEnd';
 import {
-    ClaimTxParams,
-    CreateTxParams,
+    ClaimDummyTxParams,
+    CreateDummyTxParams,
     DUMMY_CLAIM,
     DUMMY_CREATE,
     DUMMY_UPDATE,
-    UpdateTxParams,
-    createTxParamsSchema,
-    updateTxParamsSchema,
+    UpdateDummyTxParams,
+    createDummyTxParamsSchema,
+    updateDummyTxParamsSchema,
 } from '../../Commons/Constants/transactions';
 import { DummyEntity } from '../Entities/Dummy.Entity';
 import { DummyPolicyRedeemerBurnID, DummyPolicyRedeemerMintID, DummyValidatorRedeemerClaim, DummyValidatorRedeemerDatumUpdate } from '../Entities/Redeemers/Dummy.Redeemer';
@@ -292,7 +292,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 //-------------------------
                 const schemaBody = yup.object().shape({
                     walletTxParams: walletTxParamsSchema,
-                    txParams: createTxParamsSchema,
+                    txParams: createDummyTxParamsSchema,
                 });
                 //-------------------------
                 let validatedBody;
@@ -303,7 +303,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                     return res.status(400).json({ error });
                 }
                 //--------------------------------------
-                const { txParams, walletTxParams }: { txParams: CreateTxParams; walletTxParams: WalletTxParams } = validatedBody;
+                const { txParams, walletTxParams }: { txParams: CreateDummyTxParams; walletTxParams: WalletTxParams } = validatedBody;
                 //--------------------------------------
                 console_log(0, this._Entity.className(), `Create Tx - txParams: ${showData(txParams)}`);
                 //--------------------------------------
@@ -409,7 +409,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 //-------------------------
                 const sanitizedBody = sanitizeForDatabase(req.body);
                 //-------------------------
-                const { walletTxParams, txParams }: { walletTxParams: WalletTxParams; txParams: ClaimTxParams } = sanitizedBody;
+                const { walletTxParams, txParams }: { walletTxParams: WalletTxParams; txParams: ClaimDummyTxParams } = sanitizedBody;
                 //--------------------------------------
                 console_log(0, this._Entity.className(), `Claim Tx - txParams: ${showData(txParams)}`);
                 //--------------------------------------
@@ -439,6 +439,8 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                     throw `Dummy UTxO is being used, please wait and try again`;
                 }
                 //--------------------------------------
+                const dummy_UTxO = dummy_SmartUTxO.getUTxO();
+                //--------------------------------------
                 const lucidAC_BurnID = datumID_CS + strToHex(datumID_TN);
                 const valueFor_Burn_ID: Assets = { [lucidAC_BurnID]: -1n };
                 console_log(0, this._Entity.className(), `Claim Tx - valueFor_Burn_ID: ${showData(valueFor_Burn_ID)}`);
@@ -460,7 +462,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 //--------------------------------------
                 tx = await tx
                     .mintAssets(valueFor_Burn_ID, dummyPolicyRedeemerBurnID_Hex)
-                    .collectFrom([dummy_SmartUTxO], dummyValidatorRedeemerClaim_Hex)
+                    .collectFrom([dummy_UTxO], dummyValidatorRedeemerClaim_Hex)
                     .attachMintingPolicy(mintingIdDummy)
                     .attachSpendingValidator(validatorDummy)
                     .addSigner(address);
@@ -501,7 +503,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                         dummyValidatorRedeemerClaim: transactionDummyValidatorRedeemerClaim,
                     },
                     datums: { dummyDatum_In: transactionDummyDatum_In },
-                    consuming_UTxOs: [dummy_SmartUTxO],
+                    consuming_UTxOs: [dummy_UTxO],
                 });
                 await TransactionBackEndApplied.create(transaction);
                 //--------------------------------------
@@ -528,7 +530,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 //-------------------------
                 const schemaBody = yup.object().shape({
                     walletTxParams: walletTxParamsSchema,
-                    txParams: updateTxParamsSchema,
+                    txParams: updateDummyTxParamsSchema,
                 });
                 //-------------------------
                 let validatedBody;
@@ -539,7 +541,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                     return res.status(400).json({ error });
                 }
                 //--------------------------------------
-                const { walletTxParams, txParams }: { walletTxParams: WalletTxParams; txParams: UpdateTxParams } = validatedBody;
+                const { walletTxParams, txParams }: { walletTxParams: WalletTxParams; txParams: UpdateDummyTxParams } = validatedBody;
                 //--------------------------------------
                 console_log(0, this._Entity.className(), `Update Tx - txParams: ${showData(txParams)}`);
                 //--------------------------------------
@@ -573,6 +575,8 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                     throw `Dummy UTxO is being used, please wait and try again`;
                 }
                 //--------------------------------------
+                const dummy_UTxO = dummy_SmartUTxO.getUTxO();
+                //--------------------------------------
                 const paymentPKH = addressToPubKeyHash(address);
                 const datumPlainObject = {
                     ddPaymentPKH: paymentPKH,
@@ -598,7 +602,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 let tx: Tx = lucid.newTx();
                 //--------------------------------------
                 tx = await tx
-                    .collectFrom([dummy_SmartUTxO], dummyValidatorRedeemerDatumUpdate_Hex)
+                    .collectFrom([dummy_UTxO], dummyValidatorRedeemerDatumUpdate_Hex)
                     .payToContract(validatorAddress, { inline: dummyDatum_Out_Hex }, valueFor_DummyDatum_Out)
                     .attachSpendingValidator(validatorDummy)
                     .addSigner(address);
@@ -638,7 +642,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                         dummyValidatorRedeemerDatumUpdate: transactionDummyValidatorRedeemerDatumUpdate,
                     },
                     datums: { dummyDatum_In: transactionDummyDatum_In, dummyDatum_Out: transactionDummyDatum_Out },
-                    consuming_UTxOs: [dummy_SmartUTxO],
+                    consuming_UTxOs: [dummy_UTxO],
                 });
                 await TransactionBackEndApplied.create(transaction);
                 //--------------------------------------

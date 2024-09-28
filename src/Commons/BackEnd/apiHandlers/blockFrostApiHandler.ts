@@ -1,6 +1,6 @@
 import { NextApiResponse } from 'next';
 import { NextApiRequestAuthenticated } from '../../../lib/Auth/types.js';
-import { LucidLUCID_NETWORK_MAINNET_NAME, LucidLUCID_NETWORK_PREPROD_NAME, LucidLUCID_NETWORK_PREVIEW_NAME, isEmulator } from '../../Constants/constants.js';
+import { LucidLUCID_NETWORK_MAINNET_NAME, LucidLUCID_NETWORK_PREPROD_NAME, LucidLUCID_NETWORK_PREVIEW_NAME, TIMEOUT_PROXY_BLOCKFROST, isEmulator } from '../../Constants/constants.js';
 import { showData } from '../../utils.js';
 import { console_error, console_log } from '../globalLogs.js';
 import { globalSettings } from '../globalSettings.js';
@@ -134,8 +134,8 @@ export const blockfrostProxyApiHandlerWithContext = async (req: NextApiRequestAu
         //--------------------
         const response = await httpProxyMiddleware(req, res, {
             target,
-            timeout: 25000, // 10 seconds
-            proxyTimeout: 25000, // 10 seconds
+            timeout: TIMEOUT_PROXY_BLOCKFROST,
+            proxyTimeout: TIMEOUT_PROXY_BLOCKFROST, 
             headers: {
                 'Content-Type': req.headers['content-type'] ? req.headers['content-type'] : 'text/plain',
                 project_id: PROJECT_ID,

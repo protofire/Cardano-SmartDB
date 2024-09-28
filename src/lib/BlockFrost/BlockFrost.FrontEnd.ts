@@ -72,7 +72,7 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
                 if (pageResult.status_code === 404) {
                     return [];
                 } else {
-                    throw new Error(`Could not fetchWrapper UTxOs from Blockfrost. ${toJson(pageResult.error)}. Try again.`);
+                    throw new Error(`Could not fetchWrapper UTxOs from Blockfrost. Error: ${toJson(pageResult.error)}`);
                 }
             }
             result = result.concat(pageResult);
@@ -100,7 +100,7 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
                 if (pageResult.status_code === 404) {
                     return [];
                 } else {
-                    throw new Error(`Could not fetchWrapper UTxOs from Blockfrost. ${toJson(pageResult.error)}.Try again.`);
+                    throw new Error(`Could not fetchWrapper UTxOs from Blockfrost. Error: ${toJson(pageResult.error)}`);
                 }
             }
             result = result.concat(pageResult);
@@ -196,7 +196,7 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
         }).then((res) => res.json());
         if (!result || result.error) {
             if (result?.status_code === 400) throw new Error(result.message);
-            else throw new Error('Could not submit transaction.');
+            else throw new Error(`Could not submit transaction: ${toJson(result)}`);
         }
         return result;
     }

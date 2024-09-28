@@ -1,5 +1,8 @@
-import { ConversionFunctions, deserealizeBigInt, executeFunction, getCombinedConversionFunctions, isNullOrBlank, toJson } from '../../backEnd.js';
+import 'reflect-metadata';
+import { deserealizeBigInt } from '../../Commons/conversions.js';
+import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
 import { PostgreSQLAppliedFor } from '../../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
+import { ConversionFunctions, executeFunction, toJson } from '../../Commons/index.js';
 import { BaseEntity } from './Base.Entity.js';
 
 @PostgreSQLAppliedFor([BaseEntity])
@@ -95,7 +98,7 @@ export class BaseEntityPostgreSQL {
                             value = JSON.parse(value.toJsonString());
                         } else if (value !== undefined && value !== null && conversions.type !== Number && conversions.type !== String && conversions.type !== Boolean) {
                             value = JSON.parse(toJson(value));
-                        } else if (value === undefined){
+                        } else if (value === undefined) {
                             value = null;
                         }
                     }
@@ -188,14 +191,15 @@ export class BaseEntityPostgreSQL {
                                 value = await executeFunction(type.fromPlainObject, value);
                             }
                         } else if (
-                            value !== undefined && value !== null &&
+                            value !== undefined &&
+                            value !== null &&
                             conversions.type !== Number &&
                             conversions.type !== String &&
                             conversions.type !== Boolean &&
                             conversions.type !== Object
                         ) {
                             value = new type(value);
-                        } else if (value === null){
+                        } else if (value === null) {
                             value = undefined;
                         }
                         return value;

@@ -2,10 +2,11 @@ import { NextApiRequestAuthenticated } from '../lib/Auth/index.js';
 import { NextApiResponse } from 'next';
 import { BackEndApiHandlersFor, sanitizeForDatabase, showData } from '../Commons/index.js';
 import { console_error, console_log } from '../Commons/BackEnd/globalLogs.js';
-import yup from '../Commons/yupLocale.js';
+import { yup }  from '../Commons/yupLocale.js';
 import { TransactionEntity } from '../Entities/Transaction.Entity.js';
 import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
 import { TransactionBackEndApplied } from './Transaction.BackEnd.Applied.js';
+import { getGlobalTransactionStatusUpdater } from '../Commons/BackEnd/globalTransactionStatusUpdater.js';
 
 @BackEndApiHandlersFor(TransactionEntity)
 export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
@@ -104,7 +105,7 @@ export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
                 //--------------------------------------
                 const { error } = validatedBody;
                 //-------------------------
-                await this._BackEndApplied.updateFailedTransaction(txHash, error);
+                await this._BackEndApplied.setFailedTransactionByHash(txHash, error);
                 //-------------------------
                 console_log(-1, this._Entity.className(), `updateFailedTransactionApiHandler - GET - OK`);
                 //-------------------------
@@ -185,10 +186,9 @@ export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
                 //--------------------------------------
                 const { txHash } = validatedQuery;
                 //-------------------------
-                // este metodo debe iniciar un ciclo loop en el server, pero no quedarse esperando el resultado aqui
-                // ese ciclo va a actualizar el estado de la transaccion y voy a crear otro metodo para verificar el estado de cada transaccion
-                // solamente me va a devolver si el ciclo inicia correctamente
-                this._BackEndApplied.submitAndBeginStatusUpdaterJob(txHash);
+                await this._BackEndApplied.setSubmittedTransactionByHash(txHash);
+                // NOTE: este metodo debe iniciar un ciclo loop en el server, pero no quedarse esperando el resultado aqui, por eso no uso AWAIT
+                this._BackEndApplied.beginStatusUpdaterJob();
                 //-------------------------
                 console_log(-1, this._Entity.className(), `submitAndBeginStatusUpdaterJobApiHandler - GET - OK`);
                 //-------------------------

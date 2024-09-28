@@ -1,18 +1,17 @@
+import { yup } from 'smart-db';
 import request from 'supertest';
-import { baseURL, populateTestData, deleteTestData, MAXTIMEOUT } from './baseTestCases';
-import yup from 'smart-db/Commons/yupLocale';
-import { showData } from 'smart-db';
+import { baseURL, deleteTestData, MAXTIMEOUT, populateTestData } from './baseTestCases.js';
 
-import { testCases as postCreateEntity } from './testCases-POST-Create-Entity';
-import { testCases as postUpdateEntity } from './testCases-POST-Update-Entity';
-import { testCases as getEntityExistsId } from './testCases-GET-Entity-Exists-Id';
-import { testCases as postEntityExists } from './testCases-POST-Entity-Exists';
-import { testCases as getEntityId } from './testCases-GET-Entity-Id';
-import { testCases as getEntityAll } from './testCases-GET-Entity-All';
-import { testCases as postEntityByParams } from './testCases-POST-Entity-ByParams';
-import { testCases as postEntityCount } from './testCases-POST-Entity-Count';
 import { testCases as deleteEntityId } from './testCases-DELETE-Entity-ById.js';
-import { testCases as othersCases } from './testCases-Others';
+import { testCases as getEntityAll } from './testCases-GET-Entity-All.js';
+import { testCases as getEntityExistsId } from './testCases-GET-Entity-Exists-Id.js';
+import { testCases as getEntityId } from './testCases-GET-Entity-Id.js';
+import { testCases as othersCases } from './testCases-Others.js';
+import { testCases as postCreateEntity } from './testCases-POST-Create-Entity.js';
+import { testCases as postEntityByParams } from './testCases-POST-Entity-ByParams.js';
+import { testCases as postEntityCount } from './testCases-POST-Entity-Count.js';
+import { testCases as postEntityExists } from './testCases-POST-Entity-Exists.js';
+import { testCases as postUpdateEntity } from './testCases-POST-Update-Entity.js';
 
 interface TestCase {
     method: 'GET' | 'POST' | 'DELETE'; // Add more methods if needed
@@ -87,7 +86,6 @@ describe('API Tests', () => {
                 '$description',
                 async (testCase) => {
                     const parsedTestCase = parseTestCase(testCase, testData);
-
                     const {
                         method,
                         url,

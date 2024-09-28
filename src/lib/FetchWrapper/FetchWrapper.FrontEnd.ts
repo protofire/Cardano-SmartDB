@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { isFrontEndEnvironment } from '../../Commons/utils.js';
+import { delay, isFrontEndEnvironment, toJson } from '../../Commons/utils.js';
+import { API_TRY_AGAIN } from '../../Commons/Constants/constants.js';
 
 export const fetchWrapper = async (url: string, options: RequestInit = {}, swAddChallengue: boolean = true, retryCount: number = 0, timeout: number = 0): Promise<Response> => {
     //----------------------
@@ -47,7 +48,7 @@ export function createApiRequest(url: string, options: RequestInit, headers: Hea
             //----------------------
             const response: AxiosResponse<any, any> = await axios(axiosOptions);
             //----------------------
-            const fetchResponse: Response = new Response(JSON.stringify(response.data), {
+            const fetchResponse: Response = new Response(toJson(response.data), {
                 status: response.status,
                 statusText: response.statusText,
                 headers: new Headers(
@@ -60,37 +61,92 @@ export function createApiRequest(url: string, options: RequestInit, headers: Hea
             return fetchResponse;
             //----------------------
         } catch (error: any) {
+            let errorInfo: any = {
+                attempt: count + 1,
+                error: 'Unknown error',
+                message: 'Unknown error',
+                status: 500,
+                status_code: 500,
+                statusText: 'Internal Server Error',
+            };
             if (axios.isAxiosError(error)) {
-                const message =
-                    error.response?.data?.error?.message !== undefined
-                        ? error.response?.data?.error?.message
-                        : error.response?.data?.error !== undefined
-                        ? error.response?.data?.error
-                        : error.message !== undefined
-                        ? error.message
-                        : 'Unknown error';
-                errors.push({ attempt: count + 1, error: message });
+                errorInfo = {
+                    attempt: count + 1,
+                    error: error.response?.data?.error || error.response?.data || error.message || error.response?.statusText || 'Unknown error',
+                    message: error.response?.data?.message || error.message || error.response?.statusText || 'Unknown error',
+                    status: error.response?.status || 500,
+                    status_code: error.response?.data?.satus_code || error.response?.status || 500, 
+                    statusText: error.response?.statusText || 'Internal Server Error',
+                    config: error.config,
+                    code: error.code,
+                };
+            } else if (error?.code === 'ECONNABORTED') {
+                errorInfo = {
+                    attempt: count + 1,
+                    error: 'Request timed out',
+                    message: 'Request timed out',   
+                    status: 408,
+                    status_code: 408,
+                    statusText: 'Request Timeout',
+                    code: error.code,
+                };
+            } else if (error instanceof Error) {
+                errorInfo = {
+                    attempt: count + 1,
+                    error: error.message || 'Unknown error',
+                    message: error.message || 'Unknown error',
+                    status: 500,
+                    status_code: 500,
+                    statusText: 'Internal Server Error',
+                    name: error.name,
+                    stack: error.stack,
+                };
             } else {
-                const message = error.message !== undefined ? error.message : 'Unknown error';
-                errors.push({ attempt: count + 1, error: message });
+                // Capturar cualquier otro tipo de error
+                errorInfo = {
+                    attempt: count + 1,
+                    error: error || error.message || error.statusText || 'Unknown error',
+                    message: error.message || error.statusText || 'Unknown error',
+                    status: error.status || 500,
+                    status_code: error.status || 500,
+                    statusText: error.statusText || 'Internal Server Error',
+                };
             }
+            //----------------------
+            errors.push(errorInfo);
+            //----------------------
+            // Retry mechanism
             if (count < retryCount) {
+                await delay(API_TRY_AGAIN); // Delay before retrying
                 return retry(count + 1);
             }
-            const errorMessageResponse =
-                errors.length === 1 ? 'Request failed: ' + errors[0].error : 'All retries failed. ' + errors.map((err) => `Attempt ${err.attempt}: ${err.error}`).join(', ');
-            const errorResponse = new Response(
-                JSON.stringify({
-                    error: {
-                        message: errorMessageResponse,
-                    },
-                }),
-                {
-                    status: 500,
-                    statusText: 'Internal Server Error',
-                    headers: new Headers({ 'Content-Type': 'application/json' }),
-                }
-            );
+            //----------------------
+            let errorBody: any;
+            let responseStatus: number;
+            let responseStatusText: string;
+            //----------------------
+            const uniqueErrors = new Set(errors.map(err => err.status));
+            //----------------------
+            if (errors.length === 1 || uniqueErrors.size === 1) {
+                const singleError = errors[0];
+                errorBody = singleError;
+                responseStatus = errorBody.status || 500;
+                responseStatusText = errorBody.statusText || 'Internal Server Error';
+            } else {
+                errorBody = {
+                    error: 'Multiple errors occurred',
+                    details: errors
+                };
+                responseStatus = 500;
+                responseStatusText = 'Internal Server Error';
+            }
+            //----------------------
+            const errorResponse = new Response(toJson(errorBody), {
+                status: responseStatus,
+                statusText: responseStatusText,
+                headers: new Headers({ 'Content-Type': 'application/json' }),
+            });
+            //----------------------
             return errorResponse;
         }
     };

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import styles from './WalletList.module.scss'; // Assuming you will create a SCSS module
+import React from 'react';
+import { CardanoWallet, IUseWalletStore } from 'smart-db';
 import LoaderButton from '../../LoaderButton/LoaderButton';
-import { CardanoWallet, IUseWalletStore, LucidToolsFrontEnd, WALLET_ETERNL_ICON } from 'smart-db';
-import { Lucid } from 'lucid-cardano';
+import styles from './WalletList.module.scss'; // Assuming you will create a SCSS module
 
 interface Props {
     walletStore: IUseWalletStore;

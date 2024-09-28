@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { JobFrontEndApiCalls } from '../../FrontEnd/ApiCalls/Job.FrontEnd.Api.Calls.js';
 import { JobEntity } from '../../Entities/Job.Entity.js';
+import { MONITOR_JOB_INTERVAL } from '../../Commons/Constants/constants.js';
 
 export const useJobManager = () => {
     const [jobIds, setJobIds] = useState<string[]>([]);
@@ -83,7 +84,7 @@ export class JobManagerFrontEnd {
                 clearInterval(timeoutId);
                 rejectJob(new Error(`Error monitoring job ${jobId}: ${error}`));
             }
-        }, 1000);
+        }, MONITOR_JOB_INTERVAL);
 
         // Store the cleanup function for this jobId
         JobManagerFrontEnd.cleanups[jobId] = () => {

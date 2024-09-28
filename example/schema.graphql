@@ -1,0 +1,22 @@
+
+directive @entity on OBJECT
+directive @smartDBEntity on OBJECT
+directive @especialImports(fromSmart_db: [String], fromLucid_cardano: [String], rawImport: String) on OBJECT
+directive @index(indexName:[String]) on OBJECT
+directive @nullable on FIELD
+directive @especialType(typeName:String!) on FIELD
+directive @default(defaultValue:String!) on FIELD
+directive @convertible(params: [String]) on FIELD
+
+type Free @smartDBEntity {
+    fdValue: Int @nullable @convertible(params:["isForDatum: true"])
+}
+
+
+type Query @resolvers {
+    not_used: String
+}
+
+schema {
+    query: Query
+}

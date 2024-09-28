@@ -19,7 +19,6 @@ const nextConfig = {
     generateBuildId: async () => {
         // Generate your build ID here if needed
         // Return a unique value for each build, like a timestamp
-        // return 'dummyId';
         return new Date().getTime().toString();
     },
     experimental: {
@@ -29,53 +28,55 @@ const nextConfig = {
         // serverComponentsExternalPackages:['mongoose'] // <-- add this for mongoose and next13 '@typegoose/typegoose'
     },
     webpack: (config, { isServer }) => {
-        config.stats = 'verbose'; // or 'errors-only', 'minimal', etc.
-        config.resolve.alias['react-native-sqlite-storage'] = false;
+        // or 'errors-only', 'minimal', etc.
+        config.stats = 'verbose'; 
         config.experiments = {
             asyncWebAssembly: true,
             topLevelAwait: true,
             layers: true, // optional, with some bundlers/frameworks it doesn't work without
         };
-        config.resolve.fullySpecified = false; // This allows you to omit extensions when importing ES modules
-        //config.resolve.alias['aws-crt'] = path.resolve(__dirname, 'node_modules/aws-crt');
+        // This allows you to omit extensions when importing ES modules
+        config.resolve.fullySpecified = false; 
+        // Alias para importar módulos de ejemplo
         config.resolve.alias['@example'] = path.resolve(__dirname, './');
+        // Evitar las advertencias críticas sin desactivar completamente los módulos
+        config.module.parser = {
+            javascript: {
+                exprContextCritical: false, // Esto elimina las advertencias de dependencias críticas
+            },
+        };
         if (isServer) {
             config.externals.push('formidable');
+            config.resolve.fallback = {
+                ...config.resolve.fallback,
+                // Disable 'react-native-sqlite-storage' and other packages
+                'react-native-sqlite-storage': false,
+                fs: false,
+                net: false,
+                tls: false,
+                kerberos: false,
+                '@mongodb-js/zstd': false,
+                '@aws-sdk/credential-providers': false,
+                snappy: false,
+                aws4: false,
+                'mongodb-client-encryption': false,
+                '@google-cloud/spanner': false,
+                '@sap/hana-client': false,
+                'hdb-pool': false,
+                mysql: false,
+                mysql2: false,
+                oracledb: false,
+                'pg-native': false,
+                'pg-query-stream': false,
+                redis: false,
+                ioredis: false,
+                'better-sqlite3': false,
+                sqlite3: false,
+                'sql.js': false,
+                mssql: false,
+                'typeorm-aurora-data-api-driver': false,
+            };
         }
-        // config.resolve.alias['lucid-cardano'] = path.resolve(__dirname, 'node_modules/lucid-cardano');
-        // config.resolve.alias['easy-peasy'] = path.resolve(__dirname, 'node_modules/easy-peasy');
-        // config.resolve.alias['react-notifications-component'] = path.resolve(__dirname, 'node_modules/react-notifications-component');
-        // config.resolve.alias['mongosee'] = path.resolve(__dirname, 'node_modules/mongosee');
-
-        // config.resolve.fallback = {
-        //     ...config.resolve.fallback,
-        //    '@mongodb-js/zstd': false,
-        //     'kerberos': false,
-        //     'aws4': false,
-        //     'snappy': false,
-        //     '@aws-sdk/credential-providers': false,
-        //     'mongodb-client-encryption': false,
-        //     '@google-cloud/spanner': false,
-        //     '@sap/hana-client': false,
-        //     'hdb-pool': false,
-        //     'mysql': false,
-        //     'mysql2': false,
-        //     'oracledb': false,
-        //     'pg-native': false,
-        //     'pg-query-stream': false,
-        //     'typeorm-aurora-data-api-driver': false,
-        //     'redis': false,
-        //     'ioredis': false,
-        //     'better-sqlite3': false,
-        //     'sqlite3': false,
-        //     'sql.js': false,
-        //     'mssql': false,
-        //   };
-          
-        // config.module.rules.push({
-        //     test: /typeorm\/.+\.js$/,
-        //     loader: 'ignore-loader',
-        // });
 
         return config;
     },
@@ -110,7 +111,7 @@ const nextConfig = {
                     { key: 'X-Content-Type-Options', value: 'nosniff' },
                     // You could add more specific headers here if needed
                 ],
-            }
+            },
         ];
     },
 };

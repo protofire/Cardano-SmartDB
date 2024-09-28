@@ -8,7 +8,7 @@ import { NextApiRequestAuthenticated } from '../lib/Auth/types.js';
 import { AddressToFollowBackEndApplied } from './AddressToFollow.BackEnd.Applied.js';
 import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
 import { BaseSmartDBBackEndMethods } from './Base/Base.SmartDB.BackEnd.Methods.js';
-import yup from '../Commons/yupLocale.js';
+import { yup }  from '../Commons/yupLocale.js';
 
 //BackEnd Api Handlers siempre llevan seteado la entidad y el backend methods
 

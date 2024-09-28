@@ -5,7 +5,7 @@ import { console_error, console_log, tabs } from '../Commons/BackEnd/globalLogs.
 import { WalletBackEndApplied } from './Wallet.BackEnd.Applied.js';
 import { WalletEntity } from '../Entities/Wallet.Entity.js';
 import { showData, sanitizeForDatabase, BackEndApiHandlersFor } from '../Commons/index.js';
-import yup from '../Commons/yupLocale.js';
+import { yup }  from '../Commons/yupLocale.js';
 
 @BackEndApiHandlersFor(WalletEntity)
 export class WalletBackEndApiHandlers extends BaseBackEndApiHandlers {

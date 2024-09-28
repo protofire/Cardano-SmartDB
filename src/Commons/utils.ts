@@ -1,10 +1,9 @@
 import { BigNumber } from 'bignumber.js';
-import { createHash, randomBytes } from 'crypto';
-import { utcToZonedTime, format } from 'date-fns-tz';
-import { Decimals } from './types.js';
-import { ADA_DECIMALS, ADA_UI } from './Constants/constants.js';
+import { createHash } from 'crypto';
+import { format, utcToZonedTime } from 'date-fns-tz';
 import sanitizeHtml from 'sanitize-html';
-import he from 'he';
+import { ADA_DECIMALS, ADA_UI } from './Constants/constants.js';
+import { Decimals } from './types.js';
 
 //----------------------------------------------------------------------
 
@@ -56,7 +55,7 @@ export function getPostgreSQLTableName(baseName: string): string {
     return baseName
         .toLowerCase()
         .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join('');
 }
 
@@ -685,7 +684,6 @@ export function toJson(data: any, space?: string | number): string {
                     parents.push(this);
                     parentKeys.push(key);
                 }
-
                 if (parents.includes(value)) {
                     return 'Object Circular Reference';
                 }
@@ -697,7 +695,6 @@ export function toJson(data: any, space?: string | number): string {
             return value;
         };
     };
-
     if (data !== null && data !== undefined) {
         let json = JSON.stringify(data, getCircularReplacer(), space);
 
@@ -831,6 +828,13 @@ export function isEmptyObject(obj: any, swOnlyDefined: boolean = false) {
         }
     }
     return true;
+}
+
+export function isEmptyObject_usingJson(obj: any) {
+    if (toJson(obj) === '{}') {
+        return true;
+    }
+    return false;
 }
 
 export function isString(object: any): object is string {

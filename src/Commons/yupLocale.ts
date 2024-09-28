@@ -54,4 +54,4 @@ yup.addMethod(yup.mixed, 'bigint', function (message) {
     });
 });
 
-export default yup;
+export { yup };

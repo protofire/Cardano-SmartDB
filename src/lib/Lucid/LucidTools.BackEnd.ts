@@ -19,6 +19,36 @@ export class LucidToolsBackEnd extends LucidToolsFrontEnd {
         }
     };
 
+    public static initializeLucidWithBlockfrostAndWalletFromSeed = async (
+        walletSeed: string,
+        options?: {
+            addressType?: 'Base' | 'Enterprise';
+            accountIndex?: number;
+        }
+    ) => {
+        console.log(`[Lucid] - initializeLucidWithBlockfrostAndWalletFromSeed`);
+        try {
+            const lucid = await this.initializeLucidWithBlockfrost();
+            lucid.selectWalletFromSeed(walletSeed, options);
+            return lucid;
+        } catch (error) {
+            console.log(`[Lucid] - initializeLucidWithBlockfrostAndWalletFromSeed - Error: ${error}`);
+            throw error;
+        }
+    };
+
+    public static initializeLucidWithBlockfrostAndWalletFromPrivateKey = async (walletPrivateKey: string) => {
+        console.log('[Lucid] - initializeLucidWithBlockfrostAndWalletFromPrivateKey');
+        try {
+            const lucid = await this.initializeLucidWithBlockfrost();
+            lucid.selectWalletFromPrivateKey(walletPrivateKey);
+            return lucid;
+        } catch (error) {
+            console.log(`[Lucid] - initializeLucidWithBlockfrostAndWalletFromPrivateKey - Error: ${error}`);
+            throw error;
+        }
+    };
+
     public static initializeLucidWithBlockfrostAndExternalWallet = async (wallet: ExternalWallet) => {
         console.log('[Lucid] - initializeLucidWithBlockfrostAndExternalWallet');
         try {

@@ -1,7 +1,7 @@
 import { Lucid, SignedMessage } from 'lucid-cardano';
 import fetchWrapper from '../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
 import { strToHex, toJson } from '../../Commons/index.js';
-import yup from '../../Commons/yupLocale.js';
+import { yup }  from '../../Commons/yupLocale.js';
 import { Credentials, CredentialsAuthenticated } from './types.js';
 
 export class AuthApi {

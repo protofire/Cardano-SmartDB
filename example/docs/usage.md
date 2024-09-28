@@ -35,11 +35,12 @@
       - [Test Entity Files](#test-entity-files)
     - [Smart DB Entities](#smart-db-entities)
       - [Dummy Entity Files](#dummy-entity-files)
+  - [Scaffold for Automating Entity and File Creation](#scaffold-for-automating-entity-and-file-creation)
+    - [How to Use](#how-to-use)
   - [Root Backend File](#root-backend-file)
     - [Root Backend File Example](#root-backend-file-example)
     - [Endpoints Configuration](#endpoints-configuration)
   - [NextJs Api Handler Files](#nextjs-api-handler-files)
-  - [Automatic entity generator](#automatic-entity-generator)
 ## Usage
 
 ### Familiarize Yourself
@@ -297,7 +298,7 @@ npm run test-api
 The test results will be generated in a CSV file located at:
 
 ```
-__tests__/testResults.csv
+__tests__/api/testResults.csv
 ```
 
 ## Setting Up New Projects
@@ -518,6 +519,7 @@ The example includes a smartDb entity called "Dummy Entity".
 
 - **Entity Definition**: Located at `src/lib/SmartDB/Entities/Dummy.Entity.ts`
 - **MongoDB Model**: Located at `src/lib/SmartDB/Entities/Dummy.Entity.Mongo.ts`
+- **PostgreSQL Model**: Located at `src/lib/SmartDB/Entities/Dummy.Entity.PostgreSQL.ts`
 - **Backend Handlers**: Located at `src/lib/SmartDB/BackEnd/Dummy.BackEnd.Api.Handlers.ts`
 - **Frontend API Calls**: Located at `src/lib/SmartDB/FrontEnd/Dummy.FrontEnd.Api.Calls.ts`
 
@@ -770,9 +772,28 @@ export class DummyApi extends BaseSmartDBFrontEndApiCalls {
 }
 ```
 
+### Scaffold for Automating Entity and File Creation
+
+If you wish, you can use the scaffold to automate the creation of entities and their related files. This tool simplifies the process of generating the necessary components for new entities, allowing you to focus on core functionality.
+
+The scaffold will automatically generate:
+- Entity models
+- GraphQL schemas
+- Service files
+- API routes (if applicable)
+- Configuration files
+
+#### How to Use
+
+To start using the scaffold, follow the steps in the [Cardano-SmartDB-Scaffold Usage](https://github.com/protofire/Cardano-SmartDB-Scaffold/blob/main/README.md#usage).
+
+This tool will help you maintain consistency, reduce manual file creation, and speed up development.
+
+Feel free to utilize the scaffold to streamline your project!
+
 ### Root Backend File
 
-To configure the backend for projects using our library, create a root backend file. This file needs to import all backend code from the test case and should be imported in any backend code file. This ensures that all decorators and registries of entities and backend handlers are loaded.
+To configure the backend for projects using our library, create a root backend file. This file needs to import all backend code from the project. This ensures that all decorators and registries of entities and backend handlers are loaded.
 
 #### Root Backend File Example
 
@@ -846,5 +867,3 @@ export const config = {
 export default smartDBMainApiHandler.bind(smartDBMainApiHandler);
 ```
 
-### Automatic entity generator  
-Refer to [Cardano-SmartDB-Scaffold Usage](https://github.com/protofire/Cardano-SmartDB-Scaffold/blob/main/README.md#usage)

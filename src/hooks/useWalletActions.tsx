@@ -4,6 +4,8 @@ import { useTokensStore, useWalletStore } from '../store/useGlobalStore.js';
 import { CardanoWallet } from '../Commons/types.js';
 import { pushSucessNotification, pushWarningNotification } from '../Commons/pushNotification.js';
 import { explainError } from '../Commons/explainError.js';
+import { delay } from '../Commons/utils.js';
+import { WAIT_FOR_WALLET_ACTIVATION } from '../Commons/Constants/constants.js';
 
 export function useWalletActions() {
     //--------------------------------------
@@ -150,7 +152,7 @@ export function useWalletActions() {
                 if (window.cardano !== undefined && (foundWallet || session.user.isWalletFromSeed || session.user.isWalletFromKey)) {
                     //si la wallet estaba conectada en la session anterior, tengo que reconectarla
                     console.log('[WalletConnector] - Triggering a connection with session wallet: ' + session.user.walletNameOrSeedOrKey);
-                    await new Promise((r) => setTimeout(r, 1000));
+                    await delay (WAIT_FOR_WALLET_ACTIVATION);
                     if (session.user.isWalletFromSeed) {
                         await walletFromSeedConnect(session.user.walletNameOrSeedOrKey, session.user.isWalletValidatedWithSignedToken, false, false);
                     } else if (session.user.isWalletFromKey) {
@@ -206,7 +208,7 @@ export function useWalletActions() {
                 const foundWallet = walletStore.cardanoWallets.find((wallet) => wallet.wallet === session.user!.walletNameOrSeedOrKey);
                 if (window.cardano !== undefined && (foundWallet || session.user.isWalletFromSeed || session.user.isWalletFromKey)) {
                     console.log('[WalletConnector] - Triggering a re-connection with wallet: ' + session.user.walletNameOrSeedOrKey);
-                    await new Promise((r) => setTimeout(r, 1000));
+                    await delay (WAIT_FOR_WALLET_ACTIVATION);
                     if (session.user.isWalletFromSeed) {
                         await walletFromSeedConnect(session.user.walletNameOrSeedOrKey, session.user.isWalletValidatedWithSignedToken, false, false);
                     } else if (session.user.isWalletFromKey) {

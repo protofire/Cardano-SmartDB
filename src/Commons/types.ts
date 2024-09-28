@@ -1,6 +1,6 @@
 import { Address, Data, Lucid, PaymentKeyHash, SignedMessage, UTxO } from 'lucid-cardano';
 import { ISODateString } from 'next-auth';
-import yup from './yupLocale.js';
+import { yup }  from './yupLocale.js';
 
 export type PaymentPubKey = string;
 export type StakeCredentialPubKeyHash = PaymentKeyHash;

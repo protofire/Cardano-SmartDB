@@ -44,6 +44,7 @@ next-env.d.ts
 /dist
 
 /src/**/_OLD
+/**/_OLD
 
 .priv
 
@@ -52,3 +53,4 @@ next-env.d.ts
 directory_structure.json
 
 smart-db.tgz
+smart-db-*.tgz

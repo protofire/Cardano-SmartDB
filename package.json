@@ -1,23 +1,25 @@
 {
     "name": "smart-db",
-    "version": "1.0.800",
+    "version": "1.1.44",
     "description": "Smart DB",
     "type": "module",
     "main": "index.js",
     "types": "index.d.ts",
-    "private": true,
+    "private": false,
     "engines": {
         "node": ">=18"
     },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/protofire/Cardano-SmartDB.git"
+    },
     "scripts": {
-        "build": "rm -rf ./dist ./tsconfig.tsbuildinfo  && tsc -p tsconfig.json ",
+        "build": "npm run clean && tsc -p tsconfig.json",
         "watchBuild": "tsc -w -p tsconfig.json",
-        "pack": "npm version patch --no-git-tag-version && npm run build && cp package.json ./dist/package.json  && cp -r assets ./dist/assets && cd ./dist && npm pack --pack-destination=../ && cd .. && mv smart-db-*.tgz smart-db.tgz",
+        "pack": "npm version patch --no-git-tag-version && rm -f smart-db.tgz && rm -f smart-db-*.tgz && npm run build && npm pack && mv smart-db-*.tgz smart-db.tgz",
         "watchPack": "chokidar \"src/**/*\" -c \"npm run pack\"",
         "clean": "rm -rf ./dist ./tsconfig.tsbuildinfo ",
-        "cleanAll": "rm -rf ./dist ./tsconfig.tsbuildinfo  ./node_modules",
-        "lint": "eslint 'src/**/*.ts' --fix",
-        "test": "jest --passWithNoTests"
+        "cleanAll": "npm run clean && rm -rf ./node_modules"
     },
     "dependencies": {
         "axios": "^1.6.8",
@@ -31,20 +33,22 @@
         "jsonwebtoken": "^9.0.2",
         "lucid-cardano": "^0.10.10",
         "mongoose": "^8.3.2",
-        "next": "^12.1.6",
-        "next-auth": "^4.24.7",
         "next-http-proxy-middleware": "^1.2.5",
         "nodemailer": "^6.9.1",
         "pg": "^8.12.0",
         "pg-promise": "^11.8.0",
         "qs": "^6.12.1",
         "raw-body": "^2.5.2",
-        "react": "18.2.0",
-        "react-dom": "18.2.0",
         "react-notifications-component": "^4.0.1",
         "sanitize-html": "^2.13.0",
         "typeorm": "^0.3.20",
         "yup": "^1.0.2"
+    },
+    "peerDependencies": {
+        "next": "^12.1.6",
+        "next-auth": "^4.24.7",
+        "react": "18.2.0",
+        "react-dom": "18.2.0"
     },
     "devDependencies": {
         "@next/eslint-plugin-next": "^13.4.12",

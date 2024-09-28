@@ -1,13 +1,23 @@
 import { Address, Lucid, UTxO } from 'lucid-cardano';
-import { OptionsGet, OptionsGetOne, console_errorLv1, console_logLv1, isEmulator, isFrontEndEnvironment, isNullOrBlank, showData, tabs, toJson } from '../../Commons/index.BackEnd.js';
-import { addAssetsList, isNFT_With_AC_Lucid_InValue, sumTokensAmt_From_CS } from '../../Commons/helpers.js';
+import { isNFT_With_AC_Lucid_InValue, sumTokensAmt_From_CS } from '../../Commons/helpers.js';
+import {
+    OptionsGet,
+    OptionsGetOne,
+    console_errorLv1,
+    console_logLv1,
+    isEmulator,
+    isFrontEndEnvironment,
+    isNullOrBlank,
+    showData,
+    toJson
+} from '../../Commons/index.BackEnd.js';
+import { delay } from '../../Commons/utils.js';
 import { AddressToFollowEntity } from '../../Entities/AddressToFollow.Entity.js';
 import { BaseSmartDBEntity } from '../../Entities/Base/Base.SmartDB.Entity.js';
 import { EmulatorEntity } from '../../Entities/Emulator.Entity.js';
 import { SmartUTxOEntity } from '../../Entities/SmartUTxO.Entity.js';
-import { BaseBackEndMethods } from './Base.BackEnd.Methods.js';
 import { BlockFrostBackEnd } from '../../lib/BlockFrost/BlockFrost.BackEnd.js';
-
+import { BaseBackEndMethods } from './Base.BackEnd.Methods.js';
 
 // BaseSmartDBBackEndMethods es generico
 // Todos los metodos reciven o instancia o entidad
@@ -91,7 +101,8 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
                         // a veces el api de query tx dice que la transaccion existe, pero el api de tx count no lo refleja
                         // agrego esto por las dudas, para dar tiempo a blockfrost actualize sus registros
                         console_logLv1(0, Entity.className(), `syncWithAddress - waiting extra time (${i}/3) because counts (${tx_count_blockchain}) are still the same...`);
-                        await new Promise((resolve) => setTimeout(resolve, times[i])); // Wait for 5 seconds
+                        // Wait for seconds
+                        await delay(times[i]);
                     } else {
                         break; // Exit the loop if condition is not met
                     }
@@ -109,14 +120,32 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             //--------------------------------------
             console_logLv1(0, Entity.className(), `syncWithAddress - triggering a sync because tx counts are different or was forced...`);
             //--------------------------------------
-            let realUTxOs: UTxO[] = await lucid.utxosAt(address);
-            // filter real utxo with currency symbol and with datums
-            realUTxOs = realUTxOs.filter((utxo) => sumTokensAmt_From_CS(utxo.assets, addressToFollow.currencySymbol) > 0n && utxo.datum !== undefined);
-            //--------------------------------------
+            let realUTxOs: UTxO[] = [];
             const smartUTxOs = await this.getByParams<SmartUTxOEntity>(SmartUTxOEntity, { address }, { loadRelations: {} });
             //--------------------------------------
-            console_logLv1(0, Entity.className(), `syncWithAddress - UTxOs Blockchain: ` + realUTxOs.length);
-            console_logLv1(0, Entity.className(), `syncWithAddress - UTxOs DB: ` + smartUTxOs.length);
+            const tryCheckAgain = true;
+            // la primera vez espera 5 segundos, la segunda 5, la tercera 10
+            const times = [5000, 5000, 10000];
+            // NOTE: puede que la cantidad de tx count me diga que cambio, pero los utxos que vienen de lucid siguen siendo los mismos exactos a los que tengo... es un problema
+            for (let i = 0; i < 3; i++) {
+                try {
+                    realUTxOs = await lucid.utxosAt(address);
+                } catch (error) {
+                    throw `${error}`;
+                }
+                // filter real utxo with currency symbol and with datums
+                realUTxOs = realUTxOs.filter((utxo) => sumTokensAmt_From_CS(utxo.assets, addressToFollow.currencySymbol) > 0n && utxo.datum !== undefined);
+                //--------------------------------------
+                console_logLv1(0, Entity.className(), `syncWithAddress - UTxOs Blockchain: ` + realUTxOs.length);
+                console_logLv1(0, Entity.className(), `syncWithAddress - UTxOs DB: ` + smartUTxOs.length);
+                if (tryCheckAgain && tx_count_blockchain !== tx_count_DB && this.isSameUTxOs(realUTxOs, smartUTxOs)) {
+                    console_logLv1(0, Entity.className(), `syncWithAddress - waiting extra time (${i}/3) because utxos are still the same ones...`);
+                    // Wait for seconds
+                    await delay(times[i]);
+                } else {
+                    break; // Exit the loop if condition is not met
+                }
+            }
             //--------------------------------------
             // comparo la red con la base de datos
             //--------------------------------------
@@ -191,6 +220,13 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             console_errorLv1(-1, instance.className(), `updateSyncSmartUTxO - Error: ${error}`);
             throw `${error}`;
         }
+    }
+
+    private static isSameUTxOs(realUTxOs: UTxO[], smartUTxOs: SmartUTxOEntity[]): boolean {
+        if (realUTxOs.length !== smartUTxOs.length) {
+            return false;
+        }
+        return realUTxOs.every((realUTxO) => smartUTxOs.some((smartUTxO) => realUTxO.txHash === smartUTxO.txHash && realUTxO.outputIndex === smartUTxO.outputIndex));
     }
 
     private static async deleteOrUpdate_Instances_And_DeleteSmartUTxOs_ThatDoesNotExists<T extends BaseSmartDBEntity>(
@@ -367,11 +403,7 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             }
             datum = Entity.mkDatumFromDatumCborHex<T>(newSmartUTxO.datum);
         } catch (error) {
-            console_errorLv1(
-                0,
-                Entity.className(),
-                `createOrUpdate_Instance_From_SmartUTxO - this UTxO DB has a datum of another format - error: ${error}`
-            );
+            console_errorLv1(0, Entity.className(), `createOrUpdate_Instance_From_SmartUTxO - this UTxO DB has a datum of another format - error: ${error}`);
             return;
         }
         //--------------------------------------

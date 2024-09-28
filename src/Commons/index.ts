@@ -15,6 +15,3 @@ export * from './pushNotification.js';
 export * from './types.js';
 export * from './utils.js';
 export * from './yupLocale.js';
-
-
-

@@ -1,3 +1,15 @@
 /node_modules
-/example
+/src
 /_OLD
+/src/**/_OLD
+/example
+/smartDB.code-workspace
+/smart-db.tgz
+smart-db-*.tgz
+/.git
+/package-lock.json
+.priv
+directory_structure.json
+/tsconfig.json
+/prettier.config.cjs
+/.eslintrc

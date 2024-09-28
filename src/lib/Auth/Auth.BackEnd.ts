@@ -22,12 +22,11 @@ import {
 } from '../../Commons/Constants/constants.js';
 import { addressToPaymentPubKeyHashAndStakePubKeyHash } from '../../Commons/helpers.js';
 import { isNullOrBlank, sanitizeForDatabase, showData, strToHex } from '../../Commons/utils.js';
-import yup from '../../Commons/yupLocale.js';
+import { yup }  from '../../Commons/yupLocale.js';
 import { WalletEntity } from '../../Entities/Wallet.Entity.js';
 import { generateChallengueToken, isValidChallengueToken, isValidCsrfToken, validateChallengueToken } from './Auth.utils.js';
 import { ChallengueJWTPayload, CredentialsAuthenticated, NextApiRequestAuthenticated, TokenJWTPayload } from './types.js';
 import { getGlobalBlockchainTime } from '../../Commons/BackEnd/globalBlockchainTime.js';
-
 
 /**
  * @swagger

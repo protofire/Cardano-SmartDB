@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toJson } from '../Commons/utils.js';
 
 //Para guardar datos de forma persistente en el navegador
 
@@ -33,7 +34,7 @@ export function useLocalStorage(key: string, initialValue: any) {
             setStoredValue(valueToStore);
             // Save to local storage
             if (typeof window !== 'undefined') {
-                window.localStorage.setItem(key, JSON.stringify(valueToStore));
+                window.localStorage.setItem(key, toJson(valueToStore));
             }
         } catch (error) {
             // A more advanced implementation would handle the error case

@@ -21,7 +21,7 @@ export class TestEntity extends BaseEntity {
     public static defaultFieldsWhenUndefined: Record<string, boolean> = {};
 
     public static alwaysFieldsForSelect: Record<string, boolean> = {
-        ...super.alwaysFieldsForSelect,
+        ...BaseEntity.alwaysFieldsForSelect,
         name: true,
         description: true,
     };

@@ -34,7 +34,7 @@ export class DummyEntity extends BaseSmartDBEntity {
     public static defaultFieldsWhenUndefined: Record<string, boolean> = {};
 
     public static alwaysFieldsForSelect: Record<string, boolean> = {
-        ...super.alwaysFieldsForSelect,
+        ...BaseSmartDBEntity.alwaysFieldsForSelect,
         ddPaymentPKH: true,
         ddStakePKH: true,
         ddValue: true,
