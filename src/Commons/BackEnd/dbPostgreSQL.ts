@@ -34,7 +34,7 @@ export async function connectPostgres(): Promise<void> {
             password: process.env.POSTGRES_PASS,
             database: process.env.POSTGRES_DB,
             synchronize: true,
-            logging: ['error', 'schema', 'warn'],
+            logging: ['error', 'schema', 'warn'], //true, //['error', 'schema', 'warn'],
             entities: [...registeredEntities],
             subscribers: [],
             migrations: [],
