@@ -7,6 +7,37 @@ import { Decimals } from './types.js';
 
 //----------------------------------------------------------------------
 
+export function createErrorObject(error: unknown): Record<string, any> {
+    let errorObj: Record<string, any>;
+
+    if (error instanceof Error) {
+        // Standard JavaScript errors
+        errorObj = {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+            // Capture additional properties that may exist on the error
+            ...(error as any),
+        };
+    } else if (typeof error === 'object' && !isEmptyObject_usingJson(error)) {
+        // Handle non-empty objects (circular references handled by `toJson`)
+        errorObj = {
+            ...JSON.parse(toJson(error)),
+        };
+    } else {
+        // For any other error types
+        errorObj = {
+            error: String(error),
+        };
+    }
+
+    return errorObj;
+}
+
+
+//----------------------------------------------------------------------
+
+
 export const isAllowedTask = (task: string, allowedTasks: string[]): boolean => {
     return allowedTasks.includes(task);
 };
@@ -847,6 +878,10 @@ export function isObject(object: any) {
 
 export const isNullOrBlank = (value: string | undefined): boolean => {
     return value === undefined || value === null || value.trim() === '';
+};
+
+export const isArrayEmpty = (value: any[]): boolean => {
+    return value === undefined || value === null || value.length === 0;
 };
 
 //----------------------------------------------------------------------
