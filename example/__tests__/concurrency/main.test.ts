@@ -41,7 +41,6 @@ export const CONFIG = {
         { utxos: 2, users: [1, 2, 4], transactionsPerUser: [1, 2] },
         { utxos: 5, users: [2, 5, 10], transactionsPerUser: [1, 2, 4] },
         { utxos: 10, users: [5, 10, 20], transactionsPerUser: [1, 2, 4, 8] },
-        // { utxos: 10, users: [2], transactionsPerUser: [2] },
     ] as TestCase[],
     INITIAL_DELAY_BETWEEN_USERS: 500, // Separación inicial entre usuarios
     DELAY_BETWEEN_TXS: 3000, // Separación entre transacciones

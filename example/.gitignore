@@ -48,6 +48,7 @@ next-env.d.ts
 
 __tests__/concurrency/test_results_raw.csv
 __tests__/concurrency/test_results_sumary.csv
+__tests__/concurrency/test_results.xlsx
 __tests__/concurrency/test_results.backup.xlsx
 __tests__/concurrency/~$test_results.xlsx
 __tests__/concurrency/~$test_results.backup.xlsx

@@ -153,7 +153,7 @@ The process begins when a user interacts with the frontend application to initia
 ## Synchronization Mechanism
 
 - **Automatic Status Updater**: 
-- 
+
     - The status updater job is automatically initiated whenever a transaction is marked as `SUBMITTED` in the TransactionEntity. 
     - The job continues running as long as there are any transactions in the `SUBMITTED` state.
     - When any transaction moves to the `CONFIRMED` state, the job automatically triggers a synchronization (`sync`) process to update the database with the latest blockchain state.
