@@ -186,7 +186,7 @@ npm run dev
 
 Visit `http://localhost:3000` in your browser to view the example project in action. 
 
-For detailed instructions on how to use the example project, refer to its [README](../example/README.md) file located within the `example` folder.
+For detailed instructions on how to use the example project, refer to its [README](../example/README.md) file located within the `example` folder or [GitBook](https://protofire-docs.gitbook.io/smartdb-example).
 
 ### Custom Entities
 
