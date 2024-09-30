@@ -1,4 +1,4 @@
-import { SelectQueryBuilder } from 'typeorm';
+import { EntityMetadata, SelectQueryBuilder } from 'typeorm';
 import { connectPostgres, databasePostgreSQL } from '../../Commons/BackEnd/dbPostgreSQL.js';
 import { console_error, console_log } from '../../Commons/BackEnd/globalLogs.js';
 import { OptionsGet } from '../../Commons/types.js';
@@ -8,43 +8,57 @@ import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
 export class PostgreSQLDatabaseService {
     public static async create<T extends BaseEntity>(instance: T): Promise<string> {
         try {
+            //--------------------------
             await connectPostgres();
+            //--------------------------
             console_log(0, instance.className(), `create instance T : ${toJson(instance)}`);
+            //--------------------------
             const postgreSQLInterface = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
+            //--------------------------
             console_log(0, instance.className(), `create postgreSQLInterface: ${toJson(postgreSQLInterface)}`);
+            //--------------------------
             const document = await databasePostgreSQL!.manager.save(postgreSQLInterface);
+            //--------------------------
             console_log(0, instance.className(), `create document: ${toJson(document)}`);
+            //--------------------------
             if (document) {
                 return document._id.toString();
             } else {
                 throw `document is null`;
             }
+            //--------------------------
         } catch (error) {
             console_error(0, `PostgreSQL`, `create - Error: ${error}`);
             throw `${error}`;
         }
     }
 
-    public static async update<T extends BaseEntity>(instance: T, updateSet: {}, updateUnSet: {}) {
+    public static async update<T extends BaseEntity>(instance: T, updateSet: Record<string, any>, updateUnSet: Record<string, any>) {
         try {
+            //--------------------------
             await connectPostgres();
+            //--------------------------
             const postgreSQLEntity = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
             const postgreSQLModel = await instance.getPostgreSQL().PostgreSQLModel();
             const repository = databasePostgreSQL!.manager.getRepository(postgreSQLModel);
+            // const metadata = repository.metadata;
+            //--------------------------
             // Aquí usamos el ID del objeto `instance` para identificar el registro a actualizar
             const id = postgreSQLEntity._id;
             if (!id) {
                 throw new Error('Instance does not have an id');
             }
+            //--------------------------
+            // Construimos el objeto de actualización, estableciendo los campos de `updateUnSet` en `NULL`
+            const updateObject = { ...updateSet };
+            Object.keys(updateUnSet).forEach((field: string) => {
+                updateObject[field] = null; // Establecer los campos a NULL en lugar de "unset"
+            });
+            //--------------------------
             // Realizamos la actualización en PostgreSQL
-            const document = await repository.update(
-                { _id: id },
-                {
-                    ...updateSet,
-                    ...updateUnSet,
-                }
-            );
-            return document;
+            const result = await repository.update({ _id: id }, updateObject);
+            //--------------------------
+            return result;
         } catch (error) {
             console_error(0, `PostgreSQL`, `update - Error: ${error}`);
             throw `${error}`;
@@ -53,17 +67,24 @@ export class PostgreSQLDatabaseService {
 
     public static async delete<T extends BaseEntity>(instance: T): Promise<string> {
         try {
+            //--------------------------
             await connectPostgres();
+            //--------------------------
             const postgreSQLEntity = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
             const postgreSQLModel = await instance.getPostgreSQL().PostgreSQLModel();
             const repository = databasePostgreSQL!.manager.getRepository(postgreSQLModel);
+            // const metadata = repository.metadata;
+            //--------------------------
             const id = postgreSQLEntity._id;
             if (!id) {
                 throw new Error('Instance does not have an id');
             }
+            //--------------------------
             // Eliminamos el registro identificado por el ID
             await repository.delete(id);
+            //--------------------------
             return `Entity with id ${id} deleted successfully`;
+            //--------------------------
         } catch (error) {
             console_error(0, `PostgreSQL`, `delete - Error: ${error}`);
             throw `${error}`;
@@ -72,14 +93,20 @@ export class PostgreSQLDatabaseService {
 
     public static async deleteByParams<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter: Record<string, any>): Promise<number | undefined> {
         try {
+            //--------------------------
             await connectPostgres();
+            //--------------------------
             const postgreSQLModel = await Entity.getPostgreSQL().PostgreSQLModel();
             const repository = databasePostgreSQL!.manager.getRepository(postgreSQLModel);
+            const metadata = repository.metadata;
             const queryBuilder = repository.createQueryBuilder('entity');
+            //--------------------------
             // Eliminamos los registros que coincidan con los parámetros
-            this.applyFilters(queryBuilder, paramsFilter);
+            this.applyFilters(queryBuilder, metadata, paramsFilter);
+            //--------------------------
             const result = await queryBuilder.delete().execute();
             return result.affected === null ? undefined : result.affected;
+            //--------------------------
         } catch (error) {
             console_error(0, `PostgreSQL`, `deleteByParams - Error: ${error}`);
             throw `${error}`;
@@ -88,16 +115,20 @@ export class PostgreSQLDatabaseService {
 
     public static async checkIfExists<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilterOrID: Record<string, any> | string): Promise<boolean> {
         try {
+            //--------------------------
             await connectPostgres();
+            //--------------------------
             const postgreSQLModel = await Entity.getPostgreSQL().PostgreSQLModel();
             const repository = databasePostgreSQL!.manager.getRepository(postgreSQLModel);
+            const metadata = repository.metadata;
             const queryBuilder = repository.createQueryBuilder('entity');
-
+            //--------------------------
             if (typeof paramsFilterOrID === 'string') {
                 queryBuilder.where('entity._id = :id', { id: paramsFilterOrID });
             } else {
-                this.applyFilters(queryBuilder, paramsFilterOrID);
+                this.applyFilters(queryBuilder, metadata, paramsFilterOrID);
             }
+            //--------------------------
             const result = await queryBuilder.getOne();
             // Retorna `true` si existe el registro
             return !!result;
@@ -114,17 +145,20 @@ export class PostgreSQLDatabaseService {
         useOptionGet: OptionsGet
     ) {
         try {
+            //--------------------------
             // console_log(0, `PostgreSQL`, `getByParams - Connecting to PostgreSQL...`);
+            //--------------------------
             await connectPostgres();
             const postgreSQLEntity = await Entity.getPostgreSQL().PostgreSQLModel();
             const repository = databasePostgreSQL!.manager.getRepository(postgreSQLEntity);
+            const metadata = repository.metadata;
             let queryBuilder = repository.createQueryBuilder('entity');
             //--------------------------
             // console.log('Initial Query:', queryBuilder.getQuery());
             //--------------------------
             if (!isEmptyObject(paramsFilter)) {
                 // console_log(0, `PostgreSQL`, `getByParams - Applying filters: ${toJson(paramsFilter)}`);
-                queryBuilder = this.applyFilters(queryBuilder, paramsFilter);
+                queryBuilder = this.applyFilters(queryBuilder, metadata, paramsFilter);
             }
             //--------------------------
             // console.log('After filter Query:', queryBuilder.getQuery());
@@ -177,6 +211,7 @@ export class PostgreSQLDatabaseService {
             // results.forEach((result) => console_log(0, `PostgreSQL`, `getByParams - Found ${toJson(result)}`));
             //--------------------------
             return results;
+            //--------------------------
         } catch (error) {
             console_error(0, `PostgreSQL`, `getByParams - Error: ${error}`);
             throw error;
@@ -185,23 +220,36 @@ export class PostgreSQLDatabaseService {
 
     public static async getCount<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter: Record<string, any>): Promise<number> {
         try {
+            //--------------------------
             await connectPostgres();
+            //--------------------------
             const postgreSQLEntity = await Entity.getPostgreSQL().PostgreSQLModel();
             const repository = databasePostgreSQL!.manager.getRepository(postgreSQLEntity);
+            const metadata = repository.metadata;
             const queryBuilder = repository.createQueryBuilder('entity');
+            //--------------------------
             if (!isEmptyObject(paramsFilter)) {
-                this.applyFilters(queryBuilder, paramsFilter);
+                this.applyFilters(queryBuilder, metadata, paramsFilter);
             }
-
+            //--------------------------
             const count = await queryBuilder.getCount();
+            //--------------------------
             return count;
+            //--------------------------
         } catch (error) {
             console_error(0, `PostgreSQL`, `getCount - Error: ${error}`);
             throw `${error}`;
         }
     }
-    private static applyFilters(queryBuilder: SelectQueryBuilder<any>, filters: Record<string, any>): SelectQueryBuilder<any> {
+    private static applyFilters(queryBuilder: SelectQueryBuilder<any>, metadata: EntityMetadata, filters: Record<string, any>): SelectQueryBuilder<any> {
+        //--------------------------
         // console.log('Entering applyFilters with filters:', toJson(filters, null, 2));
+        //--------------------------
+        // Function to check if the field is of type JSONB
+        const isJsonbField = (field: string): boolean => {
+            const column = metadata.findColumnWithPropertyName(field.split('.').pop() || field);
+            return column ? column.type === 'jsonb' : false;
+        };
         //--------------------------
         const applyFilter = (key: string, value: any, parentKey: string = '', index: number = 0): string => {
             const fullKey = parentKey ? `${parentKey}.${key}` : key;
@@ -266,8 +314,15 @@ export class PostgreSQLDatabaseService {
                         case '$lte':
                             return `${quoteColumnName(`entity.${fullKey}`)} <= :${createParam(fullKey, operand)}`;
                         case '$in':
+                            // Use @> for JSONB, otherwise use IN
+                            if (isJsonbField(fullKey)) {
+                                return `${quoteColumnName(`entity.${fullKey}`)} @> :${createParam(fullKey, toJson(operand))}::jsonb`;
+                            }
                             return `${quoteColumnName(`entity.${fullKey}`)} IN (:...${createParam(fullKey, operand)})`;
                         case '$nin':
+                            if (isJsonbField(fullKey)) {
+                                return `${quoteColumnName(`entity.${fullKey}`)} NOT @> :${createParam(fullKey, toJson(operand))}::jsonb`;
+                            }
                             return `${quoteColumnName(`entity.${fullKey}`)} NOT IN (:...${createParam(fullKey, operand)})`;
                         case '$regex':
                             return `${quoteColumnName(`entity.${fullKey}`)} ~ :${createParam(fullKey, operand)}`;
@@ -292,8 +347,8 @@ export class PostgreSQLDatabaseService {
             .join(' AND ');
         queryBuilder.where(whereClause);
         //--------------------------
-        // console.log('Filter Query:', queryBuilder.getQuery());
-        // console.log('Filter parameters:', toJson(queryBuilder.getParameters(), null, 2));
+        console.log('Filter Query:', queryBuilder.getQuery());
+        console.log('Filter parameters:', toJson(queryBuilder.getParameters()));
         //--------------------------
         return queryBuilder;
     }
