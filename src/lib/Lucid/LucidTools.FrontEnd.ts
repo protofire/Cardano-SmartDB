@@ -6,6 +6,7 @@ import {
     TRANSACTION_STATUS_TIMEOUT,
     TX_CHECK_INTERVAL,
     WalletTxParams,
+    createErrorObject,
     delay,
     isEmptyObject_usingJson,
     isEmulator,
@@ -249,75 +250,58 @@ export class LucidToolsFrontEnd {
         return result;
     }
 
-    public static async signAndSubmitTx(lucid: Lucid, txCborHex: any, walletInfo?: ConnectedWalletInfo, emulatorDB?: EmulatorEntity) {
+    public static async signAndSubmitTx(lucid: Lucid, txHash: string, txCborHex: string, walletInfo?: ConnectedWalletInfo, emulatorDB?: EmulatorEntity) {
         try {
             console.log(`[Lucid] - signAndSubmitTx`);
             //--------------------------------------
             let txComplete = lucid.fromTx(txCborHex);
-            const txHash = txComplete.toHash();
+            //--------------------------------------
+            const txCompleteHash = txComplete.toHash();
+            //--------------------------------------
+            if (txCompleteHash !== txHash) alert('txCompleteHash !== txHash');
+            //--------------------------------------
             const transaction = await TransactionFrontEndApiCalls.getOneByParamsApi<TransactionEntity>(TransactionEntity, { hash: txHash });
             //--------------------------------------
-            try {
-                console.log(`[Lucid] - Tx Resources:`);
-                const txSize = txComplete.txComplete.to_bytes().length;
-                console.info(toJson(this.getTxMemAndStepsUse(txSize, txComplete.txComplete.to_json())));
-                //--------------------------------------
-                let txCompleteSigned: TxSigned;
-                try {
-                    if (isEmulator) {
-                        if (confirm('Sign and Submit Tx') === false) {
-                            throw 'User canceled';
-                        }
-                    }
-                    txCompleteSigned = await txComplete.sign().complete();
-                } catch (error) {
-                    throw error;
+            console.log(`[Lucid] - Tx Resources:`);
+            const txSize = txComplete.txComplete.to_bytes().length;
+            console.info(toJson(this.getTxMemAndStepsUse(txSize, txComplete.txComplete.to_json())));
+            //--------------------------------------
+            let txCompleteSigned: TxSigned;
+            //--------------------------------------
+            if (isEmulator) {
+                if (confirm('Sign and Submit Tx') === false) {
+                    throw 'User canceled';
                 }
-                //--------------------------------------
-                const txHash = await txCompleteSigned.submit();
-                //--------------------------------------
-                if (isEmulator && emulatorDB !== undefined) {
-                    // si es emulador tengo que usar awaitTx de lucid para que se agregue la tx al ledger del emulador de lucid
-                    await lucid.awaitTx(txHash);
-                    // y guardarlo para que lo pueda leer en el backend
-                    await LucidToolsFrontEnd.syncEmulatorAfterTx(lucid, emulatorDB);
-                }
-                //--------------------------------------
-                if (transaction !== undefined) {
-                    // setea la tx en submitted e inicia el job en el server para actualizar el status revisando la blockchain
-                    // el seteo se hace al llamar al begin status updater, en el back end
-                    await TransactionFrontEndApiCalls.submitAndBeginStatusUpdaterJobApi(transaction.hash);
-                }
-                //--------------------------------------
-                return txHash;
-            } catch (error: any) {
-                if (transaction !== undefined) {
-                    let errorObj;
-                    if (error instanceof Error) {
-                        // Para errores estándar de JavaScript
-                        errorObj = {
-                            name: error.name,
-                            message: error.message,
-                            stack: error.stack,
-                            // Capturar propiedades adicionales que puedan existir en el error
-                            ...(error as any),
-                        };
-                    } else if (typeof error === 'object' && !isEmptyObject_usingJson(error)) {
-                        errorObj = {
-                            ...JSON.parse(toJson(error)), // Maneja objetos circulares
-                        };
-                    } else {
-                        // Para cualquier otro tipo de error
-                        errorObj = {
-                            error: String(error),
-                        };
-                    }
-                    await TransactionFrontEndApiCalls.updateFailedTransactionApi(transaction.hash, { error: errorObj, walletInfo });
-                }
-                throw error;
             }
+            //--------------------------------------
+            txCompleteSigned = await txComplete.sign().complete();
+            //--------------------------------------
+            const txCompleteSignedHash = await txCompleteSigned.submit();
+            //--------------------------------------
+            if (txCompleteHash !== txCompleteSignedHash) alert('txCompleteHash !== txCompleteSignedHash');
+            //--------------------------------------
+            if (isEmulator && emulatorDB !== undefined) {
+                // si es emulador tengo que usar awaitTx de lucid para que se agregue la tx al ledger del emulador de lucid
+                await lucid.awaitTx(txHash);
+                // y guardarlo para que lo pueda leer en el backend
+                await LucidToolsFrontEnd.syncEmulatorAfterTx(lucid, emulatorDB);
+            }
+            //--------------------------------------
+            // setea la tx en submitted e inicia el job en el server para actualizar el status revisando la blockchain
+            // el seteo se hace al llamar al begin status updater, en el back end
+            //--------------------------------------
+            await TransactionFrontEndApiCalls.submitAndBeginStatusUpdaterJobApi(txCompleteSignedHash);
+            //--------------------------------------
+            return txCompleteSignedHash;
+            //--------------------------------------
         } catch (error) {
+            //--------------------------------------
             console.log(`[Lucid] - signAndSubmitTx - Error: ${error}`);
+            //--------------------------------------
+            const errorObj = createErrorObject(error);
+            //--------------------------------------
+            await TransactionFrontEndApiCalls.updateFailedTransactionApi(txHash, { error: errorObj, walletInfo });
+            //--------------------------------------
             throw error;
         }
     }

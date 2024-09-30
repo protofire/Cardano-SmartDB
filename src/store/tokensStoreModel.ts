@@ -1,10 +1,21 @@
 import { Action, Computed, Thunk, action, computed, thunk } from 'easy-peasy';
-import { TokensToAdd as JobTokensToAdd, Token_For_Store, Token_For_Store_With_Validity } from './types.js';
+import {
+    ADA_DECIMALS,
+    ADA_UI,
+    MAX_PRICE_AGE_FOR_APROXIMATED_USE_MS,
+    MAX_PRICE_AGE_FOR_USE_MS,
+    SYNC_SERVER_TIME_ALWAYS,
+    formatTokenAmount,
+    getNumberx1e6,
+    hexToStr,
+    isTokenADA,
+    isToken_CS_And_TN_Valid,
+} from '../Commons/index.js';
 import { CS, Decimals, TN, Token_With_Price_And_Date_And_Signature } from '../Commons/types.js';
-import { SYNC_SERVER_TIME_10M_MS, hexToStr, MAX_PRICE_AGE_FOR_USE_MS, isToken_CS_And_TN_Valid, MAX_PRICE_AGE_FOR_APROXIMATED_USE_MS, isTokenADA, formatTokenAmount, ADA_UI, getNumberx1e6, ADA_DECIMALS } from '../Commons/index.js';
 import { TokenMetadataEntity } from '../Entities/index.js';
 import { PriceFrontEndApiCalls, TokenMetadataFrontEndApiCalls } from '../FrontEnd/index.js';
 import { TimeApi } from '../lib/index.js';
+import { TokensToAdd as JobTokensToAdd, Token_For_Store, Token_For_Store_With_Validity } from './types.js';
 
 //------------------------------------
 
@@ -123,16 +134,15 @@ export const TokensModel: ITokensModel = {
         let refreshServerTime = payload?.refresh ?? false;
         //----------------
         if (refreshServerTime === false && state.serverTime !== undefined && state.serverTimeLastFetch !== undefined) {
+            //--------------------------------------
             // si pasaron mas de 10 minutos refresca siempre
             // si no, no refresca
             //--------------------------------------
             const now = Date.now();
             //--------------------------------------
             const diff = now - state.serverTimeLastFetch;
-            const diffSeconds = diff / 1000;
-            const diffMinutes = Math.floor(diffSeconds / 60);
+            refreshServerTime = diff > SYNC_SERVER_TIME_ALWAYS;
             //--------------------------------------
-            refreshServerTime = diffMinutes > SYNC_SERVER_TIME_10M_MS;
         }
         //----------------
         if (state.serverTime === undefined || state.serverTimeDiffWithBrowser === undefined || state.serverTimeLastFetch === undefined || refreshServerTime === true) {
