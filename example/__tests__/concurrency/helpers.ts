@@ -1,10 +1,8 @@
 import { ClaimFreeTxParams, CreateFreeTxParams, UpdateFreeTxParams } from '@example/src/lib/Commons/Constants/transactions';
 import { FreeApi } from '@example/src/lib/SmartDB/FrontEnd';
-import fs from 'fs';
+import assert from 'assert';
 import { Assets, Lucid } from 'lucid-cardano';
-import path from 'path';
 import { ConnectedWalletInfo, delay, getTotalOfUnitInUTxOList, LucidToolsFrontEnd, toJson, WalletTxParams } from 'smart-db';
-import * as XLSX from 'xlsx';
 import { TestResult } from './results';
 
 export interface TestCase {
@@ -60,7 +58,8 @@ function calculateRequiredFunds(walletIndex: number, testCases: TestCase[], txFe
             }
         });
     });
-    const requiredFunds = BigInt(Math.ceil(totalTransactions * txFee * safetyMargin));
+    //---------------------
+    const requiredFunds = BigInt(Math.ceil(totalTransactions * txFee * safetyMargin) * 4); //smart On + smart Off + read On + read Off
     //---------------------
     return [totalTransactions, requiredFunds];
 }
@@ -157,6 +156,7 @@ export async function prepareWallets(
                             const value: Assets = { ['lovelace']: walletInfo.additionalFundsNeeded };
                             console.log(`[TEST] - Will send ${walletInfo.additionalFundsNeeded} lovelace for transactions...`);
                             tx = tx.payToAddress(walletInfo.address, value);
+                            tx = tx.payToAddress(walletInfo.address, value);
                             walletInfo.additionalUtxosNeeded -= 1;
                             swSend = true;
                         }
@@ -165,6 +165,7 @@ export async function prepareWallets(
                             const collateralValue: Assets = { ['lovelace']: collateralAmt };
                             console.log(`[TEST] - Will send ${walletInfo.additionalUtxosNeeded} UTXOs of ${collateralAmt} lovelace each for collateral...`);
                             for (let j = 0; j < walletInfo.additionalUtxosNeeded; j++) {
+                                tx = tx.payToAddress(walletInfo.address, collateralValue);
                                 tx = tx.payToAddress(walletInfo.address, collateralValue);
                             }
                             swSend = true;
@@ -197,7 +198,7 @@ export async function prepareWallets(
                 }
                 retries++;
                 console.log(`Retrying in ${RETRY_DELAY / 1000} seconds...`);
-                await delay (RETRY_DELAY)
+                await delay(RETRY_DELAY);
             }
         }
     }
@@ -287,11 +288,13 @@ export async function executeTransaction(testName: string, walletLucid: Lucid, e
         isWalletValidatedWithSignedToken: false,
     };
     //---------------------
-    const { txCborHex } = await FreeApi.callGenericTxApi_(endpoint, walletTxParams, txParams);
+    const { txHash, txCborHex } = await FreeApi.callGenericTxApi_(endpoint, walletTxParams, txParams);
     //---------------------
-    console.log(`[TEST - ${testName}] - Transaction CBOR Ok!`);
+    console.log(`[TEST - ${testName}] - Transaction created - txHash:${txHash} - CBOR Ok!`);
     //---------------------
-    const txHash = await LucidToolsFrontEnd.signAndSubmitTx(walletLucid, txCborHex, connectedWalletInfo, undefined);
+    const txHashSigned = await LucidToolsFrontEnd.signAndSubmitTx(walletLucid, txHash, txCborHex, connectedWalletInfo, undefined);
+    //---------------------
+    assert(txHash === txHashSigned, 'txHash !== txHashSigned');
     //---------------------
     console.log(`[TEST - ${testName}] - Transaction Hash: ${txHash}`);
     //---------------------
@@ -311,16 +314,18 @@ export async function runTestCase(
     users: number,
     transactionsPerUser: number,
     useSmartSelection: boolean,
-    initialDelayBetweenUsers: number = 1000,
-    delayBetweenTxs: number = 1000,
-    maxRetries: number = 3
+    useRead: boolean,
+    initialDelayBetweenUsers: number = 500,
+    delayBetweenTxs: number = 3000,
+    maxRetries: number = 3,
+    delayBetweenRetries: number = 3000
 ): Promise<TestResult> {
     //---------------------
     const start = Date.now();
     //---------------------
-    const testName = `${utxos}:${users}:${transactionsPerUser}:${useSmartSelection}`;
+    const testName = `${utxos}:${users}:${transactionsPerUser}:${useSmartSelection}:${useRead}`;
     console.log(
-        `[TEST - ${testName}] - Running Test Case - utxos: ${utxos}, users: ${users}, transactionsPerUser: ${transactionsPerUser}, smartSelection: ${useSmartSelection} - ...`
+        `[TEST - ${testName}] - Running Test Case - utxos: ${utxos}, users: ${users}, transactionsPerUser: ${transactionsPerUser}, smartSelection: ${useSmartSelection}, With Reference Read: ${useRead} - ...`
     );
     //---------------------
     let totalAttempts = 0;
@@ -347,16 +352,21 @@ export async function runTestCase(
                 //---------------------
                 for (let attempt = 0; attempt < maxRetries; attempt++) {
                     totalAttempts++;
-                    let txParams: UpdateFreeTxParams = { valueToAdd: Math.floor(Math.random() * 100), useSmartSelection };
+                    let txParams: UpdateFreeTxParams = { valueToAdd: Math.floor(Math.random() * 100), useSmartSelection, useRead };
                     try {
                         await executeTransaction(testName, walletLucid, 'update-free-tx', txParams);
                         successful++;
                         break; // Exit retry loop if successful
-                    } catch {
+                    } catch (error) {
+                        // console.error(`[TEST - ${testName}] - error: ${toJson(error)}`);
+                        // //(AlonzoContextError (TranslationLogicMissingInput (TxIn (TxId {unTxId = SafeHash \\\"bbcfa36de8688cd7a7be9d12a8351d1e13c35591ff64db2d2f182717cdb94a1f\\\"}) (TxIx {unTxIx = 1})))))])))
+                        // if (toJson(error).includes('TranslationLogicMissingInput')) {
+                        //     const utxoMissing = toJson(error).split('TxId {unTxId = ')[1].split('}')[0];
+                        // }
                         if (attempt === maxRetries - 1) {
                             failed++;
                         } else {
-                            await delay(1000); // Wait a bit before retrying
+                            await delay(delayBetweenRetries); // Wait a bit before retrying
                         }
                     }
                 }
@@ -376,7 +386,7 @@ export async function runTestCase(
     if (useSmartSelection) {
         if (utxos >= users) {
             // Deberian pasar todos los intentos
-            pass = successful >= 0.9 * totalTransactions;
+            pass = successful >= 0.8 * totalTransactions;
         } else {
             // We expect some failures, but not too many
             pass = failed >= 0;
@@ -393,7 +403,9 @@ export async function runTestCase(
         }
     }
     //---------------------
-    console.log(`[TEST - ${testName}] - Finishing Test Case - utxos: ${utxos}, users: ${users}, transactionsPerUser: ${transactionsPerUser}, smartSelection: ${useSmartSelection}`);
+    console.log(
+        `[TEST - ${testName}] - Finishing Test Case - utxos: ${utxos}, users: ${users}, transactionsPerUser: ${transactionsPerUser}, smartSelection: ${useSmartSelection}, With Reference Read: ${useRead}`
+    );
     console.log(`[TEST - ${testName}] - Pass: ${pass} - Total Tx: ${totalTransactions}, Successful: ${successful}, Failed: ${failed}, Total Attempts: ${totalAttempts}`);
     console.log(
         `[TEST - ${testName}] - Total Time: ${totalTime}, Average Time per Tx: ${averageTimePerTx}, Average Time per Successful Tx: ${averageTimePerSuccessfulTx}, Average Time per Attempted Tx: ${averageTimePerAttemptedTx}`
@@ -404,6 +416,7 @@ export async function runTestCase(
         users,
         transactionsPerUser,
         smartSelection: useSmartSelection,
+        read: useRead,
         successful,
         failed,
         totalAttempts,

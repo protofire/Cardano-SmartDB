@@ -2,23 +2,24 @@ import fs from 'fs';
 import path from 'path';
 import * as XLSX from 'xlsx';
 
-export interface TestResult {
-    utxos: number;
-    users: number;
-    transactionsPerUser: number;
-    smartSelection: boolean;
-    read: boolean;
-    successful: number;
-    failed: number;
-    totalAttempts: number;
-    totalTime: number;
-    averageTimePerTx: number;
-    averageTimePerSuccessfulTx: number;
-    averageTimePerAttemptedTx: number;
-    pass: boolean;
-}
+// export interface TestResult {
+//     utxos: number;
+//     users: number;
+//     transactionsPerUser: number;
+//     smartSelection: boolean;
+//     read: boolean;
+//     successful: number;
+//     failed: number;
+//     totalAttempts: number;
+//     totalTime: number;
+//     averageTimePerTx: number;
+//     averageTimePerSuccessfulTx: number;
+//     averageTimePerAttemptedTx: number;
+//     pass: boolean;
+// }
 
-export function saveExcel(results: TestResult[], filePath: string, filename: string) {
+export function saveExcel(results, filePath, filename) {
+    // export function saveExcel(results: TestResult[], filePath: string, filename: string) {
     const spreadsheetPath = path.join(filePath, `${filename}.xlsx`);
     const backupPath = path.join(filePath, `${filename}.backup.xlsx`);
     // Si existe un archivo previo, créale una copia de seguridad
@@ -34,7 +35,7 @@ export function saveExcel(results: TestResult[], filePath: string, filename: str
         //     fs.unlinkSync(backupPath);
         //     console.log(`[TEST] - Backup removed after successful update`);
         // }
-    } catch (error: any) {
+    } catch (error) {
         console.error(`[TEST] - Error updating Excel file: ${JSON.stringify(error)}`);
         if (fs.existsSync(backupPath)) {
             // Si hubo un error y existe un backup, lo restauramos
@@ -44,7 +45,8 @@ export function saveExcel(results: TestResult[], filePath: string, filename: str
     }
 }
 
-export function generateSpreadsheet(results: TestResult[], filename: string): void {
+// export function generateSpreadsheet(results: TestResult[], filename: string): void {
+export function generateSpreadsheet(results, filename) {
     const wb = XLSX.utils.book_new();
 
     // Combined Detailed Results and Summary
@@ -55,7 +57,7 @@ export function generateSpreadsheet(results: TestResult[], filename: string): vo
         'Smart Selection': r.smartSelection ? 'On' : 'Off',
         'With Reference Read': r.read ? 'On' : 'Off', // Add this new field
         'Total Transactions': r.users * r.transactionsPerUser,
-        'Concurrency Factor': (r.users * r.transactionsPerUser * ( r.read ? 2 : 1)/ r.utxos).toFixed(2),
+        'Concurrency Factor': (r.users * r.transactionsPerUser / r.utxos).toFixed(2),
         'Successful Transactions': r.successful,
         'Failed Transactions': r.failed,
         'Success Rate': `${((r.successful / (r.users * r.transactionsPerUser)) * 100).toFixed(2)}%`,
@@ -118,7 +120,8 @@ export function generateSpreadsheet(results: TestResult[], filename: string): vo
     XLSX.writeFile(wb, filename);
 }
 
-export function compareSmartSelection(results: TestResult[]): any[] {
+// export function compareSmartSelection(results: TestResult[]): any[] {
+export function compareSmartSelection(results) {
     const comparison = [];
     if (results.length % 4 !== 0) {
         console.warn('[WARNING] Number of results is not a multiple of 4. Some results may be ignored in the comparison.');
@@ -135,15 +138,16 @@ export function compareSmartSelection(results: TestResult[]): any[] {
         }
         const totalTx = smartOnReadOff.users * smartOnReadOff.transactionsPerUser;
         // Compare Smart On vs Off with Read Off
-        comparison.push(createComparisonRow(smartOnReadOff, smartOffReadOff, totalTx, false));
+        comparison.push(createComparisonRow(smartOnReadOff, smartOffReadOff, totalTx, 'Off'));
         // Compare Smart On vs Off with Read On
-        comparison.push(createComparisonRow(smartOnReadOn, smartOffReadOn, totalTx, true));
+        comparison.push(createComparisonRow(smartOnReadOn, smartOffReadOn, totalTx, 'On'));
         
     }
     return comparison;
 }
 
-function areComparable(results: TestResult[]): boolean {
+// function areComparable(results: TestResult[]): boolean {
+function areComparable(results) {
     const [first, ...rest] = results;
     return rest.every(r => 
         r.utxos === first.utxos && 
@@ -152,16 +156,18 @@ function areComparable(results: TestResult[]): boolean {
     );
 }
 
-function createComparisonRow(smartOn: TestResult, smartOff: TestResult, totalTx: number, readState: boolean): any {
+// function createComparisonRow(smartOn: TestResult, smartOff: TestResult, totalTx: number, readState: string): any {
+    function createComparisonRow(smartOn, smartOff, totalTx, readState) {
     // Helper function to safely divide
-    const safeDivide = (a: number, b: number) => (b === 0 ? 0 : a / b);
+    // const safeDivide = (a: number, b: number) => (b === 0 ? 0 : a / b);
+    const safeDivide = (a, b) => (b === 0 ? 0 : a / b);
     return {
         UTXOs: smartOn.utxos,
         Users: smartOn.users,
-        'Transactions per User': smartOn.transactionsPerUser,
+        'Transactioddns per User': smartOn.transactionsPerUser,
         'Total Transactions': totalTx,
-        'With Reference Read': readState ? 'On' : 'Off', // Add this new field
-        'Concurrency Factor': safeDivide(smartOn.users * smartOn.transactionsPerUser * (readState ? 2 : 1), smartOn.utxos).toFixed(2),
+        'Concurrency Factor': safeDivide(smartOn.users * smartOn.transactionsPerUser, smartOn.utxos).toFixed(2),
+        'With Reference Read': readState,
         'Success Rate (Smart On)': `${(safeDivide(smartOn.successful, totalTx) * 100).toFixed(2)}%`,
         'Success Rate (Smart Off)': `${(safeDivide(smartOff.successful, totalTx) * 100).toFixed(2)}%`,
         'Success Rate Improvement': `${((safeDivide(smartOn.successful, totalTx) - safeDivide(smartOff.successful, totalTx)) * 100).toFixed(2)}%`,

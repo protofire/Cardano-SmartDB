@@ -38,16 +38,19 @@ export const CONFIG = {
     TX_FEE: 1000000, // 1 ADA en lovelace, ajusta según sea necesario
     SAFETY_MARGIN: 1.5, // Ajusta según sea necesario
     TEST_CASES: [
-        // { utxos: 2, users: [1, 2, 4], transactionsPerUser: [1, 2] },
-        // { utxos: 5, users: [2, 5, 10], transactionsPerUser: [1, 2, 4] },
-        // { utxos: 10, users: [5, 10, 20], transactionsPerUser: [1, 2, 4] },
-        { utxos: 10, users: [10], transactionsPerUser: [4] },
+        { utxos: 2, users: [1, 2, 4], transactionsPerUser: [1, 2] },
+        { utxos: 5, users: [2, 5, 10], transactionsPerUser: [1, 2, 4] },
+        { utxos: 10, users: [5, 10, 20], transactionsPerUser: [1, 2, 4, 8] },
+        // { utxos: 10, users: [2], transactionsPerUser: [2] },
     ] as TestCase[],
-    INITIAL_DELAY_BETWEEN_USERS: 1000, // Separación inicial entre usuarios
-    DELAY_BETWEEN_TXS: 1000, // Separación entre transacciones
-    MAX_RETRIES: 3, // Número máximo de reintentos
+    INITIAL_DELAY_BETWEEN_USERS: 500, // Separación inicial entre usuarios
+    DELAY_BETWEEN_TXS: 3000, // Separación entre transacciones
+    MAX_RETRIES_TX: 3, // Número máximo de reintentos
+    RETRY_DELAY_TX: 3000, // Retardo entre reintentos
     REQUIRED_UTXOS: 5, // Número de UTXOs requeridos para cada billetera
     COLLATERAL_UTXO_VALUE: 5000000n, // 5 ADA en lovelace
+    MAX_RETRIES_SETUP: 3, // Número máximo de reintentos en la configuración
+    RETRY_DELAY_SETUP: 3000, // Retardo entre reintentos en la configuración
 };
 
 describe('Concurrency Tests', () => {
@@ -108,10 +111,7 @@ describe('Concurrency Tests', () => {
             //--------------------
             beforeEach(async () => {
                 //---------------------
-                const MAX_RETRIES = 3;
-                const RETRY_DELAY = 5000; // 5 seconds
-                //---------------------
-                for (let retry = 0; retry < MAX_RETRIES; retry++) {
+                for (let retry = 0; retry < CONFIG.MAX_RETRIES_TX; retry++) {
                     try {
                         //---------------------
                         setupUTxOsFailed = true; // Set the flag to true before each attempt
@@ -142,12 +142,12 @@ describe('Concurrency Tests', () => {
                         break; // Exit the retry loop if successful
                     } catch (error) {
                         console.error(`[TEST] - Setup UTxOs failed (Attempt ${retry + 1}):`, error);
-                        if (retry === MAX_RETRIES - 1) {
+                        if (retry === CONFIG.MAX_RETRIES_SETUP - 1) {
                             console.error('[TEST] - All retry attempts exhausted. Setup UTxOs failed.');
                             throw error; // Rethrow the error after all retries have failed
                         } else {
-                            console.log(`[TEST] - Retrying in ${RETRY_DELAY / 1000} seconds...`);
-                            await delay(RETRY_DELAY);
+                            console.log(`[TEST] - Retrying in ${CONFIG.MAX_RETRIES_SETUP / 1000} seconds...`);
+                            await delay(CONFIG.RETRY_DELAY_SETUP);
                         }
                     }
                 }
@@ -156,7 +156,7 @@ describe('Concurrency Tests', () => {
             testCase.users.forEach((users) => {
                 testCase.transactionsPerUser.forEach((transactionsPerUser) => {
                     test(
-                        `Users: ${users}, Transactions per User: ${transactionsPerUser}, Smart Selection: On`,
+                        `Users: ${users}, Transactions per User: ${transactionsPerUser}, Smart Selection: On, With Reference Read: Off`,
                         async () => {
                             //---------------------
                             // console.log(
@@ -174,9 +174,11 @@ describe('Concurrency Tests', () => {
                                 users,
                                 transactionsPerUser,
                                 true,
+                                false,
                                 CONFIG.INITIAL_DELAY_BETWEEN_USERS,
                                 CONFIG.DELAY_BETWEEN_TXS,
-                                CONFIG.MAX_RETRIES
+                                CONFIG.MAX_RETRIES_TX,
+                                CONFIG.RETRY_DELAY_TX
                             );
                             allResults.push(result);
                             saveExcel(allResults, __dirname, fileNameResults);
@@ -185,9 +187,8 @@ describe('Concurrency Tests', () => {
                         },
                         1000 * 60 * 60 * 2
                     );
-                    //--------------------
                     test(
-                        `Users: ${users}, Transactions per User: ${transactionsPerUser}, Smart Selection: Off`,
+                        `Users: ${users}, Transactions per User: ${transactionsPerUser}, Smart Selection: Off, With Reference Read: Off`,
                         async () => {
                             //---------------------
                             // console.log(
@@ -207,9 +208,11 @@ describe('Concurrency Tests', () => {
                                 users,
                                 transactionsPerUser,
                                 false,
+                                false,
                                 CONFIG.INITIAL_DELAY_BETWEEN_USERS,
                                 CONFIG.DELAY_BETWEEN_TXS,
-                                CONFIG.MAX_RETRIES
+                                CONFIG.MAX_RETRIES_TX,
+                                CONFIG.RETRY_DELAY_TX
                             );
                             allResults.push(result);
                             saveExcel(allResults, __dirname, fileNameResults);
@@ -218,6 +221,75 @@ describe('Concurrency Tests', () => {
                         },
                         1000 * 60 * 60 * 2
                     );
+                    test(
+                        `Users: ${users}, Transactions per User: ${transactionsPerUser}, Smart Selection: On, With Reference Read: On`,
+                        async () => {
+                            //---------------------
+                            // console.log(
+                            //     `[TEST] - Running Test Case - utxos: ${testCase.utxos}, users: ${users}, transactionsPerUser: ${transactionsPerUser}, smartSelection: ${true} - ...`
+                            // );
+                            //---------------------
+                            if (setupUTxOsFailed) {
+                                throw new Error('Setup failed, skipping test');
+                            }
+                            //---------------------
+                            const result = await runTestCase(
+                                masterWallet,
+                                walletLucids,
+                                testCase.utxos,
+                                users,
+                                transactionsPerUser,
+                                true,
+                                true,
+                                CONFIG.INITIAL_DELAY_BETWEEN_USERS,
+                                CONFIG.DELAY_BETWEEN_TXS,
+                                CONFIG.MAX_RETRIES_TX,
+                                CONFIG.RETRY_DELAY_TX
+                            );
+                            allResults.push(result);
+                            saveExcel(allResults, __dirname, fileNameResults);
+                            expect(result.pass).toBe(true);
+                            //---------------------
+                        },
+                        1000 * 60 * 60 * 2
+                    );
+                    //--------------------
+                    test(
+                        `Users: ${users}, Transactions per User: ${transactionsPerUser}, Smart Selection: Off, With Reference Read: On`,
+                        async () => {
+                            //---------------------
+                            // console.log(
+                            //     `[TEST] - Running Test Case - utxos: ${
+                            //         testCase.utxos
+                            //     }, users: ${users}, transactionsPerUser: ${transactionsPerUser}, smartSelection: ${false} - ...`
+                            // );
+                            //---------------------
+                            if (setupUTxOsFailed) {
+                                throw new Error('Setup failed, skipping test');
+                            }
+                            //---------------------
+                            const result = await runTestCase(
+                                masterWallet,
+                                walletLucids,
+                                testCase.utxos,
+                                users,
+                                transactionsPerUser,
+                                false,
+                                true,
+                                CONFIG.INITIAL_DELAY_BETWEEN_USERS,
+                                CONFIG.DELAY_BETWEEN_TXS,
+                                CONFIG.MAX_RETRIES_TX,
+                                CONFIG.RETRY_DELAY_TX
+                            );
+                            allResults.push(result);
+                            saveExcel(allResults, __dirname, fileNameResults);
+                            expect(result.pass).toBe(true);
+                            //---------------------
+                        },
+                        1000 * 60 * 60 * 2
+                    );
+                    //--------------------
+                    
                 });
             });
         });
