@@ -26,7 +26,7 @@ export class MongoDatabaseService {
         }
     }
 
-    public static async update<T extends BaseEntity>(instance: T, updateSet: {}, updateUnSet: {}) {
+    public static async update<T extends BaseEntity>(instance: T, updateSet: Record<string, any>, updateUnSet: Record<string, any>) {
         try {
             await connectMongoDB();
             const MongoModel = instance.getMongo().MongoModel();
