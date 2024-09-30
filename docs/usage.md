@@ -188,9 +188,6 @@ Visit `http://localhost:3000` in your browser to view the example project in act
 
 For detailed instructions on how to use the example project, refer to its [README](../example/README.md) file located within the `example` folder.
 
-- More information about installing and running the example is provided in the [README](../example/README.md) file.
-- The example requires a Mongo or PostgreSQL database. For instructions on how to install and set up, refer to the [README](../example/README.md) file.
-
 ### Custom Entities
 
 Entities in Smart DB Library can be classified into two types: normal entities and Smart DB entities.
