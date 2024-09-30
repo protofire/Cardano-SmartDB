@@ -12,6 +12,9 @@ export class TransactionEntity extends BaseEntity {
     // #region fields
 
     @Convertible()
+    hash!: string;
+
+    @Convertible()
     paymentPKH!: PaymentKeyHash;
 
     @Convertible()
@@ -19,9 +22,6 @@ export class TransactionEntity extends BaseEntity {
 
     @Convertible()
     type!: string;
-
-    @Convertible()
-    hash!: string;
 
     @Convertible()
     status!: string;
@@ -43,6 +43,12 @@ export class TransactionEntity extends BaseEntity {
 
     @Convertible({ type: Object })
     reading_UTxOs!: OutRef[];
+
+    @Convertible()
+    createdAt!: Date;
+
+    @Convertible()
+    updatedAt!: Date;
 
     // #endregion fields
 }

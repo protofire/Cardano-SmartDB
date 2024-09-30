@@ -47,12 +47,12 @@ export class TransactionEntityMongo extends BaseEntityMongo {
 
     public static MongoModel() {
         interface Interface extends Document {
+            hash: string;
             paymentPKH: PaymentKeyHash;
             date: Date;
             type: string;
             status: string;
             error: Object;
-            hash: string;
             ids: Record<string, string>;
             redeemers: Record<string, TransactionRedeemer>;
             datums: Record<string, TransactionDatum>;
@@ -62,15 +62,15 @@ export class TransactionEntityMongo extends BaseEntityMongo {
 
         const schema = new Schema<Interface>(
             {
+                hash: { type: String, required: false, index: true },
                 paymentPKH: { type: String, required: true, index: true },
                 date: { type: Date, required: true, index: -1 },
                 type: { type: String, required: true, index: true },
                 status: { type: String, required: true, index: true },
                 error: { type: Object, required: false },
-                hash: { type: String, required: true, index: true },
-                ids: { type: Object, required: true },
-                redeemers: { type: Object, required: true },
-                datums: { type: Object, required: true },
+                ids: { type: Object, required: false },
+                redeemers: { type: Object, required: false },
+                datums: { type: Object, required: false },
                 consuming_UTxOs: { type: [Object], required: false },
                 reading_UTxOs: { type: [Object], required: false },
             },

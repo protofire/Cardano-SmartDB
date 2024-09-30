@@ -2,7 +2,7 @@ import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
 import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
 import { SmartUTxOEntity } from './SmartUTxO.Entity.js';
-import { Address, Datum, Script } from "lucid-cardano";
+import { Address, Datum, Script } from 'lucid-cardano';
 import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
 import { SmartUTxOWithDetailsEntity } from './SmartUTxO.WithDetails.Entity.js';
 
@@ -50,7 +50,9 @@ export class SmartUTxOEntityMongo extends BaseEntityMongo {
             address: Address;
             txHash: string;
             outputIndex: number;
-            isPreparing: Date | undefined;
+            isPreparingForReading: Date | undefined;
+            isReading: Date | undefined;
+            isPreparingForConsuming: Date | undefined;
             isConsuming: Date | undefined;
             assets: { [x: string]: string };
             datumHash: string | undefined;
@@ -64,25 +66,31 @@ export class SmartUTxOEntityMongo extends BaseEntityMongo {
         }
 
         //TODO poner required, controlar eso
-        const schema = new Schema<Interface>({
-            address: { type: String, required: true , index: true},
-            txHash: { type: String, required: true },
-            outputIndex: { type: Number, required: true },
-            isPreparing: { type: Date, index: true },
-            isConsuming: { type: Date, index: true },
-            assets: { type: Object, required: true },
-            datumHash: { type: String },
-            datum: { type: String },
-            datumObj: { type: Object },
-            scriptRef: { type: Object },
-            _NET_id_CS: { type: String, required: true },
-            _NET_id_TN: { type: String, required: true },
-            _is_NET_id_Unique: { type: Boolean, required: true },
-            datumType: { type: String, required: true, index: true },
-        });
+        const schema = new Schema<Interface>(
+            {
+                address: { type: String, required: true, index: true },
+                txHash: { type: String, required: true },
+                outputIndex: { type: Number, required: true },
+                isPreparingForReading: { type: Date, index: true },
+                isReading: { type: Date, index: true },
+                isPreparingForConsuming: { type: Date, index: true },
+                isConsuming: { type: Date, index: true },
+                assets: { type: Object, required: true },
+                datumHash: { type: String },
+                datum: { type: String },
+                datumObj: { type: Object },
+                scriptRef: { type: Object },
+                _NET_id_CS: { type: String, required: true },
+                _NET_id_TN: { type: String, required: true },
+                _is_NET_id_Unique: { type: Boolean, required: true },
+                datumType: { type: String, required: true, index: true },
+            },
+            { timestamps: true }
+        );
 
         schema.index({ txHash: 1, outputIndex: 1 });
-        schema.index({ isPreparing: 1, isConsuming: 1 });
+        // schema.index({ isPreparingReading: 1, isReading: 1 });
+        // schema.index({ isPreparingConsuming: 1, isConsuming: 1 });
 
         const modelDB = models[this._mongoTableName] || model<Interface>(this._mongoTableName, schema);
         return modelDB;

@@ -1,5 +1,5 @@
 import type { OutRef, PaymentKeyHash, UTxO } from 'lucid-cardano';
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
 import { TransactionDatum, TransactionRedeemer } from '../Commons/index.js';
 import { getPostgreSQLTableName } from '../Commons/utils.js';
@@ -48,6 +48,10 @@ export class TransactionEntityPostgreSQL extends BaseEntityPostgreSQL {
     @PrimaryGeneratedColumn()
     _id!: number; // ID auto-generado
 
+    @Column({ type: 'varchar', nullable: true })
+    @Index()
+    hash!: string;
+
     @Column({ type: 'varchar', nullable: false })
     @Index()
     paymentPKH!: PaymentKeyHash;
@@ -67,24 +71,26 @@ export class TransactionEntityPostgreSQL extends BaseEntityPostgreSQL {
     @Column({ type: 'jsonb', nullable: true })
     error!: Object | undefined;
 
-    @Column({ type: 'varchar', nullable: false })
-    @Index()
-    hash!: string;
-
-    @Column({ type: 'jsonb', nullable: false })
+    @Column({ type: 'jsonb', nullable: true })
     ids!: Record<string, string>;
 
-    @Column({ type: 'jsonb', nullable: false })
+    @Column({ type: 'jsonb', nullable: true })
     redeemers!: Record<string, TransactionRedeemer>;
 
-    @Column({ type: 'jsonb', nullable: false })
+    @Column({ type: 'jsonb', nullable: true })
     datums!: Record<string, TransactionDatum>;
 
     @Column({ type: 'jsonb', nullable: true })
-    consuming_UTxOs!: OutRef[] | undefined;
+    consuming_UTxOs!: OutRef[] ;
 
     @Column({ type: 'jsonb', nullable: true })
-    reading_UTxOs!: OutRef[] | undefined;
+    reading_UTxOs!: OutRef[] ;
+
+    @CreateDateColumn()
+    createdAt!: Date;
+
+    @UpdateDateColumn()
+    updatedAt!: Date;
 
     // #endregion fields
 }

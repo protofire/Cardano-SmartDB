@@ -15,7 +15,7 @@ export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
     // protected static _BackEndMethods = this._BackEndApplied.getBack();
 
     // #region custom api handlers
-    protected static _ApiHandlers: string[] = ['status-updater', 'update-failed-transaction', 'begin-status-updater', 'submit-and-begin-status-updater', 'get-status'];
+    protected static _ApiHandlers: string[] = ['status-updater', 'update-canceled-transaction', 'update-failed-transaction', 'begin-status-updater', 'submit-and-begin-status-updater', 'get-status'];
 
     protected static async executeApiHandlers(command: string, req: NextApiRequestAuthenticated, res: NextApiResponse) {
         //--------------------
@@ -24,6 +24,13 @@ export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
         if (this._ApiHandlers.includes(command) && query !== undefined) {
             if (query[0] === 'begin-status-updater') {
                 return await this.beginStatusUpdaterJobApiHandler(req, res);
+            } else if (query[0] === 'update-canceled-transaction') {
+                if (query.length === 2) {
+                    req.query = { txHash: query[1] };
+                } else {
+                    req.query = {};
+                }
+                return await this.updateCanceledTransactionApiHandler(req, res);
             } else if (query[0] === 'update-failed-transaction') {
                 if (query.length === 2) {
                     req.query = { txHash: query[1] };
@@ -64,6 +71,62 @@ export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
     // #endregion custom api handlers
 
     // #region api handlers
+
+    
+    public static async updateCanceledTransactionApiHandler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
+        if (req.method === 'POST') {
+            //-------------------------
+            console_log(1, this._Entity.className(), `updateCanceledTransactionApiHandler - GET - Init`);
+            console_log(0, this._Entity.className(), `query: ${showData(req.query)}`);
+            //-------------------------
+            try {
+                //-------------------------
+                const sanitizedQuery = sanitizeForDatabase(req.query);
+                //-------------------------
+                const schemaQuery = yup.object().shape({
+                    txHash: yup.string().required(),
+                });
+                //-------------------------
+                let validatedQuery;
+                try {
+                    validatedQuery = await schemaQuery.validate(sanitizedQuery);
+                } catch (error) {
+                    console_error(-1, this._Entity.className(), `updateCanceledTransactionApiHandler - Error: ${error}`);
+                    return res.status(400).json({ error });
+                }
+                //--------------------------------------
+                const { txHash } = validatedQuery;
+                //-------------------------
+                const sanitizedBody = sanitizeForDatabase(req.body);
+                //-------------------------
+                const schemaBody = yup.object().shape({
+                    error: yup.object().required(),
+                });
+                //-------------------------
+                let validatedBody;
+                try {
+                    validatedBody = await schemaBody.validate(sanitizedBody);
+                } catch (error) {
+                    console_error(-1, this._Entity.className(), `updateCanceledTransactionApiHandler - Error: ${error}`);
+                    return res.status(400).json({ error });
+                }
+                //--------------------------------------
+                const { error } = validatedBody;
+                //-------------------------
+                await this._BackEndApplied.setCanceledTransactionByHash(txHash, error);
+                //-------------------------
+                console_log(-1, this._Entity.className(), `updateCanceledTransactionApiHandler - GET - OK`);
+                //-------------------------
+                return res.status(200).json({ isUpdated: true });
+            } catch (error) {
+                console_error(-1, this._Entity.className(), `updateCanceledTransactionApiHandler - Error: ${error}`);
+                return res.status(500).json({ error: `An error occurred while updating failed transaction: ${error}` });
+            }
+        } else {
+            console_error(-1, this._Entity.className(), `updateCanceledTransactionApiHandler - Error: Method not allowed`);
+            return res.status(405).json({ error: `Method not allowed` });
+        }
+    }
 
     public static async updateFailedTransactionApiHandler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
         if (req.method === 'POST') {

@@ -1,8 +1,9 @@
 import { TransactionEntity } from '../../Entities/Transaction.Entity.js';
 import { BlockFrostBackEnd } from '../../lib/BlockFrost/BlockFrost.BackEnd.js';
 import {
-    TRANSACTION_STATUS_CANCELED,
-    TRANSACTION_STATUS_FAILED,
+    isEmulator,
+    TRANSACTION_STATUS_CONFIRMED,
+    TRANSACTION_STATUS_CREATED,
     TRANSACTION_STATUS_PENDING,
     TRANSACTION_STATUS_SUBMITTED,
     TRANSACTION_STATUS_TIMEOUT,
@@ -10,8 +11,7 @@ import {
     TX_CONSUMING_TIME,
     TX_PREPARING_TIME,
     TX_TIMEOUT,
-    TX_WAIT_FOR_SYNC,
-    isEmulator
+    TX_WAIT_FOR_SYNC
 } from '../Constants/constants.js';
 import { RegistryManager } from '../Decorators/registerManager.js';
 import { delay, showData, toJson } from '../utils.js';
@@ -28,15 +28,11 @@ export class TransactionStatusUpdater {
             //-------------------------
             const TransactionBackEndApplied = (await import('../../BackEnd/Transaction.BackEnd.Applied.js')).TransactionBackEndApplied;
             //-------------------------
+            // revisa cualquier estado menos las que ya han sido confirmadas ni las que estan en proceso de creacion
+            //-------------------------
             const unconfirmedTransaction: TransactionEntity | undefined = await TransactionBackEndApplied.getOneByParams_({
                 hash: txHash,
-                $or: [
-                    { status: TRANSACTION_STATUS_FAILED },
-                    { status: TRANSACTION_STATUS_TIMEOUT },
-                    { status: TRANSACTION_STATUS_CANCELED },
-                    { status: TRANSACTION_STATUS_SUBMITTED },
-                    { status: TRANSACTION_STATUS_PENDING },
-                ],
+                status: { $nin: [TRANSACTION_STATUS_CONFIRMED, TRANSACTION_STATUS_CREATED] },
             });
             //-------------------------
             if (unconfirmedTransaction === undefined) {
@@ -76,7 +72,12 @@ export class TransactionStatusUpdater {
                     //-------------------------
                     if (swCheckAgainTxWithTimeOut) {
                         const timeoutTransactions: TransactionEntity[] = await TransactionBackEndApplied.getByParams_({
-                            $or: [{ status: TRANSACTION_STATUS_TIMEOUT }, { status: TRANSACTION_STATUS_CANCELED }],
+                            $or: [{ status: TRANSACTION_STATUS_TIMEOUT }],
+                            // antes revisaba pending timeout, pero ese se pone desde pending, o sea, nunca se enviaron a la red, no hace falta revisar
+                            // las timeout si, por que esas eran submited que se pasaron de tiempo de espera
+                            // las failed tampoco  fueron nunca submitted. Las puso asi el frontend cuando se intentaba firmar o submitiar. Existe una minima chance de que se hayan submiteado pero luego arroja error y quedan failed.
+                            // pero no por eso lo voy a agregar aca. Para eso se puede revisar manualmente las tx en transactionUpdater(hash)
+                            //, { status: TRANSACTION_STATUS_PENDING_TIMEOUT }
                         });
                         unconfirmedTransactions.push(...timeoutTransactions);
                         swCheckAgainTxWithTimeOut = false;
@@ -95,7 +96,7 @@ export class TransactionStatusUpdater {
                     console_error(0, `TxStatus`, `UpdaterJob - Error: ${error} - Retrying...`);
                 }
                 // Sleep for TX_CHECK_INTERVAL before the next iteration
-                await delay(TX_CHECK_INTERVAL)
+                await delay(TX_CHECK_INTERVAL);
             }
         } catch (error) {
             console_error(0, `TxStatus`, `UpdaterJob - Error: ${error}`);
@@ -118,7 +119,7 @@ export class TransactionStatusUpdater {
         for (let pendingTransaction of pendingTransactions) {
             const currentTime = serverTime;
             if (currentTime - pendingTransaction.date.getTime() > TX_PREPARING_TIME) {
-                await TransactionBackEndApplied.updateTransactionStatusAndUTxOs(pendingTransaction, TRANSACTION_STATUS_CANCELED);
+                await TransactionBackEndApplied.setPendingTransactionTimeout(pendingTransaction);
             }
         }
     }
@@ -250,15 +251,25 @@ export class TransactionStatusUpdater {
                     //-------------------------
                     console_log(0, `TxStatus`, `UpdaterJob - unconfirmedTransaction: ${unconfirmedTransaction.hash} - TIMEOUT`);
                     //-------------------------
-                    await TransactionBackEndApplied.updateTransactionStatusAndUTxOs(unconfirmedTransaction, TRANSACTION_STATUS_TIMEOUT);
+                    // NOTE: uso un tiempo TX_TIMEOUT mayor que el TX_CONSUMING_TIME, solo por que quiero tener mas margen de que se confirme y hacer el sync
+                    // si seteo que es time out y luego se confirma no tendre el sync adecuado
+                    // pero igual como Consuming time es mas chico, las utxos usadas se liberaron al menos logicamente para otros usuarios las usen
+                    // es posible que la tx haya caido en algun pool de tx y nadie la termino de confirmar
+                    // en ese caso quiero que otro usuario pueda crear otra tx
+                    // de todas formas si luego la tx es tomada de ese pool perdido y se intenta confirmar, sera cuestion de si tiene o no los utxos disponibles aun
+                    //-------------------------
+                    await TransactionBackEndApplied.updateTransactionStatus(unconfirmedTransaction, TRANSACTION_STATUS_TIMEOUT);
                     //-------------------------
                 }
-                // NOTE: aqui no cambio el estado de la transaccion, solo libero los utxos. No importa el estado actual tampoco. Es una medida de seguridad
                 if (currentTime - unconfirmedTransaction.date.getTime() > TX_CONSUMING_TIME) {
                     //-------------------------
                     console_log(0, `TxStatus`, `UpdaterJob - unconfirmedTransaction: ${unconfirmedTransaction.hash} - RELEASE UTXO`);
                     //-------------------------
-                    await TransactionBackEndApplied.relseaseUTxOs(unconfirmedTransaction);
+                    // NOTE: aqui no cambio el estado de la transaccion, solo libero los utxos. No importa el estado actual tampoco. Es una medida de seguridad
+                    // De todas formas tampoco tengo que hacer nada, por que las utxos ya no tienen mas el flag
+                    // cuando pregunte por utxos libres, tendre en cuenta el estado de la tx y el TX_CONSUMING_TIME
+                    // si ya paso ese tiempo voy a considerar que la tx fallo y puedo usar los utxos
+                    // await TransactionBackEndApplied.relseaseUTxOs(unconfirmedTransaction);
                     //-------------------------
                 }
             }

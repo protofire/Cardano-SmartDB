@@ -1,5 +1,5 @@
 import type { Datum, Script } from 'lucid-cardano';
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
 import { getPostgreSQLTableName } from '../Commons/utils.js';
 import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js'; // Change the base class to the TypeORM version
@@ -9,7 +9,7 @@ import { SmartUTxOWithDetailsEntity } from './SmartUTxO.WithDetails.Entity.js'; 
 @PostgreSQLAppliedFor([SmartUTxOEntity, SmartUTxOWithDetailsEntity])
 @Entity(getPostgreSQLTableName(SmartUTxOEntity.className()))
 @Index(['txHash', 'outputIndex']) // Composite index
-@Index(['isPreparing', 'isConsuming']) // Additional index
+// @Index(['isPreparing', 'isConsuming']) // Additional index
 export class SmartUTxOEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = SmartUTxOEntity;
 
@@ -57,7 +57,13 @@ export class SmartUTxOEntityPostgreSQL extends BaseEntityPostgreSQL {
     outputIndex!: number;
 
     @Column({ type: 'timestamptz', nullable: true })
-    isPreparing!: Date | undefined;
+    isPreparingForReading!: Date [];
+
+    @Column({ type: 'timestamptz', nullable: true })
+    isReading!: Date [];
+
+    @Column({ type: 'timestamptz', nullable: true })
+    isPreparingForConsuming!: Date | undefined;
 
     @Column({ type: 'timestamptz', nullable: true })
     isConsuming!: Date | undefined;
@@ -89,6 +95,12 @@ export class SmartUTxOEntityPostgreSQL extends BaseEntityPostgreSQL {
     @Column({ type: 'varchar', nullable: false })
     @Index()
     datumType!: string;
+
+    @CreateDateColumn()
+    createdAt!: Date;
+
+    @UpdateDateColumn()
+    updatedAt!: Date;
 
     // #endregion fields
 }

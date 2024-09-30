@@ -23,7 +23,7 @@ import {
     console_log,
     isEmulator,
     objToCborHex,
-    optionsGetMinimalWithSmartUTxO,
+    optionsGetMinimalWithSmartUTxOCompleteFields,
     sanitizeForDatabase,
     showData,
     strToHex,
@@ -345,7 +345,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 const dummyPolicyRedeemerMintID_Hex = objToCborHex(dummyPolicyRedeemerMintID);
                 console_log(0, this._Entity.className(), `Create Tx - dummyPolicyRedeemerMintID_Hex: ${showData(dummyPolicyRedeemerMintID_Hex, false)}`);
                 //--------------------------------------
-                const { from, until } = await TimeBackEnd.getTxTimeRange();
+                const { now, from, until } = await TimeBackEnd.getTxTimeRange();
                 console_log(0, this._Entity.className(), `Create Tx - from ${from} to ${until}`);
                 //--------------------------------------
                 let tx: Tx = lucid.newTx();
@@ -375,7 +375,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 //--------------------------------------
                 const transaction: TransactionEntity = new TransactionEntity({
                     paymentPKH: walletTxParams.pkh,
-                    date: new Date(from),
+                    date: new Date(now),
                     type: DUMMY_CREATE,
                     hash: txHash,
                     status: TRANSACTION_STATUS_PENDING,
@@ -425,7 +425,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 const { datumID_CS, datumID_TN, mintingIdDummy, validatorDummy, dummy_id } = txParams;
                 //--------------------------------------
                 const dummy = await DummyBackEndApplied.getById_<DummyEntity>(dummy_id, {
-                    ...optionsGetMinimalWithSmartUTxO,
+                    ...optionsGetMinimalWithSmartUTxOCompleteFields,
                 });
                 if (dummy === undefined) {
                     throw `Invalid dummy id`;
@@ -435,7 +435,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 if (dummy_SmartUTxO === undefined) {
                     throw `Can't find Dummy UTxO`;
                 }
-                if (dummy_SmartUTxO.isPreparing !== undefined || dummy_SmartUTxO.isConsuming !== undefined) {
+                if (dummy_SmartUTxO.unsafeIsAvailableForConsuming() === false) {
                     throw `Dummy UTxO is being used, please wait and try again`;
                 }
                 //--------------------------------------
@@ -455,7 +455,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 const dummyValidatorRedeemerClaim_Hex = objToCborHex(dummyValidatorRedeemerClaim);
                 console_log(0, this._Entity.className(), `Claim Tx - dummyValidatorRedeemerClaim_Hex: ${showData(dummyValidatorRedeemerClaim_Hex, false)}`);
                 //--------------------------------------
-                const { from, until } = await TimeBackEnd.getTxTimeRange();
+                const { now, from, until } = await TimeBackEnd.getTxTimeRange();
                 console_log(0, this._Entity.className(), `Claim Tx - from ${from} to ${until}`);
                 //--------------------------------------
                 let tx: Tx = lucid.newTx();
@@ -493,7 +493,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 //--------------------------------------
                 const transaction: TransactionEntity = new TransactionEntity({
                     paymentPKH: walletTxParams.pkh,
-                    date: new Date(from),
+                    date: new Date(now),
                     type: DUMMY_CLAIM,
                     hash: txHash,
                     status: TRANSACTION_STATUS_PENDING,
@@ -561,7 +561,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 console_log(0, this._Entity.className(), `Update Tx - valueFor_ID: ${showData(valueFor_ID)}`);
                 //--------------------------------------
                 const dummy = await DummyBackEndApplied.getById_<DummyEntity>(dummy_id, {
-                    ...optionsGetMinimalWithSmartUTxO,
+                    ...optionsGetMinimalWithSmartUTxOCompleteFields,
                 });
                 if (dummy === undefined) {
                     throw `Invalid dummy id`;
@@ -571,7 +571,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 if (dummy_SmartUTxO === undefined) {
                     throw `Can't find Dummy UTxO`;
                 }
-                if (dummy_SmartUTxO.isPreparing !== undefined || dummy_SmartUTxO.isConsuming !== undefined) {
+                if (dummy_SmartUTxO.unsafeIsAvailableForConsuming() === false) {
                     throw `Dummy UTxO is being used, please wait and try again`;
                 }
                 //--------------------------------------
@@ -596,8 +596,8 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 const dummyValidatorRedeemerDatumUpdate_Hex = objToCborHex(dummyValidatorRedeemerDatumUpdate);
                 console_log(0, this._Entity.className(), `Update Tx - dummyValidatorRedeemerDatumUpdate_Hex: ${showData(dummyValidatorRedeemerDatumUpdate_Hex, false)}`);
                 //--------------------------------------
-                const { from, until } = await TimeBackEnd.getTxTimeRange();
-                console_log(0, this._Entity.className(), `Claim Tx - from ${from} to ${until}`);
+                const { now, from, until } = await TimeBackEnd.getTxTimeRange();
+                console_log(0, this._Entity.className(), `Update Tx - from ${from} to ${until}`);
                 //--------------------------------------
                 let tx: Tx = lucid.newTx();
                 //--------------------------------------
@@ -633,7 +633,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 //--------------------------------------
                 const transaction: TransactionEntity = new TransactionEntity({
                     paymentPKH: walletTxParams.pkh,
-                    date: new Date(from),
+                    date: new Date(now),
                     type: DUMMY_UPDATE,
                     hash: txHash,
                     status: TRANSACTION_STATUS_PENDING,

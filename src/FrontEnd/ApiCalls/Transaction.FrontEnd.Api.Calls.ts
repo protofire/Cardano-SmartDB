@@ -8,6 +8,38 @@ export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
 
     // #region api
 
+    public static async updateCanceledTransactionApi(txHash: string, error: Record<string, any>): Promise<boolean> {
+        try {
+            //-------------------------
+            if (isNullOrBlank(txHash)) {
+                throw `txHash not defined`;
+            }
+            //------------------
+            const body = toJson({ error });
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/update-cenceled-transaction/${txHash}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body,
+            });
+            //------------------
+            if (response.status === 200) {
+                const data = await response.json();
+                console.log(`[${this._Entity.className()}] - updateCanceledTransactionApi - isStarted: ${data.isUpdated} - response OK`);
+                return data.isUpdated;
+            } else {
+                const errorData = await response.json();
+                //throw `Received status code ${response.status} with message: ${errorData.error.message ? errorData.error.message : errorData.error}`;
+                throw `${errorData.error.message ? errorData.error.message : errorData.error}`;
+            }
+            //-------------------------
+        } catch (error) {
+            console.log(`[${this._Entity.className()}] - updateCanceledTransactionApi - Error: ${error}`);
+            throw `${error}`;
+        }
+    }
+
     public static async updateFailedTransactionApi(txHash: string, error: Record<string, any>): Promise<boolean> {
         try {
             //-------------------------

@@ -1,6 +1,6 @@
-import { Address, Assets, MintingPolicy, SpendingValidator, Tx } from 'lucid-cardano';
+import { Address, Assets, MintingPolicy, OutRef, SpendingValidator, Tx } from 'lucid-cardano';
 import { NextApiResponse } from 'next';
-import {} from 'smart-db';
+import { createErrorObject, getOutRef, SmartUTxOEntity, TRANSACTION_STATUS_CREATED } from 'smart-db';
 import {
     BackEndApiHandlersFor,
     BackEndAppliedFor,
@@ -10,6 +10,7 @@ import {
     CS,
     LucidToolsBackEnd,
     NextApiRequestAuthenticated,
+    SmartUTxOBackEndApplied,
     TRANSACTION_STATUS_PENDING,
     TimeBackEnd,
     TransactionBackEndApplied,
@@ -23,7 +24,7 @@ import {
     console_log,
     isEmulator,
     objToCborHex,
-    optionsGetMinimalWithSmartUTxO,
+    optionsGetMinimalWithSmartUTxOCompleteFields,
     sanitizeForDatabase,
     showData,
     strToHex,
@@ -146,79 +147,100 @@ export class FreeApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 const validatorAddress: Address = lucid.utils.validatorToAddress(this.validatorFree);
                 console_log(0, this._Entity.className(), `Create Tx - validatorAddress: ${validatorAddress}`);
                 //----------------------------
-                const lucidAC_MintID = freeID_CS + strToHex(freeID_TN);
-                const valueFor_Mint_ID: Assets = { [lucidAC_MintID]: 1n };
-                console_log(0, this._Entity.className(), `Create Tx - valueFor_Mint_ID: ${showData(valueFor_Mint_ID)}`);
-                //----------------------------
-                let valueFor_FreeDatum_Out: Assets = valueFor_Mint_ID;
-                const minADA_For_FreeDatum = calculateMinAdaOfUTxO({ assets: valueFor_FreeDatum_Out });
-                const value_MinAda_For_FreeDatum: Assets = { lovelace: minADA_For_FreeDatum };
-                valueFor_FreeDatum_Out = addAssetsList([value_MinAda_For_FreeDatum, valueFor_FreeDatum_Out]);
-                console_log(0, this._Entity.className(), `Create Tx - valueFor_FundDatum_Out: ${showData(valueFor_FreeDatum_Out, false)}`);
-                //--------------------------------------
-                const datumPlainObject = {
-                    fdValue: BigInt(0),
-                };
-                //--------------------------------------
-                let freeDatum_Out = FreeEntity.mkDatumFromPlainObject(datumPlainObject);
-                console_log(0, this._Entity.className(), `Create Tx - freeDatum_Out: ${showData(freeDatum_Out, false)}`);
-                const freeDatum_Out_Hex = FreeEntity.datumToCborHex(freeDatum_Out);
-                console_log(0, this._Entity.className(), `Create Tx - freeDatum_Out_Hex: ${showData(freeDatum_Out_Hex, false)}`);
-                //--------------------------------------
-                const freePolicyRedeemerMintID = new FreePolicyRedeemerMintID();
-                console_log(0, this._Entity.className(), `Create Tx - freePolicyRedeemerMintID: ${showData(freePolicyRedeemerMintID, false)}`);
-                const freePolicyRedeemerMintID_Hex = objToCborHex(freePolicyRedeemerMintID);
-                console_log(0, this._Entity.className(), `Create Tx - freePolicyRedeemerMintID_Hex: ${showData(freePolicyRedeemerMintID_Hex, false)}`);
-                //--------------------------------------
-                const { from, until } = await TimeBackEnd.getTxTimeRange();
+                const { now, from, until } = await TimeBackEnd.getTxTimeRange();
                 console_log(0, this._Entity.className(), `Create Tx - from ${from} to ${until}`);
                 //--------------------------------------
-                let tx: Tx = lucid.newTx();
+                let transaction: TransactionEntity | undefined = undefined;
                 //--------------------------------------
-                tx = await tx
-                    .mintAssets(valueFor_Mint_ID, freePolicyRedeemerMintID_Hex)
-                    .payToContract(validatorAddress, { inline: freeDatum_Out_Hex }, valueFor_FreeDatum_Out)
-                    .attachMintingPolicy(this.mintingIdFree);
-                //--------------------------------------
-                const txComplete = await tx.complete();
-                //--------------------------------------
-                const txCborHex = txComplete.toString();
-                //--------------------------------------
-                const txHash = txComplete.toHash();
-                //--------------------------------------
-                const transactionFreePolicyRedeemerMintID: TransactionRedeemer = {
-                    tx_index: 0,
-                    purpose: 'mint',
-                    redeemerObj: freePolicyRedeemerMintID,
-                };
-                //--------------------------------------
-                const transactionFreeDatum_Out: TransactionDatum = {
-                    address: validatorAddress,
-                    datumType: FreeEntity.className(),
-                    datumObj: freeDatum_Out,
-                };
-                //--------------------------------------
-                const transaction: TransactionEntity = new TransactionEntity({
-                    paymentPKH: walletTxParams.pkh,
-                    date: new Date(from),
-                    type: FREE_CREATE,
-                    hash: txHash,
-                    status: TRANSACTION_STATUS_PENDING,
-                    ids: {},
-                    redeemers: {
-                        freePolicyRedeemerMintID: transactionFreePolicyRedeemerMintID,
-                    },
-                    datums: { freeDatum_Out: transactionFreeDatum_Out },
-                    consuming_UTxOs: [],
-                });
-                //--------------------------------------
-                const transaction_ = await TransactionBackEndApplied.create(transaction);
-                //--------------------------------------
-                await TransactionBackEndApplied.setPendingTransaction(transaction_);
-                //--------------------------------------
-                console_log(-1, this._Entity.className(), `Create Tx - txCborHex: ${showData(txCborHex)}`);
-                return res.status(200).json({ txCborHex });
-                //--------------------------------------
+                try {
+                    //--------------------------------------
+                    // NOTE: leer nota abajo
+                    //--------------------------------------
+                    const reading_UTxOs: OutRef[] = [];
+                    const consuming_UTxOs: OutRef[] = [];
+                    //--------------------------------------
+                    const transaction_ = new TransactionEntity({
+                        paymentPKH: walletTxParams.pkh,
+                        date: new Date(now),
+                        type: FREE_CREATE,
+                        status: TRANSACTION_STATUS_CREATED,
+                        reading_UTxOs,
+                        consuming_UTxOs,
+                    });
+                    //--------------------------------------
+                    transaction = await TransactionBackEndApplied.create(transaction_);
+                    //--------------------------------------
+                    const lucidAC_MintID = freeID_CS + strToHex(freeID_TN);
+                    const valueFor_Mint_ID: Assets = { [lucidAC_MintID]: 1n };
+                    console_log(0, this._Entity.className(), `Create Tx - valueFor_Mint_ID: ${showData(valueFor_Mint_ID)}`);
+                    //----------------------------
+                    let valueFor_FreeDatum_Out: Assets = valueFor_Mint_ID;
+                    const minADA_For_FreeDatum = calculateMinAdaOfUTxO({ assets: valueFor_FreeDatum_Out });
+                    const value_MinAda_For_FreeDatum: Assets = { lovelace: minADA_For_FreeDatum };
+                    valueFor_FreeDatum_Out = addAssetsList([value_MinAda_For_FreeDatum, valueFor_FreeDatum_Out]);
+                    console_log(0, this._Entity.className(), `Create Tx - valueFor_FundDatum_Out: ${showData(valueFor_FreeDatum_Out, false)}`);
+                    //--------------------------------------
+                    const datumPlainObject = {
+                        fdValue: BigInt(0),
+                    };
+                    //--------------------------------------
+                    let freeDatum_Out = FreeEntity.mkDatumFromPlainObject(datumPlainObject);
+                    console_log(0, this._Entity.className(), `Create Tx - freeDatum_Out: ${showData(freeDatum_Out, false)}`);
+                    const freeDatum_Out_Hex = FreeEntity.datumToCborHex(freeDatum_Out);
+                    console_log(0, this._Entity.className(), `Create Tx - freeDatum_Out_Hex: ${showData(freeDatum_Out_Hex, false)}`);
+                    //--------------------------------------
+                    const freePolicyRedeemerMintID = new FreePolicyRedeemerMintID();
+                    console_log(0, this._Entity.className(), `Create Tx - freePolicyRedeemerMintID: ${showData(freePolicyRedeemerMintID, false)}`);
+                    const freePolicyRedeemerMintID_Hex = objToCborHex(freePolicyRedeemerMintID);
+                    console_log(0, this._Entity.className(), `Create Tx - freePolicyRedeemerMintID_Hex: ${showData(freePolicyRedeemerMintID_Hex, false)}`);
+                    //--------------------------------------
+                    let tx: Tx = lucid.newTx();
+                    //--------------------------------------
+                    tx = await tx
+                        .mintAssets(valueFor_Mint_ID, freePolicyRedeemerMintID_Hex)
+                        .payToContract(validatorAddress, { inline: freeDatum_Out_Hex }, valueFor_FreeDatum_Out)
+                        .attachMintingPolicy(this.mintingIdFree);
+                    //--------------------------------------
+                    const txComplete = await tx.complete();
+                    //--------------------------------------
+                    const txCborHex = txComplete.toString();
+                    //--------------------------------------
+                    const txHash = txComplete.toHash();
+                    //--------------------------------------
+                    const transactionFreePolicyRedeemerMintID: TransactionRedeemer = {
+                        tx_index: 0,
+                        purpose: 'mint',
+                        redeemerObj: freePolicyRedeemerMintID,
+                    };
+                    //--------------------------------------
+                    const transactionFreeDatum_Out: TransactionDatum = {
+                        address: validatorAddress,
+                        datumType: FreeEntity.className(),
+                        datumObj: freeDatum_Out,
+                    };
+                    //--------------------------------------
+                    await TransactionBackEndApplied.setPendingTransaction(transaction, {
+                        hash: txHash,
+                        ids: {},
+                        redeemers: {
+                            freePolicyRedeemerMintID: transactionFreePolicyRedeemerMintID,
+                        },
+                        datums: { freeDatum_Out: transactionFreeDatum_Out },
+                    });
+                    //--------------------------------------
+                    console_log(-1, this._Entity.className(), `Create Tx - txHash: ${txHash} - txCborHex: ${showData(txCborHex)}`);
+                    return res.status(200).json({ txHash, txCborHex });
+                    //--------------------------------------
+                } catch (error) {
+                    //--------------------------------------
+                    // NOTE: si existe la transaccion, la elimino
+                    // con esto libero los utxos
+                    if (transaction !== undefined) {
+                        await TransactionBackEndApplied.delete(transaction);
+                    }
+                    //--------------------------------------
+                    throw error;
+                }
             } catch (error) {
                 console_error(-1, this._Entity.className(), `Create Tx - Error: ${error}`);
                 return res.status(500).json({ error: `An error occurred while creating the ${this._Entity.apiRoute()} Create Tx: ${error}` });
@@ -260,106 +282,133 @@ export class FreeApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 const validatorAddress: Address = lucid.utils.validatorToAddress(this.validatorFree);
                 console_log(0, this._Entity.className(), `Claim Tx - validatorAddress: ${validatorAddress}`);
                 //--------------------------------------
-                const free_SmartUTxOs = await Promise.all(
-                    free_ids.map(async (free_id) => {
-                        const free = await FreeBackEndApplied.getById_<FreeEntity>(free_id, {
-                            ...optionsGetMinimalWithSmartUTxO,
-                        });
-                        if (free === undefined) {
-                            throw `Invalid free id: ${free_id}`;
-                        }
-                        const free_SmartUTxO = free.smartUTxO;
-                        if (free_SmartUTxO === undefined) {
-                            throw `Can't find Free UTxO for id: ${free_id}`;
-                        }
-                        if (free_SmartUTxO.isPreparing !== undefined || free_SmartUTxO.isConsuming !== undefined) {
-                            throw `Free UTxO for id: ${free_id} is being used, please wait and try again`;
-                        }
-                        return free_SmartUTxO;
-                    })
-                );
-                //--------------------------------------
-                const free_UTxOs = free_SmartUTxOs.map((free_SmartUTxO) => free_SmartUTxO.getUTxO());
-                //--------------------------------------
-                const lucidAC_BurnID = freeID_CS + strToHex(freeID_TN);
-                const valueFor_Burn_ID: Assets = { [lucidAC_BurnID]: -1n };
-                console_log(0, this._Entity.className(), `Claim Tx - valueFor_Burn_ID: ${showData(valueFor_Burn_ID)}`);
-                //----------------------------
-                const freePolicyRedeemerBurnID = new FreePolicyRedeemerBurnID();
-                console_log(0, this._Entity.className(), `Claim Tx - freePolicyRedeemerBurnID: ${showData(freePolicyRedeemerBurnID, false)}`);
-                const freePolicyRedeemerBurnID_Hex = objToCborHex(freePolicyRedeemerBurnID);
-                console_log(0, this._Entity.className(), `Claim Tx - freePolicyRedeemerBurnID_Hex: ${showData(freePolicyRedeemerBurnID_Hex, false)}`);
-                //--------------------------------------
-                const freeValidatorRedeemerClaim = new FreeValidatorRedeemerClaim();
-                console_log(0, this._Entity.className(), `Claim Tx - freeValidatorRedeemerClaim: ${showData(freeValidatorRedeemerClaim, false)}`);
-                const freeValidatorRedeemerClaim_Hex = objToCborHex(freeValidatorRedeemerClaim);
-                console_log(0, this._Entity.className(), `Claim Tx - freeValidatorRedeemerClaim_Hex: ${showData(freeValidatorRedeemerClaim_Hex, false)}`);
-                //--------------------------------------
-                const { from, until } = await TimeBackEnd.getTxTimeRange();
+                const { now, from, until } = await TimeBackEnd.getTxTimeRange();
                 console_log(0, this._Entity.className(), `Claim Tx - from ${from} to ${until}`);
                 //--------------------------------------
-                let tx: Tx = lucid.newTx();
+                let transaction: TransactionEntity | undefined = undefined;
                 //--------------------------------------
-                tx = await tx
-                    .mintAssets(valueFor_Burn_ID, freePolicyRedeemerBurnID_Hex)
-                    .collectFrom(free_UTxOs, freeValidatorRedeemerClaim_Hex)
-                    .attachMintingPolicy(this.mintingIdFree)
-                    .attachSpendingValidator(this.validatorFree)
-                    .addSigner(address);
-                //----------------------------
-                const txComplete = await tx.complete();
-                //--------------------------------------
-                const txCborHex = txComplete.toString();
-                //--------------------------------------
-                const txHash = txComplete.toHash();
-                //--------------------------------------
-                const transactionFreePolicyRedeemerBurnID: TransactionRedeemer = {
-                    tx_index: 0,
-                    purpose: 'mint',
-                    redeemerObj: freePolicyRedeemerBurnID,
-                };
-                //--------------------------------------
-                const transactionFreeValidatorRedeemerClaim: TransactionRedeemer = {
-                    tx_index: 0,
-                    purpose: 'spend',
-                    redeemerObj: freeValidatorRedeemerClaim,
-                };
-                //--------------------------------------
-                const transactionFreeDatums_In: TransactionDatum[] = free_SmartUTxOs.map((free_SmartUTxO) => {
-                    return {
-                        address: free_SmartUTxO.address,
-                        datumType: FreeEntity.className(),
-                        datumObj: free_SmartUTxO.datumObj,
+                try {
+                    //--------------------------------------
+                    // NOTE: este bloque try crea una transaccion temporal y ya la guarda en la base de datos
+                    // al existir una transaccion con reading o consuming utxos esos utxos quedan separados y evita que se usen en otra transaccion
+                    // si hay algun error en la creacion de la transaccion se elimina de la base de datos y con eso se liberan los utxos
+                    // Esto soluciona el problema de una concurrencia muy simultanea. En esos casos antes pasaba que encontraba utxo libres y no las marcaba al momento, si no recien al final al guardar la transaccion
+                    // al ser tan simultaneo, otro proceso podia encontrar los mismos utxos libres y usarlos antes de que se marquen como consumidos
+                    // Ahora me aseguro que al encontrar los utxos libres, ya los marco como consumidos
+                    //--------------------------------------
+                    const free_SmartUTxOs = await Promise.all(
+                        free_ids.map(async (free_id) => {
+                            const freeEntity = await FreeBackEndApplied.getById_<FreeEntity>(free_id, {
+                                ...optionsGetMinimalWithSmartUTxOCompleteFields,
+                            });
+                            if (freeEntity === undefined) {
+                                throw `Invalid free id: ${free_id}`;
+                            }
+                            const free_SmartUTxO = freeEntity.smartUTxO;
+                            if (free_SmartUTxO === undefined) {
+                                throw `Can't find Free UTxO for id: ${free_id}`;
+                            }
+                            const available = await SmartUTxOBackEndApplied.isAvailableForConsuming(free_SmartUTxO);
+                            if (available === false) {
+                                throw `Free UTxO for id: ${free_id} is being used, please wait and try again`;
+                            }
+                            return free_SmartUTxO;
+                        })
+                    );
+                    //--------------------------------------
+                    const reading_UTxOs: OutRef[] = [];
+                    const consuming_UTxOs: OutRef[] = free_SmartUTxOs.map((free_SmartUTxO) => free_SmartUTxO.getOutRef());
+                    //--------------------------------------
+                    const transaction_ = new TransactionEntity({
+                        paymentPKH: walletTxParams.pkh,
+                        date: new Date(now),
+                        type: FREE_CLAIM,
+                        status: TRANSACTION_STATUS_CREATED,
+                        reading_UTxOs,
+                        consuming_UTxOs,
+                    });
+                    //--------------------------------------
+                    transaction = await TransactionBackEndApplied.create(transaction_);
+                    //--------------------------------------
+                    const free_UTxOs = free_SmartUTxOs.map((free_SmartUTxO) => free_SmartUTxO.getUTxO());
+                    //--------------------------------------
+                    const lucidAC_BurnID = freeID_CS + strToHex(freeID_TN);
+                    const valueFor_Burn_ID: Assets = { [lucidAC_BurnID]: -1n };
+                    console_log(0, this._Entity.className(), `Claim Tx - valueFor_Burn_ID: ${showData(valueFor_Burn_ID)}`);
+                    //----------------------------
+                    const freePolicyRedeemerBurnID = new FreePolicyRedeemerBurnID();
+                    console_log(0, this._Entity.className(), `Claim Tx - freePolicyRedeemerBurnID: ${showData(freePolicyRedeemerBurnID, false)}`);
+                    const freePolicyRedeemerBurnID_Hex = objToCborHex(freePolicyRedeemerBurnID);
+                    console_log(0, this._Entity.className(), `Claim Tx - freePolicyRedeemerBurnID_Hex: ${showData(freePolicyRedeemerBurnID_Hex, false)}`);
+                    //--------------------------------------
+                    const freeValidatorRedeemerClaim = new FreeValidatorRedeemerClaim();
+                    console_log(0, this._Entity.className(), `Claim Tx - freeValidatorRedeemerClaim: ${showData(freeValidatorRedeemerClaim, false)}`);
+                    const freeValidatorRedeemerClaim_Hex = objToCborHex(freeValidatorRedeemerClaim);
+                    console_log(0, this._Entity.className(), `Claim Tx - freeValidatorRedeemerClaim_Hex: ${showData(freeValidatorRedeemerClaim_Hex, false)}`);
+                    //--------------------------------------
+                    let tx: Tx = lucid.newTx();
+                    //--------------------------------------
+                    tx = await tx
+                        .mintAssets(valueFor_Burn_ID, freePolicyRedeemerBurnID_Hex)
+                        .collectFrom(free_UTxOs, freeValidatorRedeemerClaim_Hex)
+                        .attachMintingPolicy(this.mintingIdFree)
+                        .attachSpendingValidator(this.validatorFree)
+                        .addSigner(address);
+                    //----------------------------
+                    const txComplete = await tx.complete();
+                    //--------------------------------------
+                    const txCborHex = txComplete.toString();
+                    //--------------------------------------
+                    const txHash = txComplete.toHash();
+                    //--------------------------------------
+                    const transactionFreePolicyRedeemerBurnID: TransactionRedeemer = {
+                        tx_index: 0,
+                        purpose: 'mint',
+                        redeemerObj: freePolicyRedeemerBurnID,
                     };
-                });
-                //--------------------------------------
-                const datums = transactionFreeDatums_In.reduce((acc, datum, index) => {
-                    acc[`freeDatum_In${index}`] = datum;
-                    return acc;
-                }, {} as Record<string, TransactionDatum>);
-                //--------------------------------------
-                const transaction: TransactionEntity = new TransactionEntity({
-                    paymentPKH: walletTxParams.pkh,
-                    date: new Date(from),
-                    type: FREE_CLAIM,
-                    hash: txHash,
-                    status: TRANSACTION_STATUS_PENDING,
-                    ids: {},
-                    redeemers: {
-                        freePolicyRedeemerBurnID: transactionFreePolicyRedeemerBurnID,
-                        freeValidatorRedeemerClaim: transactionFreeValidatorRedeemerClaim,
-                    },
-                    datums,
-                    consuming_UTxOs: free_UTxOs,
-                });
-                //--------------------------------------
-                const transaction_ = await TransactionBackEndApplied.create(transaction);
-                //--------------------------------------
-                await TransactionBackEndApplied.setPendingTransaction(transaction_);
-                //--------------------------------------
-                console_log(-1, this._Entity.className(), `Claim Tx - txCborHex: ${showData(txCborHex)}`);
-                return res.status(200).json({ txCborHex });
-                //--------------------------------------
+                    //--------------------------------------
+                    const transactionFreeValidatorRedeemerClaim: TransactionRedeemer = {
+                        tx_index: 0,
+                        purpose: 'spend',
+                        redeemerObj: freeValidatorRedeemerClaim,
+                    };
+                    //--------------------------------------
+                    const transactionFreeDatums_In: TransactionDatum[] = free_SmartUTxOs.map((free_SmartUTxO) => {
+                        return {
+                            address: free_SmartUTxO.address,
+                            datumType: FreeEntity.className(),
+                            datumObj: free_SmartUTxO.datumObj,
+                        };
+                    });
+                    //--------------------------------------
+                    const datums = transactionFreeDatums_In.reduce((acc, datum, index) => {
+                        acc[`freeDatum_In${index}`] = datum;
+                        return acc;
+                    }, {} as Record<string, TransactionDatum>);
+                    //--------------------------------------
+                    await TransactionBackEndApplied.setPendingTransaction(transaction, {
+                        hash: txHash,
+                        ids: {},
+                        redeemers: {
+                            freePolicyRedeemerBurnID: transactionFreePolicyRedeemerBurnID,
+                            freeValidatorRedeemerClaim: transactionFreeValidatorRedeemerClaim,
+                        },
+                        datums,
+                    });
+                    //--------------------------------------
+                    console_log(-1, this._Entity.className(), `Claim Tx - txHash: ${txHash} - txCborHex: ${showData(txCborHex)}`);
+                    return res.status(200).json({ txHash, txCborHex });
+                    //--------------------------------------
+                } catch (error) {
+                    //--------------------------------------
+                    // NOTE: si existe la transaccion, la elimino
+                    // con esto libero los utxos
+                    if (transaction !== undefined) {
+                        await TransactionBackEndApplied.delete(transaction);
+                    }
+                    //--------------------------------------
+                    throw error;
+                }
             } catch (error) {
                 console_error(-1, this._Entity.className(), `Claim Tx - Error: ${error}`);
                 return res.status(500).json({ error: `An error occurred while creating the ${this._Entity.apiRoute()} Claim Tx: ${error}` });
@@ -387,7 +436,7 @@ export class FreeApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 try {
                     validatedBody = await schemaBody.validate(sanitizedBody);
                 } catch (error) {
-                    console_error(-1, this._Entity.className(), `Create Tx - Error: ${error}`);
+                    console_error(-1, this._Entity.className(), `Update Tx - Error: ${error}`);
                     return res.status(400).json({ error });
                 }
                 //--------------------------------------
@@ -404,118 +453,172 @@ export class FreeApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 //--------------------------------------
                 const { utxos: uTxOsAtWallet, address } = walletTxParams;
                 //--------------------------------------
-                const { valueToAdd, useSmartSelection } = txParams;
+                const { valueToAdd, useSmartSelection, useRead } = txParams;
                 //--------------------------------------
                 const freeID_CS: CS = lucid.utils.mintingPolicyToId(this.mintingIdFree);
                 const freeID_TN = 'FreeID';
-                console_log(0, this._Entity.className(), `Claim Tx - freeID_CS: ${freeID_CS}`);
+                console_log(0, this._Entity.className(), `Update Tx - freeID_CS: ${freeID_CS}`);
                 //----------------------------
                 const validatorAddress: Address = lucid.utils.validatorToAddress(this.validatorFree);
-                console_log(0, this._Entity.className(), `Claim Tx - validatorAddress: ${validatorAddress}`);
+                console_log(0, this._Entity.className(), `Update Tx - validatorAddress: ${validatorAddress}`);
                 //--------------------------------------
                 const lucidAC_ID = freeID_CS + strToHex(freeID_TN);
                 const valueFor_ID: Assets = { [lucidAC_ID]: 1n };
                 console_log(0, this._Entity.className(), `Update Tx - valueFor_ID: ${showData(valueFor_ID)}`);
                 //--------------------------------------
-                const freeEntities: FreeEntity[] = await FreeBackEndApplied.getAll_({
-                    ...optionsGetMinimalWithSmartUTxO,
-                });
+                const { now, from, until } = await TimeBackEnd.getTxTimeRange();
+                console_log(0, this._Entity.className(), `Update Tx - from ${from} to ${until}`);
                 //--------------------------------------
-                if (freeEntities.length === 0) {
-                    throw `Can't find freeEntities`;
-                }
+                let transaction: TransactionEntity | undefined = undefined;
                 //--------------------------------------
-                let freeEntity = freeEntities[0];
-                //--------------------------------------
-                if (useSmartSelection !== false) {
-                    const freeEntitiesAvailable = freeEntities.filter(
-                        (free) => free.smartUTxO !== undefined && free.smartUTxO.isPreparing === undefined && free.smartUTxO.isConsuming === undefined
-                    );
-                    if (freeEntitiesAvailable.length === 0) {
-                        throw `freeEntity UTxO is being used, please wait and try again`;
+                try {
+                    //--------------------------------------
+                    const freeEntities: FreeEntity[] = await FreeBackEndApplied.getAll_({
+                        ...optionsGetMinimalWithSmartUTxOCompleteFields,
+                    });
+                    //--------------------------------------
+                    if (freeEntities.length === 0) {
+                        throw `Can't find freeEntities`;
                     }
-                    freeEntity = freeEntitiesAvailable[0];
+                    //--------------------------------------
+                    let freeEntity = freeEntities[0];
+                    let free_SmartUTxO = freeEntity.smartUTxO;
+                    //--------------------------------------
+                    let read_freeEntity: FreeEntity | undefined = undefined;
+                    let read_free_SmartUTxO: SmartUTxOEntity | undefined = undefined;
+                    //--------------------------------------
+                    if (freeEntities.length > 0 && useRead !== false) {
+                        read_freeEntity = freeEntities[1];
+                        read_free_SmartUTxO = read_freeEntity.smartUTxO;
+                    }
+                    //--------------------------------------
+                    if (useSmartSelection !== false) {
+                        //--------------------------------------
+                        const free_SmartUTxOs = freeEntities.map((freeEntity) => freeEntity.smartUTxO).filter((smartUTxO): smartUTxO is SmartUTxOEntity => smartUTxO !== undefined);
+                        //--------------------------------------
+                        if (free_SmartUTxOs.length === 0) {
+                            throw `Can't find Free UTxOs`;
+                        }
+                        //--------------------------------------
+                        const free_SmartUTxOsAvailables = await SmartUTxOBackEndApplied.getAvailablesForConsuming(free_SmartUTxOs);
+                        //--------------------------------------
+                        if (free_SmartUTxOsAvailables.length === 0) {
+                            throw `freeEntity UTxOs are being used, please wait and try again`;
+                        }
+                        //--------------------------------------
+                        free_SmartUTxO = free_SmartUTxOsAvailables[0];
+                        //--------------------------------------
+                        if (useRead !== false) {
+                            //--------------------------------------
+                            const free_SmartUTxOsAvailablesForRead = await SmartUTxOBackEndApplied.getAvailablesForReading(
+                                free_SmartUTxOs.filter((smartUTxO) => smartUTxO !== free_SmartUTxO)
+                            );
+                            //--------------------------------------
+                            if (free_SmartUTxOsAvailablesForRead.length === 0) {
+                                throw `freeEntity UTxOs are being used, please wait and try again`;
+                            }
+                            //--------------------------------------
+                            read_free_SmartUTxO = free_SmartUTxOsAvailablesForRead[0];
+                            //--------------------------------------
+                        }
+                        //--------------------------------------
+                    }
+                    //--------------------------------------
+                    if (free_SmartUTxO === undefined) {
+                        throw `Can't find Free UTxO`;
+                    }
+                    //--------------------------------------
+                    const reading_UTxOs: OutRef[] = read_free_SmartUTxO !== undefined ? [read_free_SmartUTxO.getOutRef()] : [];
+                    const consuming_UTxOs: OutRef[] = [free_SmartUTxO.getOutRef()];
+                    //--------------------------------------
+                    const transaction_ = new TransactionEntity({
+                        paymentPKH: walletTxParams.pkh,
+                        date: new Date(now),
+                        type: FREE_UPDATE,
+                        status: TRANSACTION_STATUS_CREATED,
+                        reading_UTxOs,
+                        consuming_UTxOs,
+                    });
+                    //--------------------------------------
+                    transaction = await TransactionBackEndApplied.create(transaction_);
+                    //--------------------------------------
+                    const free_UTxO = free_SmartUTxO.getUTxO();
+                    //--------------------------------------
+                    const datumPlainObject = {
+                        fdValue: freeEntity.fdValue + BigInt(valueToAdd),
+                    };
+                    //--------------------------------------
+                    let valueFor_FreeDatum_Out = free_SmartUTxO.assets;
+                    //--------------------------------------
+                    let freeDatum_Out = FreeEntity.mkDatumFromPlainObject(datumPlainObject);
+                    console_log(0, this._Entity.className(), `Update Tx - freeDatum_Out: ${showData(freeDatum_Out, false)}`);
+                    const freeDatum_Out_Hex = FreeEntity.datumToCborHex(freeDatum_Out);
+                    console_log(0, this._Entity.className(), `Update Tx - freeDatum_Out_Hex: ${showData(freeDatum_Out_Hex, false)}`);
+                    //--------------------------------------
+                    const freeValidatorRedeemerDatumUpdate = new FreeValidatorRedeemerDatumUpdate();
+                    console_log(0, this._Entity.className(), `Update Tx - freeValidatorRedeemerDatumUpdate: ${showData(freeValidatorRedeemerDatumUpdate, false)}`);
+                    const freeValidatorRedeemerDatumUpdate_Hex = objToCborHex(freeValidatorRedeemerDatumUpdate);
+                    console_log(0, this._Entity.className(), `Update Tx - freeValidatorRedeemerDatumUpdate_Hex: ${showData(freeValidatorRedeemerDatumUpdate_Hex, false)}`);
+                    //--------------------------------------
+                    let tx: Tx = lucid.newTx();
+                    //--------------------------------------
+                    tx = await tx
+                        .collectFrom([free_UTxO], freeValidatorRedeemerDatumUpdate_Hex)
+                        .payToContract(validatorAddress, { inline: freeDatum_Out_Hex }, valueFor_FreeDatum_Out)
+                        .attachSpendingValidator(this.validatorFree)
+                        .addSigner(address);
+                    //--------------------------------
+                    if (useRead !== false && read_free_SmartUTxO !== undefined ) {
+                        const read_free_UTxO = read_free_SmartUTxO.getUTxO();
+                        tx = tx.readFrom([read_free_UTxO])
+                    }
+                    //--------------------------------------
+                    const txComplete = await tx.complete();
+                    //--------------------------------------
+                    const txCborHex = txComplete.toString();
+                    //--------------------------------------
+                    const txHash = txComplete.toHash();
+                    //--------------------------------------
+                    const transactionFreeValidatorRedeemerDatumUpdate: TransactionRedeemer = {
+                        tx_index: 0,
+                        purpose: 'spend',
+                        redeemerObj: freeValidatorRedeemerDatumUpdate,
+                    };
+                    //--------------------------------------
+                    const transactionFreeDatum_In: TransactionDatum = {
+                        address: validatorAddress,
+                        datumType: FreeEntity.className(),
+                        datumObj: free_SmartUTxO.datumObj,
+                    };
+                    //--------------------------------------
+                    const transactionFreeDatum_Out: TransactionDatum = {
+                        address: validatorAddress,
+                        datumType: FreeEntity.className(),
+                        datumObj: freeDatum_Out,
+                    };
+                    //--------------------------------------
+                    await TransactionBackEndApplied.setPendingTransaction(transaction, {
+                        hash: txHash,
+                        ids: {},
+                        redeemers: {
+                            freeValidatorRedeemerDatumUpdate: transactionFreeValidatorRedeemerDatumUpdate,
+                        },
+                        datums: { freeDatum_In: transactionFreeDatum_In, freeDatum_Out: transactionFreeDatum_Out },
+                    });
+                    //--------------------------------------
+                    console_log(-1, this._Entity.className(), `Update Tx - txHash: ${txHash} - txCborHex: ${showData(txCborHex)}`);
+                    return res.status(200).json({ txHash, txCborHex });
+                    //--------------------------------------
+                } catch (error) {
+                    //--------------------------------------
+                    // NOTE: si existe la transaccion, la elimino
+                    // con esto libero los utxos
+                    if (transaction !== undefined) {
+                        await TransactionBackEndApplied.delete(transaction);
+                    }
+                    //--------------------------------------
+                    throw error;
                 }
-                //--------------------------------------
-                const free_SmartUTxO = freeEntity.smartUTxO;
-                if (free_SmartUTxO === undefined) {
-                    throw `Can't find Free UTxO`;
-                }
-                //--------------------------------------
-                const free_UTxO = free_SmartUTxO.getUTxO();
-                //--------------------------------------
-                const datumPlainObject = {
-                    fdValue: freeEntity.fdValue + BigInt(valueToAdd),
-                };
-                //--------------------------------------
-                let valueFor_FreeDatum_Out = free_SmartUTxO.assets;
-                //--------------------------------------
-                let freeDatum_Out = FreeEntity.mkDatumFromPlainObject(datumPlainObject);
-                console_log(0, this._Entity.className(), `Update Tx - freeDatum_Out: ${showData(freeDatum_Out, false)}`);
-                const freeDatum_Out_Hex = FreeEntity.datumToCborHex(freeDatum_Out);
-                console_log(0, this._Entity.className(), `Update Tx - freeDatum_Out_Hex: ${showData(freeDatum_Out_Hex, false)}`);
-                //--------------------------------------
-                const freeValidatorRedeemerDatumUpdate = new FreeValidatorRedeemerDatumUpdate();
-                console_log(0, this._Entity.className(), `Update Tx - freeValidatorRedeemerDatumUpdate: ${showData(freeValidatorRedeemerDatumUpdate, false)}`);
-                const freeValidatorRedeemerDatumUpdate_Hex = objToCborHex(freeValidatorRedeemerDatumUpdate);
-                console_log(0, this._Entity.className(), `Update Tx - freeValidatorRedeemerDatumUpdate_Hex: ${showData(freeValidatorRedeemerDatumUpdate_Hex, false)}`);
-                //--------------------------------------
-                const { from, until } = await TimeBackEnd.getTxTimeRange();
-                console_log(0, this._Entity.className(), `Claim Tx - from ${from} to ${until}`);
-                //--------------------------------------
-                let tx: Tx = lucid.newTx();
-                //--------------------------------------
-                tx = await tx
-                    .collectFrom([free_UTxO], freeValidatorRedeemerDatumUpdate_Hex)
-                    .payToContract(validatorAddress, { inline: freeDatum_Out_Hex }, valueFor_FreeDatum_Out)
-                    .attachSpendingValidator(this.validatorFree)
-                    .addSigner(address);
-                //--------------------------------------
-                const txComplete = await tx.complete();
-                //--------------------------------------
-                const txCborHex = txComplete.toString();
-                //--------------------------------------
-                const txHash = txComplete.toHash();
-                //--------------------------------------
-                const transactionFreeValidatorRedeemerDatumUpdate: TransactionRedeemer = {
-                    tx_index: 0,
-                    purpose: 'spend',
-                    redeemerObj: freeValidatorRedeemerDatumUpdate,
-                };
-                //--------------------------------------
-                const transactionFreeDatum_In: TransactionDatum = {
-                    address: validatorAddress,
-                    datumType: FreeEntity.className(),
-                    datumObj: free_SmartUTxO.datumObj,
-                };
-                //--------------------------------------
-                const transactionFreeDatum_Out: TransactionDatum = {
-                    address: validatorAddress,
-                    datumType: FreeEntity.className(),
-                    datumObj: freeDatum_Out,
-                };
-                //--------------------------------------
-                const transaction: TransactionEntity = new TransactionEntity({
-                    paymentPKH: walletTxParams.pkh,
-                    date: new Date(from),
-                    type: FREE_UPDATE,
-                    hash: txHash,
-                    status: TRANSACTION_STATUS_PENDING,
-                    ids: {},
-                    redeemers: {
-                        freeValidatorRedeemerDatumUpdate: transactionFreeValidatorRedeemerDatumUpdate,
-                    },
-                    datums: { freeDatum_In: transactionFreeDatum_In, freeDatum_Out: transactionFreeDatum_Out },
-                    consuming_UTxOs: [free_UTxO],
-                });
-                //--------------------------------------
-                const transaction_ = await TransactionBackEndApplied.create(transaction);
-                //--------------------------------------
-                await TransactionBackEndApplied.setPendingTransaction(transaction_);
-                //--------------------------------------
-                console_log(-1, this._Entity.className(), `Update Tx - txCborHex: ${showData(txCborHex)}`);
-                return res.status(200).json({ txCborHex });
-                //--------------------------------------
             } catch (error) {
                 console_error(-1, this._Entity.className(), `Update Tx - Error: ${error}`);
                 return res.status(500).json({ error: `An error occurred while creating the ${this._Entity.apiRoute()} Update Tx: ${error}` });

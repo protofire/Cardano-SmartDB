@@ -1,4 +1,4 @@
-import { Datum, DatumHash, Script, UTxO, type Address, type Assets, type TxHash } from "lucid-cardano";
+import { Datum, DatumHash, OutRef, Script, UTxO, type Address, type Assets, type TxHash } from "lucid-cardano";
 import 'reflect-metadata';
 import { Convertible, TxOutRef, asEntity, toJson } from '../Commons/index.js';
 import { deserealizeAssets } from '../Commons/conversions.js';
@@ -21,7 +21,13 @@ export class SmartUTxOEntity extends BaseEntity {
     outputIndex!: number;
 
     @Convertible({ type: Date })
-    isPreparing!: Date | undefined;
+    isPreparingForReading!: Date | undefined;
+
+    @Convertible({ type: Date })
+    isReading!: Date | undefined;
+
+    @Convertible({ type: Date })
+    isPreparingForConsuming!: Date | undefined;
 
     @Convertible({ type: Date })
     isConsuming!: Date | undefined;
@@ -56,8 +62,41 @@ export class SmartUTxOEntity extends BaseEntity {
     @Convertible()
     datumType!: string;
 
+    @Convertible()
+    createdAt!: Date;
+
+    @Convertible()
+    updatedAt!: Date;
+
     // #endregion fields
 
+    // #region db
+
+    public static defaultFieldsWhenUndefined: Record<string, boolean> = {
+        address: false,
+        isPreparingForReading: false,
+        isReading: false,
+        isPreparingForConsuming: false,
+        isConsuming: false,
+        assets: false,
+        datumHash: false,
+        datum: false,
+        datumObj: false,
+        scriptRef: false
+    };
+
+    public static alwaysFieldsForSelect: Record<string, boolean> = {
+        ...super.alwaysFieldsForSelect,
+        txHash: true,
+        outputIndex: true,
+        _NET_id_CS: true,
+        _NET_id_TN: true,
+        _is_NET_id_Unique: true,
+        datumType: true,
+        
+    }
+
+    // #endregion db
 
     // #region class methods
 
@@ -85,6 +124,27 @@ export class SmartUTxOEntity extends BaseEntity {
             scriptRef: this.scriptRef,
         };
         return uTxO;
+    }
+
+    public getOutRef<T extends SmartUTxOEntity>(): OutRef {
+        const outRef: OutRef = {
+            txHash: this.txHash,
+            outputIndex: this.outputIndex,
+        };
+        return outRef;
+    }
+
+    // NOTE: estos metodos solo sirven para mostrar en frontend, por que los valores de estos campos no estan actualizados
+    // se actualizan con el callbackonload, pero lo mas poreciso es buscar en transactions getReadingAndConsumingDates
+    public unsafeIsAvailableForReading<T extends SmartUTxOEntity>(): Boolean {
+        // para que pueda ser usada como utxo de lectura, por referencia, debe estar no en uso para consumo
+        // es indiferente si está en uso para lectura por otro proceso
+        return this.isPreparingForConsuming === undefined && this.isConsuming === undefined;
+    }
+
+    public unsafeIsAvailableForConsuming<T extends SmartUTxOEntity>(): Boolean {
+        // para que pueda ser usada como utxo de consumo, debe estar no en uso para lectura ni consumo
+        return this.isPreparingForReading === undefined && this.isReading === undefined && this.isPreparingForConsuming === undefined && this.isConsuming === undefined;
     }
 
     // #endregion class methods

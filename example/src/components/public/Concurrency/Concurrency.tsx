@@ -10,21 +10,28 @@ import {
     BaseSmartDBFrontEndBtnHandlers,
     CS,
     LucidToolsFrontEnd,
+    TX_CONSUMING_TIME,
+    TX_PREPARING_TIME,
     TransactionFrontEndApiCalls,
     formatTokenAmount,
     formatUTxO,
+    optionsGetMinimalWithSmartUTxOWithDates,
     pushSucessNotification,
     pushWarningNotification,
-    useWalletStore
+    useWalletStore,
 } from 'smart-db';
 import LoaderButton from '../../Commons/LoaderButton/LoaderButton';
 import WalletConnector from '../../Commons/WalletConnector/WalletConnector';
 import styles from './Concurrency.module.scss';
 
-function formatTimeSince(timestamp: Date | undefined) {
-    if (!timestamp) return 'N/A';
-    const seconds = Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000);
-    return `${seconds}s ago`;
+function formatCountdown(startTime: Date | undefined, durationMs: number) {
+    if (!startTime) return 'N/A';
+    const timeElapsedMs = Date.now() - new Date(startTime).getTime();
+    const timeRemainingMs = durationMs - timeElapsedMs;
+    if (timeRemainingMs <= 0) return 'N/A';
+    const secondsElapsed = Math.floor(timeElapsedMs / 1000);
+    const secondsRemaining = Math.floor(timeRemainingMs / 1000);
+    return `Since: ${secondsElapsed} - ${secondsRemaining}s remaining`;
 }
 
 export default function Concurrency() {
@@ -32,6 +39,15 @@ export default function Concurrency() {
     const [isRefreshing, setIsRefreshing] = useState(true);
     useEffect(() => {
         setIsRefreshing(false);
+    }, []);
+    //--------------------------------------
+    const [_, setTick] = useState(0); // Usamos este estado solo para forzar el renderizado
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTick((tick) => tick + 1); // Actualizamos el estado para forzar el renderizado cada segundo
+        }, 1000);
+
+        return () => clearInterval(interval); // Limpiar el intervalo cuando el componente se desmonte
     }, []);
     //--------------------------------------
     const walletStore = useWalletStore();
@@ -102,6 +118,22 @@ export default function Concurrency() {
         //----------------------------
     }
     //--------------------------------------
+    async function refreshList() {
+        //----------------------------
+        setIsLoadingList(true);
+        //----------------------------
+        try {
+            //----------------------------
+            const list: FreeEntity[] = await FreeApi.getAllApi_({ ...optionsGetMinimalWithSmartUTxOWithDates });
+            setList(list);
+            //----------------------------
+        } catch (e) {
+            console.error(e);
+        }
+        //----------------------------
+        setIsLoadingList(false);
+    }
+    //--------------------------------------
     useEffect(() => {
         const fetch = async () => {
             //----------------------------
@@ -111,8 +143,9 @@ export default function Concurrency() {
                 const lucid = await LucidToolsFrontEnd.initializeLucidWithBlockfrost();
                 setLucid(lucid);
                 await generateScripts(lucid);
-                const list: FreeEntity[] = await FreeApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
-                setList(list);
+                //----------------------------
+                await refreshList();
+                //----------------------------
             } catch (e) {
                 console.error(e);
             }
@@ -196,8 +229,8 @@ export default function Concurrency() {
         try {
             //----------------------------
             await FreeApi.syncWithAddressApi(FreeEntity, validatorAddress, true);
-            const list: FreeEntity[] = await FreeApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
-            setList(list);
+            //----------------------------
+            await refreshList();
             //----------------------------
             pushSucessNotification(`Free Sync`, 'Syncronization complete!', false);
             //----------------------------
@@ -227,17 +260,8 @@ export default function Concurrency() {
     //----------------------------
     const handleBtnRefresh = async () => {
         //----------------------------
-        setIsLoadingList(true);
+        await refreshList();
         //----------------------------
-        try {
-            //----------------------------
-            const list: FreeEntity[] = await FreeApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
-            setList(list);
-        } catch (e) {
-            console.error(e);
-        }
-        //----------------------------
-        setIsLoadingList(false);
     };
     //----------------------------
     const handleBtnCreateTx = async () => {
@@ -266,6 +290,10 @@ export default function Concurrency() {
             //----------------------------
             const txParams: CreateFreeTxParams = {};
             //--------------------------------------
+            setTimeout(() => {
+                refreshList();
+            }, 2000);
+            //--------------------------------------
             const result = await BaseSmartDBFrontEndBtnHandlers.handleBtnDoTransactionV1(
                 FreeEntity,
                 'Creating Free...',
@@ -282,8 +310,8 @@ export default function Concurrency() {
             }
             //----------------------------
             setTxMessage('Transaction has been confirmed. Refreshing data...');
-            const list: FreeEntity[] = await FreeApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
-            setList(list);
+            //----------------------------
+            await refreshList();
             //----------------------------
             setTxMessage('Transaction has been confirmed. Data has been refreshed.');
             setTxConfirmed(result);
@@ -292,6 +320,9 @@ export default function Concurrency() {
             console.error(e);
             setTxHash(undefined);
             setIsTxError(true);
+            //----------------------------
+            await refreshList();
+            //----------------------------
         }
         setIsLoadingTxCreate(false);
     };
@@ -325,6 +356,10 @@ export default function Concurrency() {
                 free_ids: [item._DB_id],
             };
             //--------------------------------------
+            setTimeout(() => {
+                refreshList();
+            }, 2000);
+            //--------------------------------------
             const result = await BaseSmartDBFrontEndBtnHandlers.handleBtnDoTransactionV1(
                 FreeEntity,
                 'Claiming Free...',
@@ -341,8 +376,8 @@ export default function Concurrency() {
             }
             //----------------------------
             setTxMessage('Transaction has been confirmed. Refreshing data...');
-            const list: FreeEntity[] = await FreeApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
-            setList(list);
+            //----------------------------
+            await refreshList();
             //----------------------------
             setTxMessage('Transaction has been confirmed. Data has been refreshed.');
             setTxConfirmed(result);
@@ -351,6 +386,9 @@ export default function Concurrency() {
             console.error(e);
             setTxHash(undefined);
             setIsTxError(true);
+            //----------------------------
+            await refreshList();
+            //----------------------------
         }
         setIsLoadingTxClaim(false);
         setSelectedItem(undefined);
@@ -383,7 +421,12 @@ export default function Concurrency() {
             const txParams: UpdateFreeTxParams = {
                 valueToAdd: Number(updateValue),
                 useSmartSelection: true,
+                useRead: true
             };
+            //--------------------------------------
+            setTimeout(() => {
+                refreshList();
+            }, 2000);
             //--------------------------------------
             const result = await BaseSmartDBFrontEndBtnHandlers.handleBtnDoTransactionV1(
                 FreeEntity,
@@ -401,8 +444,8 @@ export default function Concurrency() {
             }
             //----------------------------
             setTxMessage('Transaction has been confirmed. Refreshing data...');
-            const list: FreeEntity[] = await FreeApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
-            setList(list);
+            //----------------------------
+            await refreshList();
             //----------------------------
             setTxMessage('Transaction has been confirmed. Data has been refreshed.');
             setTxConfirmed(result);
@@ -411,6 +454,9 @@ export default function Concurrency() {
             console.error(e);
             setTxHash(undefined);
             setIsTxError(true);
+            //----------------------------
+            await refreshList();
+            //----------------------------
         }
         setIsLoadingTxUpdate(false);
         setSelectedItem(undefined);
@@ -527,17 +573,17 @@ export default function Concurrency() {
             <div>
                 <div className={styles.subTitle}>6: Sync DB with Blockchain</div>
                 <div>
-                <button onClick={handleBtnSync} className={styles.buttonCenterWithLoading}>
-                    Sync{' '}
-                    {isLoadingSync && (
-                        <>
-                            <LoaderButton />
-                        </>
-                    )}
-                </button>
-                <button onClick={handleBtnUpdaterJob} className={styles.buttonCenterWithLoading}>
-                    Updater Job
-                </button>
+                    <button onClick={handleBtnSync} className={styles.buttonCenterWithLoading}>
+                        Sync{' '}
+                        {isLoadingSync && (
+                            <>
+                                <LoaderButton />
+                            </>
+                        )}
+                    </button>
+                    <button onClick={handleBtnUpdaterJob} className={styles.buttonCenterWithLoading}>
+                        Updater Job
+                    </button>
                 </div>
             </div>
             <div>
@@ -558,8 +604,10 @@ export default function Concurrency() {
                         <div className={styles.itemID}>DB Id</div>
                         <div className={styles.txHash}>UTxO</div>
                         <div className={styles.value}>Datum Value</div>
-                        <div className={styles.preparing}>Preparing Since</div>
-                        <div className={styles.consuming}>Consuming Since</div>
+                        <div className={styles.preparing}>Preparing for Reading</div>
+                        <div className={styles.preparing}>Reading</div>
+                        <div className={styles.consuming}>Preparing for Consuming</div>
+                        <div className={styles.consuming}>Consuming</div>
                     </div>
                     {list?.length === 0 && <div>No data</div>}
                     {list?.map((item, index) => (
@@ -567,8 +615,10 @@ export default function Concurrency() {
                             <div className={styles.itemID}>{item._DB_id.slice(0, 5)}</div>
                             <div className={styles.txHash}>{formatUTxO(item.smartUTxO?.txHash ?? '', item.smartUTxO?.outputIndex ?? 0)}</div>
                             <div className={styles.value}>{item.fdValue.toString()}</div>
-                            <div className={styles.preparing}>{formatTimeSince(item.smartUTxO?.isPreparing)}</div>
-                            <div className={styles.consuming}>{formatTimeSince(item.smartUTxO?.isConsuming)}</div>
+                            <div className={styles.preparing}>{formatCountdown(item.smartUTxO?.isPreparingForReading, TX_PREPARING_TIME)}</div>
+                            <div className={styles.consuming}>{formatCountdown(item.smartUTxO?.isReading, TX_CONSUMING_TIME)}</div>
+                            <div className={styles.preparing}>{formatCountdown(item.smartUTxO?.isPreparingForConsuming, TX_PREPARING_TIME)}</div>
+                            <div className={styles.consuming}>{formatCountdown(item.smartUTxO?.isConsuming, TX_CONSUMING_TIME)}</div>
                             <div>
                                 <button onClick={() => handleBtnClaimTx(item)} className={styles.buttonCenterWithLoading}>
                                     Delete Tx
