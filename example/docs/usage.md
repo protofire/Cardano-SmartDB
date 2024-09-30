@@ -41,6 +41,7 @@
     - [Root Backend File Example](#root-backend-file-example)
     - [Endpoints Configuration](#endpoints-configuration)
   - [NextJs Api Handler Files](#nextjs-api-handler-files)
+  
 ## Usage
 
 ### Familiarize Yourself
