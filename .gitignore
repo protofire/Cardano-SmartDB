@@ -46,20 +46,7 @@ next-env.d.ts
 /src/**/_OLD
 /**/_OLD
 
-.priv
-
-/public/uploads/*
-
 directory_structure.json
 
 smart-db.tgz
 smart-db-*.tgz
-
-
-example/__tests__/concurrency/test_results_raw.csv
-example/__tests__/concurrency/test_results_sumary.csv
-example/__tests__/concurrency/test_results.backup.xlsx
-example/__tests__/concurrency/~$test_results.xlsx
-example/__tests__/concurrency/~$test_results.backup.xlsx
-
-example/__tests__/concurrency/bk
