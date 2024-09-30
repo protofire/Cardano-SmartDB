@@ -476,39 +476,6 @@ export default function Concurrency() {
                 </div>
             </div>
             <div>
-                <div className={styles.subTitle}>What is this Free Entity?</div>
-                <div className={styles.text}>
-                    <ul>
-                        <li>
-                            La entidad Free es un componente diseñado específicamente para probar y demostrar la funcionalidad de selección inteligente de UTXOs (Unspent
-                            Transaction Outputs) en el sistema Smart DB. Esta entidad representa un dato simple almacenado en la blockchain de Cardano, asociado a una UTXO
-                            específica.
-                        </li>
-                        <li>
-                            Cada entidad Free está vinculada directamente a una smart UTXO, que es una abstracción que combina la información de la UTXO en la blockchain con
-                            metadatos adicionales almacenados en la base de datos local. Estos metadatos incluyen campos como isPreparing e isConsuming, que son marcas de tiempo
-                            (timestamps) utilizadas para gestionar la concurrencia y evitar conflictos en las transacciones.
-                        </li>
-                        <li>
-                            isPreparing: Se establece cuando un usuario inicia el proceso de creación de una transacción que involucra esta UTXO, separándola temporalmente para
-                            evitar que otros usuarios la utilicen simultáneamente.
-                        </li>
-                        <li>
-                            isConsuming: Se marca cuando la transacción está siendo procesada y la UTXO está a punto de ser consumida, indicando que está definitivamente separada y
-                            no debe ser utilizada en otras transacciones.
-                        </li>
-                        <li>
-                            El sistema de sincronización de Smart DB, cuando confirma una transacción, crea una nueva UTXO para representar la entidad actualizada, con estos campos
-                            (isPreparing e isConsuming) inicializados en cero, indicando que está disponible para futuras transacciones.
-                        </li>
-                        <li>
-                            Esta entidad y su mecanismo asociado permiten probar y demostrar cómo la selección inteligente de UTXOs mejora la eficiencia y reduce los conflictos en
-                            escenarios de alta concurrencia, proporcionando una base sólida para aplicaciones descentralizadas más complejas en la blockchain de Cardano.
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div>
                 <div className={styles.subTitle}>Validator Address:</div>
                 <div className={styles.text}>{validatorAddress}</div>
             </div>
