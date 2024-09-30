@@ -359,7 +359,7 @@ export class BaseBackEndMethods {
                 //-----------------------
                 const mongoInterface = (await instance.getMongo().toMongoInterface(instance)) as any;
                 //-----------------------
-                await this.updateMeWithParams<T>(instance, mongoInterface, useOptionUpdate, false);
+                await this.updateMeWithParams<T>(instance, mongoInterface, false);
                 //-----------------------
                 console_logLv2(-1, instance.className(), `update - Instance: ${instance.show()} - OK`);
                 //----------------------------
@@ -367,7 +367,7 @@ export class BaseBackEndMethods {
                 //-----------------------
                 const postgreSQLInterface = (await instance.getPostgreSQL().toPostgreSQLInterface(instance)) as any;
                 //-----------------------
-                await this.updateMeWithParams<T>(instance, postgreSQLInterface, useOptionUpdate, false);
+                await this.updateMeWithParams<T>(instance, postgreSQLInterface, false);
                 //-----------------------
                 console_logLv2(-1, instance.className(), `update - Instance: ${instance.show()} - OK`);
                 //----------------------------
@@ -383,7 +383,6 @@ export class BaseBackEndMethods {
     public static async updateMeWithParams<T extends BaseEntity>(
         instance: T,
         updateFields: Record<string, any>,
-        optionsUpdate?: OptionsCreateOrUpdate,
         swRefreshInstance: boolean = true
     ): Promise<void> {
         try {
@@ -396,21 +395,15 @@ export class BaseBackEndMethods {
                 throw `Can't run this method in the Browser`;
             }
             //-----------------------
-            console_logLv2(1, instance.className(), `updateMeWithParams - Options: ${showData(optionsUpdate)} - Init`);
+            console_logLv2(1, instance.className(), `updateMeWithParams - swRefreshInstance: ${swRefreshInstance} - Init`);
             //----------------------------
-            let useOptionUpdate = optionsCreateOrUpdateDefault;
-            if (optionsUpdate !== undefined) {
-                useOptionUpdate = optionsUpdate;
-            }
-            //-----------------------
             if (process.env.USE_DATABASE === 'mongo') {
                 //----------------------------
                 console_logLv2(0, instance.className(), `updateMeWithParams - id: ${instance._DB_id}`);
                 console_logLv2(0, instance.className(), `updateMeWithParams - updateFields: ${showData(Object.keys(updateFields))} |`);
-                // console_log(instance.className(),  `${tabs()}[${instance.className()}**] - updateMeWithParams - updateFields: ${log(updateFields)}`);
                 //----------------------------
-                let updateSet = {};
-                let updateUnSet = {};
+                let updateSet: Record<string, any> = {};
+                let updateUnSet: Record<string, any> = {};
                 //----------------------------
                 for (let key in updateFields) {
                     if (updateFields[key as keyof typeof updateFields] === undefined) {
@@ -424,17 +417,11 @@ export class BaseBackEndMethods {
                 }
                 //----------------------------
                 console_logLv2(0, instance.className(), `updateMeWithParams - set fields: ${showData(Object.keys(updateSet))} |`);
-                // console_log(instance.className(),  `${tabs()}[${instance.className()}**] - updateMeWithParams - set: ${log(updateSet)}`);
                 console_logLv2(0, instance.className(), `updateMeWithParams - unset fields: ${showData(Object.keys(updateUnSet))} |`);
                 //----------------------------
                 const document = await MongoDatabaseService.update<T>(instance, updateSet, updateUnSet);
                 //----------------------------
                 if (document) {
-                    // const instance_ = await this.getById<T>(instance.getStatic(), document._id.toString(), useOptionUpdate, undefined);
-                    // if (instance_ === undefined) {
-                    //     throw `${instance.className()} - Not found for Update It - id: ${document._id.toString()}`;
-                    // }
-                    // Object.assign(instance, instance_);
                     //-----------------------
                     // voy a actualizar los campos manualmente en la instancia, asi no tengo que hacer un refresh
                     //-----------------------
@@ -458,10 +445,9 @@ export class BaseBackEndMethods {
                 //----------------------------
                 console_logLv2(0, instance.className(), `updateMeWithParams - id: ${instance._DB_id}`);
                 console_logLv2(0, instance.className(), `updateMeWithParams - updateFields: ${showData(Object.keys(updateFields))} |`);
-                // console_log(instance.className(),  `${tabs()}[${instance.className()}**] - updateMeWithParams - updateFields: ${log(updateFields)}`);
                 //----------------------------
-                let updateSet = {};
-                let updateUnSet = {};
+                let updateSet: Record<string, any> = {};
+                let updateUnSet: Record<string, any> = {};
                 //----------------------------
                 for (let key in updateFields) {
                     if (updateFields[key as keyof typeof updateFields] === undefined) {
@@ -475,27 +461,19 @@ export class BaseBackEndMethods {
                 }
                 //----------------------------
                 console_logLv2(0, instance.className(), `updateMeWithParams - set fields: ${showData(Object.keys(updateSet))} |`);
-                // console_log(instance.className(),  `${tabs()}[${instance.className()}**] - updateMeWithParams - set: ${log(updateSet)}`);
                 console_logLv2(0, instance.className(), `updateMeWithParams - unset fields: ${showData(Object.keys(updateUnSet))} |`);
                 //----------------------------
-                const document = await PostgreSQLDatabaseService.update<T>(instance, updateSet, updateUnSet);
+                const result = await PostgreSQLDatabaseService.update<T>(instance, updateSet, updateUnSet);
                 //----------------------------
-                if (document) {
-                    // const instance_ = await this.getById<T>(instance.getStatic(), document._id.toString(), useOptionUpdate, undefined);
-                    // if (instance_ === undefined) {
-                    //     throw `${instance.className()} - Not found for Update It - id: ${document._id.toString()}`;
-                    // }
-                    // Object.assign(instance, instance_);
+                if (result.affected  == 1) {
                     //-----------------------
                     // voy a actualizar los campos manualmente en la instancia, asi no tengo que hacer un refresh
                     //-----------------------
                     if (swRefreshInstance) {
                         //-----------------------
-                        const newInstance = (await instance.getPostgreSQL().fromPostgreSQLInterface(document)) as any;
-                        //-----------------------
                         Object.entries(updateFields).forEach(([key, value]) => {
                             if (key in instance) {
-                                instance[key as keyof typeof instance] = newInstance[key as keyof typeof newInstance];
+                                instance[key as keyof typeof instance] = updateFields[key as keyof typeof updateFields];
                             }
                         });
                         //-----------------------
@@ -516,8 +494,7 @@ export class BaseBackEndMethods {
     public static async updateWithParams<T extends BaseEntity>(
         Entity: typeof BaseEntity,
         id: string,
-        updateFields: Record<string, any>,
-        optionsUpdate?: OptionsCreateOrUpdate
+        updateFields: Record<string, any>
     ): Promise<T> {
         //----------------------------
         try {
@@ -526,14 +503,14 @@ export class BaseBackEndMethods {
                 throw `Can't run this method in the Browser`;
             }
             //-----------------------
-            console_logLv2(1, Entity.className(), `updateWithParams - Options: ${showData(optionsUpdate)} - Init`);
+            console_logLv2(1, Entity.className(), `updateWithParams - Init`);
             //----------------------------
             // TODO: podria cargar solo los campos que se van a actualizar. por ahora cargo todo
             const instance = await this.getById<T>(Entity, id, { loadRelations: {} });
             if (!instance) {
                 throw `${Entity.className()} - Not found for Update - id: ${id}`;
             }
-            await this.updateMeWithParams<T>(instance, updateFields, optionsUpdate);
+            await this.updateMeWithParams<T>(instance, updateFields);
             //-----------------------
             console_logLv2(-1, instance.className(), `updateWithParams - OK`);
             //----------------------------
@@ -697,7 +674,7 @@ export class BaseBackEndMethods {
                 if (isEmptyObject(fieldsForSelectForMongo)) {
                     // si esta vacio, lo dejo asi, por que eso signifca que trae todos los campos y a veces quiero usarlo asi
                     // para eso el usuario lo deja en fieldsForSelect: {}, o lo setea undefined, y aqui se llama a Entity.defaultFieldsWhenUndefined(),
-                    //que en la mayoria de las clases es {}, lo que significa todos.
+                    // que en la mayoria de las clases es {}, lo que significa todos.
                     // En algunas clases esta seteado en algunos campos, por que la clase tiene mucho y no quiero permitir ese tipo de carga
                     // tiene que elegir campos si o si o quedarse con los que estan en Entity.defaultFieldsWhenUndefined();, es el caso de funds y protocols
                 } else {
@@ -856,12 +833,6 @@ export class BaseBackEndMethods {
                     //-----------------------
                     if (cascadeUpdate.swUpdate === true && cascadeUpdate.updatedFields !== undefined) {
                         //-----------------------
-                        const optionsCreateOrUpdate: OptionsCreateOrUpdate = {
-                            doCallbackAfterLoad: false,
-                            loadRelations: {},
-                            saveRelations: {},
-                        };
-                        //-----------------------
                         const updatedFields = Object.entries(cascadeUpdate.updatedFields).reduce((acc, [key, value]) => {
                             acc[key] = value.to; // Assign the 'to' value to the field
                             return acc;
@@ -869,7 +840,7 @@ export class BaseBackEndMethods {
                         //-----------------------
                         console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - updating because cascadeUpdate...`);
                         //-----------------------
-                        await this.updateMeWithParams<T>(instance, updatedFields, optionsCreateOrUpdate);
+                        await this.updateMeWithParams<T>(instance, updatedFields, false);
                         //-----------------------
                     }
                     //-----------------------
@@ -1066,12 +1037,6 @@ export class BaseBackEndMethods {
                     //-----------------------
                     if (cascadeUpdate.swUpdate === true && cascadeUpdate.updatedFields !== undefined) {
                         //-----------------------
-                        const optionsCreateOrUpdate: OptionsCreateOrUpdate = {
-                            doCallbackAfterLoad: false,
-                            loadRelations: {},
-                            saveRelations: {},
-                        };
-                        //-----------------------
                         const updatedFields = Object.entries(cascadeUpdate.updatedFields).reduce((acc, [key, value]) => {
                             acc[key] = value.to; // Assign the 'to' value to the field
                             return acc;
@@ -1079,7 +1044,7 @@ export class BaseBackEndMethods {
                         //-----------------------
                         console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - updating because cascadeUpdate...`);
                         //-----------------------
-                        await this.updateMeWithParams<T>(instance, updatedFields, optionsCreateOrUpdate);
+                        await this.updateMeWithParams<T>(instance, updatedFields, false);
                         //-----------------------
                     }
                     //-----------------------

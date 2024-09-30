@@ -22,11 +22,11 @@ export class BaseBackEndApplied {
     }
 
     public static async updateWithParams_<T extends BaseEntity>(id: string, updateFields: Record<string, any>, optionsUpdate?: OptionsCreateOrUpdate): Promise<T> {
-        return await this.getBack().updateWithParams<T>(this._Entity, id, updateFields, optionsUpdate);
+        return await this.getBack().updateWithParams<T>(this._Entity, id, updateFields);
     }
 
     public static async updateMeWithParams<T extends BaseEntity>(instance: T, updateFields: Record<string, any>, optionsUpdate?: OptionsCreateOrUpdate): Promise<void> {
-        return await this.getBack().updateMeWithParams<T>(instance, updateFields, optionsUpdate);
+        return await this.getBack().updateMeWithParams<T>(instance, updateFields);
     }
 
     public static async update<T extends BaseEntity>(instance: T, optionsUpdate?: OptionsCreateOrUpdate): Promise<void> {
@@ -239,11 +239,7 @@ export class BaseBackEndApplied {
                                     conversions,
                                     optionsCreateOrUpdateForRelation
                                 );
-                                console_logLv2(
-                                    0,
-                                    instance.className(),
-                                    `cascadeSaveChildRelations - created child: ${toJson(value_object)}`
-                                );
+                                console_logLv2(0, instance.className(), `cascadeSaveChildRelations - created child: ${toJson(value_object)}`);
                             }
                             //--------------------------------------
                             const value_id2 = value_object?._DB_id;
@@ -256,11 +252,7 @@ export class BaseBackEndApplied {
                                 //     throw `${this.className()} - ${propertyKey}: Relation id ${value_id} is different from ${conversions.propertyToFill} id ${value_id2}`;
                                 // }
                             }
-                            console_logLv2(
-                                0,
-                                instance.className(),
-                                `cascadeSaveChildRelations - saving child in parent ${propertyKey}: ${value_id}`
-                            );
+                            console_logLv2(0, instance.className(), `cascadeSaveChildRelations - saving child in parent ${propertyKey}: ${value_id}`);
                             //--------------------------------------
                             instance[propertyKey as keyof typeof instance] = value_id;
                             //--------------------------------------
@@ -269,7 +261,7 @@ export class BaseBackEndApplied {
                             console_logLv2(
                                 0,
                                 instance.className(),
-                                `cascadeSaveChildRelations - saved child in parent ${propertyKey}: ${instance[propertyKey as keyof typeof instance] }`
+                                `cascadeSaveChildRelations - saved child in parent ${propertyKey}: ${instance[propertyKey as keyof typeof instance]}`
                             );
                         }
                     }
@@ -413,9 +405,14 @@ export class BaseBackEndApplied {
                                 //--------------------------------------
                                 if (isCascadeLoad) {
                                     //--------------------------------------
-                                    let optionsGetForRelation = conversions.optionsGet;
+                                    let optionsGetForRelation =
+                                        // primero veo si vienen option get para la relacion en particular
+                                        // si no, cargo las que estan en la conversion
+                                        optionsGet?.optionsGetForRelation?.[propertyKey] !== undefined ? optionsGet.optionsGetForRelation[propertyKey] : conversions.optionsGet;
+                                    //--------------------------------------
                                     if (optionsGetForRelation === undefined) {
-                                        optionsGetForRelation = { doCallbackAfterLoad: optionsGet?.doCallbackAfterLoad };
+                                        // si aun es undefined, copio las opciones de get que me pasaron para la entidad principal
+                                        optionsGetForRelation = optionsGet;
                                     }
                                     //--------------------------------------
                                     const value_object = await this.getBack().checkRelationAndLoadIt<T, R>(
