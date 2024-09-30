@@ -68,6 +68,7 @@ export interface ClaimFreeTxParams {
 export interface UpdateFreeTxParams {
     valueToAdd: number;
     useSmartSelection: boolean;
+    useRead: boolean;
 }
 
 export const createFreeTxParamsSchema = yup.object().shape({});
@@ -79,4 +80,5 @@ export const claimFreeTxParamsSchema = yup.object().shape({
 export const updateFreeTxParamsSchema = yup.object().shape({
     valueToAdd: yup.number().required(),
     useSmartSelection: yup.boolean().required(),
+    useRead: yup.boolean().required(),
 });
