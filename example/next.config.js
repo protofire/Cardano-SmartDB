@@ -14,7 +14,7 @@ const nextConfig = {
     reactStrictMode: false,
     //-------------
     images: {
-        domains: ['ipfs.io', 'taptools.io', 'taptools-public.s3.amazonaws.com', 'img.cexplorer.io'],
+        domains: ['localhost', 'ipfs.io', 'taptools.io', 'taptools-public.s3.amazonaws.com', 'img.cexplorer.io'],
     },
     generateBuildId: async () => {
         // Generate your build ID here if needed
@@ -29,14 +29,14 @@ const nextConfig = {
     },
     webpack: (config, { isServer }) => {
         // or 'errors-only', 'minimal', etc.
-        config.stats = 'verbose'; 
+        config.stats = 'verbose';
         config.experiments = {
             asyncWebAssembly: true,
             topLevelAwait: true,
             layers: true, // optional, with some bundlers/frameworks it doesn't work without
         };
         // This allows you to omit extensions when importing ES modules
-        config.resolve.fullySpecified = false; 
+        config.resolve.fullySpecified = false;
         // Alias para importar módulos de ejemplo
         config.resolve.alias['@example'] = path.resolve(__dirname, './');
         // Evitar las advertencias críticas sin desactivar completamente los módulos
