@@ -1,10 +1,9 @@
-import { getGlobalBlockchainTime, globalBlockChainTime } from '../../Commons/BackEnd/globalBlockchainTime.js';
+import { getGlobalBlockchainTime } from '../../Commons/BackEnd/globalBlockchainTime.js';
 import { globalEmulator } from '../../Commons/BackEnd/globalEmulator.js';
 import { console_log } from '../../Commons/BackEnd/globalLogs.js';
 import { globalLucid } from '../../Commons/BackEnd/globalLucid.js';
-import { SYNC_SERVER_TIME_10M_MS, SYNC_SERVER_TIME_2M_MS, VALID_TX_TIME_RANGE, isEmulator } from '../../Commons/Constants/constants.js';
+import { TX_TIME_RANGE_MARGIN, VALID_TX_TIME_RANGE, isEmulator } from '../../Commons/Constants/constants.js';
 import { convertMillisToTime } from '../../Commons/utils.js';
-
 
 export class TimeBackEnd {
     //---------------------------------------------------------------
@@ -100,14 +99,14 @@ export class TimeBackEnd {
     //     return now;
     // }
 
-    public static async getTxTimeRange() {
+    public static async getTxTimeRange(): Promise<{ now: number; from: number; until: number }> {
         const serverTime = await this.getServerTime(true, true);
-        return this.getTxTimeRangeFromTime(serverTime);
+        return { now: serverTime, ...(await this.getTxTimeRangeFromTime(serverTime)) };
     }
 
-    public static async getTxTimeRangeFromTime(serverTime: number) {
-        const from = serverTime - 1 * 60 * 1000; // - (5 * 60 * 1000) TODO: for safety
-        const until = serverTime + VALID_TX_TIME_RANGE + 1 * 60 * 1000; // - (5 * 60 * 1000)
+    public static async getTxTimeRangeFromTime(serverTime: number): Promise<{ from: number; until: number }> {
+        const from = serverTime - TX_TIME_RANGE_MARGIN; // TODO: for safety we add a margin of 1 minute
+        const until = serverTime + VALID_TX_TIME_RANGE + TX_TIME_RANGE_MARGIN;
         return { from, until };
     }
 
