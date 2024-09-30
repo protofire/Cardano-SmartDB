@@ -1,18 +1,18 @@
 // es generica, todos los metodos llevan instancia o entidad como parametro
 
-import { Lucid } from "lucid-cardano";
-import { explainErrorTx } from "../../../Commons/explainError.js";
-import { pushSucessNotification, pushWarningNotification } from "../../../Commons/pushNotification.js";
-import { WalletTxParams } from "../../../Commons/types.js";
-import { BaseSmartDBEntity } from "../../../Entities/Base/Base.SmartDB.Entity.js";
-import { LucidToolsFrontEnd } from "../../../lib/Lucid/LucidTools.FrontEnd.js";
-import { IUseWalletStore } from "../../../store/types.js";
-import { AddressToFollowFrontEndApiCalls } from "../../ApiCalls/AddressToFollow.FrontEnd.Api.Calls.js";
-import { BaseSmartDBFrontEndApiCalls } from "../../ApiCalls/Base/Base.SmartDB.FrontEnd.Api.Calls.js";
-import { EmulatorEntity } from "../../../Entities/Emulator.Entity.js";
-import { AddressToFollowEntity } from "../../../Entities/AddressToFollow.Entity.js";
-import { formatAddress } from "../../../Commons/helpers.js";
-import { JobManagerFrontEnd } from "../../../lib/JobManager/JobManager.FrontEnd.js";
+import { Lucid } from 'lucid-cardano';
+import { explainErrorTx } from '../../../Commons/explainError.js';
+import { pushSucessNotification, pushWarningNotification } from '../../../Commons/pushNotification.js';
+import { WalletTxParams } from '../../../Commons/types.js';
+import { BaseSmartDBEntity } from '../../../Entities/Base/Base.SmartDB.Entity.js';
+import { LucidToolsFrontEnd } from '../../../lib/Lucid/LucidTools.FrontEnd.js';
+import { IUseWalletStore } from '../../../store/types.js';
+import { AddressToFollowFrontEndApiCalls } from '../../ApiCalls/AddressToFollow.FrontEnd.Api.Calls.js';
+import { BaseSmartDBFrontEndApiCalls } from '../../ApiCalls/Base/Base.SmartDB.FrontEnd.Api.Calls.js';
+import { EmulatorEntity } from '../../../Entities/Emulator.Entity.js';
+import { AddressToFollowEntity } from '../../../Entities/AddressToFollow.Entity.js';
+import { formatAddress } from '../../../Commons/helpers.js';
+import { JobManagerFrontEnd } from '../../../lib/JobManager/JobManager.FrontEnd.js';
 
 // todas las clases la pueden usar
 export class BaseSmartDBFrontEndBtnHandlers {
@@ -48,7 +48,7 @@ export class BaseSmartDBFrontEndBtnHandlers {
             return false;
         }
     }
-    
+
     public static async handleBtnDoTransactionV1<T extends BaseSmartDBEntity>(
         Entity: typeof BaseSmartDBEntity,
         name: string,
@@ -56,8 +56,8 @@ export class BaseSmartDBFrontEndBtnHandlers {
         setProcessingTxMessage: (value: string) => void,
         setProcessingTxHash: (value: string) => void,
         walletStore: IUseWalletStore,
-        txParams: any,
-        apiTxCall: (walletTxParams: WalletTxParams, txParams: any) => Promise<any>
+        txParams: Record<string, any>,
+        apiTxCall: (walletTxParams: WalletTxParams, txParams: any) => Promise<{ txHash: string; txCborHex: string }>
     ): Promise<boolean> {
         try {
             //--------------------------------------
@@ -65,11 +65,11 @@ export class BaseSmartDBFrontEndBtnHandlers {
             //--------------------------------------
             const { lucid, emulatorDB, walletTxParams } = await LucidToolsFrontEnd.prepareLucidFrontEndForTx(walletStore);
             //--------------------------------------
-            const { txCborHex } = await apiTxCall(walletTxParams, txParams);
+            const { txHash, txCborHex } = await apiTxCall(walletTxParams, txParams);
             //--------------------------------------
             setProcessingTxMessage('Transaction prepared, waiting for sign to submit...');
             //--------------------------------------
-            const txHash = await LucidToolsFrontEnd.signAndSubmitTx(lucid, txCborHex, walletStore.info, emulatorDB);
+            await LucidToolsFrontEnd.signAndSubmitTx(lucid, txHash, txCborHex, walletStore.info, emulatorDB);
             //--------------------------------------
             setProcessingTxMessage(`Transaction submitted, waiting for confirmation...`);
             setProcessingTxHash(txHash);
@@ -102,7 +102,7 @@ export class BaseSmartDBFrontEndBtnHandlers {
         nameTx: string,
         lucid: Lucid,
         emulatorDB: EmulatorEntity | undefined,
-        apiTxCall: () => Promise<any>,
+        apiTxCall: () => Promise<{ txHash: string; txCborHex: string }>,
         setProcessingTxMessage: (value: string) => void,
         setProcessingTxHash: (value: string) => void,
         walletStore: IUseWalletStore
@@ -111,11 +111,11 @@ export class BaseSmartDBFrontEndBtnHandlers {
             //--------------------------------------
             setProcessingTxMessage(name + '...');
             //--------------------------------------
-            const { txCborHex } = await apiTxCall();
+            const { txHash, txCborHex } = await apiTxCall();
             //--------------------------------------
             setProcessingTxMessage('Transaction prepared, waiting for sign to submit...');
             //--------------------------------------
-            const txHash = await LucidToolsFrontEnd.signAndSubmitTx(lucid, txCborHex, walletStore.info, emulatorDB);
+            await LucidToolsFrontEnd.signAndSubmitTx(lucid, txHash, txCborHex, walletStore.info, emulatorDB);
             //--------------------------------------
             setProcessingTxMessage(`Transaction submitted, waiting for confirmation...`);
             setProcessingTxHash(txHash);
