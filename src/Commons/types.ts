@@ -1,6 +1,6 @@
 import { Address, Data, Lucid, PaymentKeyHash, SignedMessage, UTxO } from 'lucid-cardano';
 import { ISODateString } from 'next-auth';
-import { yup }  from './yupLocale.js';
+import { yup } from './yupLocale.js';
 
 export type PaymentPubKey = string;
 export type StakeCredentialPubKeyHash = PaymentKeyHash;
@@ -63,6 +63,8 @@ export const optionsGetMinimal: OptionsGet = {
     lookUpFields: undefined,
 };
 
+export const optionsGetMinimalWithCallBack: OptionsGet = { ...optionsGetMinimal, doCallbackAfterLoad: true };
+
 export const optionsGetMinimalWithSmartUTxO: OptionsGet = {
     skip: undefined,
     limit: undefined,
@@ -70,9 +72,20 @@ export const optionsGetMinimalWithSmartUTxO: OptionsGet = {
     fieldsForSelect: { _id: true },
     doCallbackAfterLoad: false,
     loadRelations: { smartUTxO_id: true },
-    optionsGetForRelation: { smartUTxO_id: optionsGetMinimal },
+    optionsGetForRelation: { smartUTxO_id: { ...optionsGetMinimal, fieldsForSelect: { txHash: true, outputIndex: true } } },
     checkRelations: false,
     lookUpFields: undefined,
+};
+
+export const optionsGetMinimalWithSmartUTxOCompleteFields: OptionsGet = {
+    ...optionsGetMinimalWithSmartUTxO,
+    optionsGetForRelation: { smartUTxO_id: { ...optionsGetMinimal, fieldsForSelect: {} } },
+};
+
+
+export const optionsGetMinimalWithSmartUTxOWithDates: OptionsGet = {
+    ...optionsGetMinimalWithSmartUTxO,
+    optionsGetForRelation: { smartUTxO_id: { ...optionsGetMinimalWithCallBack, fieldsForSelect: {} } },
 };
 
 export const optionsGetAllFields: OptionsGet = {
@@ -88,6 +101,7 @@ export interface OptionsGetOne {
     checkRelations?: boolean;
     lookUpFields?: LookUpFields[];
 }
+
 
 export const optionsGetOneDefault: OptionsGetOne = {
     sort: undefined,
