@@ -1,4 +1,4 @@
-import { SYNC_SERVER_TIME_10M_MS, SYNC_SERVER_TIME_2M_MS } from '../Constants/constants.js';
+import { SYNC_SERVER_TIME_ALWAYS, SYNC_SERVER_TIME_OPTIONAL } from '../Constants/constants.js';
 import { convertMillisToTime } from '../utils.js';
 import { console_log } from './globalLogs.js';
 
@@ -26,7 +26,7 @@ if (!globalState.globalBlockChainTime) {
     } as GlobalBlockChainTime;
 }
 
-export const globalBlockChainTime = globalState.globalBlockChainTime
+export const globalBlockChainTime = globalState.globalBlockChainTime;
 
 export async function getGlobalBlockchainTime(refresh: boolean = false): Promise<number | undefined> {
     //----------------ó
@@ -38,18 +38,17 @@ export async function getGlobalBlockchainTime(refresh: boolean = false): Promise
     // este deberia ser el unico lugar donde se pide Date.now() que es la hora del server
     // a partir de aca, se usa el globalTime.time, que es un calculo de la hora del server a partir de la hora de la blockchain
     if (globalBlockChainTime.time !== undefined && globalBlockChainTime.lastFetch !== undefined) {
-        // si pasaron mas de 10 minutos refresca siempre
+        //----------------
+        // si pasaron mas de SYNC_SERVER_TIME_ALWAYS refresca siempre
         // si pasaron mas de 2 minutos refresca si refresh es true
         // si no, no refresca
         //----------------
         const now = Date.now();
         //----------------
         const diff = now - globalBlockChainTime.lastFetch;
-        const diffSeconds = diff / 1000;
-        const diffMinutes = Math.floor(diffSeconds / 60);
-        if (diffMinutes > SYNC_SERVER_TIME_10M_MS) {
+        if (diff > SYNC_SERVER_TIME_ALWAYS) {
             refresh = true;
-        } else if (refresh === true && diffMinutes > SYNC_SERVER_TIME_2M_MS) {
+        } else if (refresh === true && diff > SYNC_SERVER_TIME_OPTIONAL) {
             refresh = true;
         } else {
             refresh = false;
