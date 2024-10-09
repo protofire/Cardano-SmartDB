@@ -1,4 +1,55 @@
-# Smart DB Library
+<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
+<a name="readme-top"></a>
+<!--
+*** Thanks for checking out the Best-README-Template. If you have a suggestion
+*** that would make this better, please fork the repo and create a pull request
+*** or simply open an issue with the tag "enhancement".
+*** Don't forget to give the project a star!
+*** Thanks again! Now go create something AMAZING! :D
+-->
+
+
+
+<!-- PROJECT SHIELDS -->
+<!--
+*** I'm using markdown "reference style" links for readability.
+*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
+*** See the bottom of this document for the declaration of the reference variables
+*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
+*** https://www.markdownguide.org/basic-syntax/#reference-style-links
+-->
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![MIT License][license-shield]][license-url]
+[![LinkedIn][linkedin-shield]][linkedin-url]
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <a href="https://github.com/protofire/Cardano-SmartDB
+">
+    <img src="images/logo.png" alt="Logo" width="250" height="250">
+  </a>
+
+<h3 align="center">Cardano Smart DB</h3>
+
+  <p align="center">
+          Memory is where fleeting moments turn to whispers, and scattered data finds its form.
+    <br />
+    <a href="https://protofire-docs.gitbook.io/smartdb"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/protofire/Cardano-SmartDB
+  ">View Demo</a>
+    ·
+    <a href="https://github.com/protofire/Cardano-SmartDB
+  /issues">Report Bug</a>
+    ·
+    <a href="https://github.com/protofire/Cardano-SmartDB
+  /issues">Request Feature</a>
+  </p>
+</div>
 
 ## Table of Contents
 - [Smart DB Library](#smart-db-library)
@@ -73,3 +124,19 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 ## Acknowledgements
 
 We express our deepest gratitude to the Cardano community for their unwavering support and valuable contributions to this project. This work is part of a funded project through Cardano Catalyst, a community-driven innovation platform. For more details on the proposal and its progress, please visit our proposal page on [IdeaScale](https://cardano.ideascale.com/c/idea/110478).
+
+
+[contributors-shield]: https://img.shields.io/github/contributors/protofire/Cardano-SmartDB.svg?style=for-the-badge
+[contributors-url]: https://github.com/protofire/Cardano-SmartDB/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/protofire/Cardano-SmartDB.svg?style=for-the-badge
+[forks-url]: https://github.com/protofire/Cardano-SmartDB/network/members
+[stars-shield]: https://img.shields.io/github/stars/protofire/Cardano-SmartDB.svg?style=for-the-badge
+[stars-url]: https://github.com/protofire/Cardano-SmartDB/stargazers
+[issues-shield]: https://img.shields.io/github/issues/protofire/Cardano-SmartDB.svg?style=for-the-badge
+[issues-url]: https://github.com/protofire/Cardano-SmartDB/issues
+[license-shield]: https://img.shields.io/github/license/protofire/Cardano-SmartDB.svg?style=for-the-badge
+[license-url]: https://github.com/protofire/Cardano-SmartDB/blob/master/LICENSE
+[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
+[linkedin-url]: https://www.linkedin.com/company/protofire-io/posts/?feedView=all
+[product-screenshot]: images/screenshot.png
+[usage-example]: images/example.png
