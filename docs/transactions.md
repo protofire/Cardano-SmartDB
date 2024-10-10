@@ -195,7 +195,10 @@ These limitations are important considerations when implementing and scaling app
 ## Conclusion
 
 This transaction flow demonstrates how the Smart DB system manages complex blockchain interactions while maintaining data integrity and handling concurrency. By using a combination of database entities (TransactionEntity, SmartUTxOEntity) and blockchain interactions, the system provides a robust and efficient way to manage SmartDBEntity instances that are synchronized with the blockchain state.
+
 The use of status tracking, UTXO management, and asynchronous processing allows for scalable and reliable operation, even in high-concurrency scenarios. The smart selection algorithm and detailed UTXO state management ensure that the system can handle multiple concurrent transactions while minimizing conflicts and maximizing throughput.
+
 This architecture enables developers to build sophisticated decentralized applications on top of the Cardano blockchain while abstracting away much of the complexity of direct blockchain interaction. The system's ability to handle both reading and consuming UTXOs with different locking strategies provides flexibility for various transaction types while maintaining data integrity and preventing race conditions.
-While the system has limitations, particularly in extreme concurrency scenarios, it represents a significant step forward in managing complex blockchain-based applications. Future improvements could focus on further optimizing UTXO management, enhancing the smart selection algorithm, and developing strategies to handle edge cases more effectively.****
+
+While the system has limitations, particularly in extreme concurrency scenarios, it represents a significant step forward in managing complex blockchain-based applications. Future improvements could focus on further optimizing UTXO management, enhancing the smart selection algorithm, and developing strategies to handle edge cases more effectively.
 
