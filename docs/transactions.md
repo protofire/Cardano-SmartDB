@@ -78,8 +78,10 @@ The process begins when a user interacts with the frontend application to initia
 3.1. Lucid Transaction Builder:
    - The system uses the Lucid library to construct the transaction.
    - It includes necessary inputs, outputs, and the updated entity data in the transaction.
+     
 3.2. Script Attachment:
    - Relevant scripts (validator scripts, minting policies) are attached to the transaction.
+     
 3.3. Transaction Completion:
    - The transaction is completed and serialized into CBOR format.
    - The TransactionEntity status is updated to "PENDING".
@@ -88,10 +90,13 @@ The process begins when a user interacts with the frontend application to initia
 
 4.1. Return to Frontend:
    - The backend sends the constructed transaction back to the frontend.
+     
 4.2. User Signing:
    - The frontend uses Lucid to prompt the user to sign the transaction using their wallet.
+     
 4.3. Transaction Submission:
    - Once signed, the frontend uses Lucid to submit the transaction to the blockchain network.
+     
 4.4. Update Transaction Status:
    - The frontend calls an API to update the TransactionEntity status to "SUBMITTED".
    - UTXO statuses are updated in the SmartUTxOEntity:
@@ -102,8 +107,10 @@ The process begins when a user interacts with the frontend application to initia
 
 5.1. Status Updater Job:
    - A backend job (TransactionStatusUpdater) periodically checks the status of submitted transactions.
+     
 5.2. Blockchain Querying:
    - The job uses Lucid and Blockfrost (or other providers) to query the blockchain and check transaction confirmation status.
+     
 5.3. Status Updates:
    - As the transaction progresses, its status in the TransactionEntity is updated (e.g., "PENDING", "SUBMITTED", "CONFIRMED", or "FAILED").
   
@@ -111,10 +118,13 @@ The process begins when a user interacts with the frontend application to initia
 
 6.1. Confirmation Detection:
    - Once the transaction is confirmed on the blockchain, the status updater job detects this.
+     
 6.2. Database Synchronization:
    - The system initiates a sync process for the affected SmartDBEntity.
+     
 6.3. SmartDB Entity Update:
    - The corresponding SmartDBEntity in the database is updated to reflect the new state from the blockchain.
+     
 6.4. UTXO Management:
    - Used UTXOs are marked as consumed in the SmartUTxOEntity table.
    - New UTXOs created by the transaction are added to the SmartUTxOEntity table.
@@ -123,8 +133,10 @@ The process begins when a user interacts with the frontend application to initia
 
 7.1. Transaction Completion:
    - The TransactionEntity status is set to "CONFIRMED".
+     
 7.2. Cleanup:
    - Any temporary locks or reservations on UTXOs are cleared in the SmartUTxOEntity table.
+     
 7.3. Notification:
    - The system may notify the user of the successful transaction and update.
   
