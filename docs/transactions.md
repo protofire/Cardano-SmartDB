@@ -52,12 +52,14 @@ The process begins when a user interacts with the frontend application to initia
 2.1. Entity Retrieval:
    - The system retrieves the current state of the SmartDBEntity from the database.
    - It checks if the entity exists and if the user has the right to update it.
+     
 2.2. UTXO Selection:
    - The system queries available UTXOs (represented by SmartUTxOEntity instances) for the transaction.
    - It applies smart selection logic to choose appropriate UTXOs, considering factors like value and availability.
    - The system distinguishes between UTXOs for reading (reference) and consuming:
      - Reading UTXOs are passed by reference and can be used by multiple transactions simultaneously.
      - Consuming UTXOs will be spent in the transaction and can only be used by one transaction at a time.
+       
 2.3. UTXO Reservation:
    - Selected UTXOs are marked in the SmartUTxOEntity table based on their intended use:
      - For reading: marked with "isPreparingForReading" timestamp.
@@ -65,6 +67,7 @@ The process begins when a user interacts with the frontend application to initia
    - This process uses timestamps to manage concurrency and prevent conflicts.
    - UTXOs are available for reading if they are not being prepared for or currently in consumption.
    - UTXOs are available for consumption if they are not being prepared for or currently in reading or consumption.
+     
 2.4. Transaction Entity Creation:
    - A new TransactionEntity is created in the database with status "CREATED".
    - This entity includes references to the UTXOs being used and other transaction details.
