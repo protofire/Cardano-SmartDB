@@ -1,28 +1,27 @@
-
 import 'reflect-metadata';
 import { BaseEntity, Convertible, asEntity } from 'smart-db';
 
 @asEntity()
-export class UserOptEntity extends BaseEntity {
-    protected static _apiRoute: string = 'user-opt';
-    protected static _className: string = 'UserOpt';
+export class ProductNoOptEntity extends BaseEntity {
+    protected static _apiRoute: string = 'product-no-opt';
+    protected static _className: string = 'ProductNoOpt';
 
     // #region fields
 
     @Convertible()
-    firstName!: string;
+    name!: string;
 
     @Convertible()
-    lastName!: string;
+    description!: string;
 
     @Convertible()
-    email!: string;
-
-    @Convertible() // Excluir por defecto
-    password!: string;
+    price!: number;
 
     @Convertible()
-    birthDate!: Date;
+    stock!: number;
+
+    @Convertible()
+    category!: string;
 
     @Convertible()
     createdAt!: Date;
@@ -38,18 +37,13 @@ export class UserOptEntity extends BaseEntity {
 
     public static alwaysFieldsForSelect: Record<string, boolean> = {
         ...BaseEntity.alwaysFieldsForSelect,
-        firstName: true,
-        lastName: true,
-        email: true,
-        birthDate: true,
+        name: true,
+        description: true,
+        price: true,
+        stock: true,
+        category: true,
         createdAt: true,
         updatedAt: true,
-    };
-
-    // Índices para mejorar el rendimiento de las búsquedas
-    public static indexes = {
-        emailIndex: { email: true },
-        nameIndex: { firstName: true, lastName: true },
     };
 
     // #endregion  db

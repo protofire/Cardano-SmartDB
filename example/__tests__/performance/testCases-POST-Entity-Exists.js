@@ -1,0 +1,167 @@
+const {
+    validToken,
+    invalidToken,
+    validEntity,
+    invalidEntity,
+    validBodyWithParamsFilter,
+    validBodyWithParamsFilterNonExists,
+    validBodyWithInvalidStructure,
+    validTimeResponse,
+    validTimeResponseUnderLoad,
+    numberOfRequests,
+} = require('./baseTestCases');
+
+const testCases = [
+    // Valid scenarios
+    {
+        category: 'Positive and Negative Scenarios',
+        description: 'should return 200 and swExists true when valid entity, body with paramsFilter, and token are provided',
+        method: 'POST',
+        url: '/api/{entity}/exists',
+        entity: validEntity,
+        body: validBodyWithParamsFilter,
+        token: validToken,
+        expectedStatus: 200,
+        expectedBody: { swExists: true },
+    },
+    // Non Exists ID
+    {
+        category: 'Positive and Negative Scenarios',
+        description: 'should return 200 when Non Exists ID is provided in the body with paramsFilter',
+        method: 'POST',
+        url: '/api/{entity}/exists',
+        entity: validEntity,
+        body: validBodyWithParamsFilterNonExists,
+        token: validToken,
+        expectedStatus: 200,
+        expectedBody: { swExists: false },
+    },
+    // Invalid body
+    {
+        category: 'Positive and Negative Scenarios',
+        description: 'should return 200 when body without paramsFilter is provided',
+        method: 'POST',
+        url: '/api/{entity}/exists',
+        entity: validEntity,
+        body: validBodyWithInvalidStructure,
+        token: validToken,
+        expectedStatus: 200,
+        expectedBody: { swExists: true },
+    },
+    // Invalid entity
+    {
+        category: 'Error Handling',
+        description: 'should return 404 when invalid entity is provided',
+        method: 'POST',
+        url: '/api/{entity}/exists',
+        entity: invalidEntity,
+        body: validBodyWithParamsFilter,
+        token: validToken,
+        expectedStatus: 404,
+        expectedBody: {},
+    },
+    // Invalid token
+    {
+        category: 'Authentication and Authorization',
+        description: 'should return 401 when invalid token is provided',
+        method: 'POST',
+        url: '/api/{entity}/exists',
+        entity: validEntity,
+        body: validBodyWithParamsFilter,
+        token: invalidToken,
+        expectedStatus: 401,
+        expectedBody: {},
+    },
+    // Missing entity
+    {
+        category: 'Data Validation',
+        description: 'should return 404 when entity is missing',
+        method: 'POST',
+        url: '/api/{entity}/exists',
+        entity: '',
+        body: validBodyWithParamsFilter,
+        token: validToken,
+        expectedStatus: 404,
+        expectedBody: {},
+    },
+    // Missing body
+    {
+        category: 'Positive and Negative Scenarios',
+        description: 'should return 200 when body is not provided',
+        method: 'POST',
+        url: '/api/{entity}/exists',
+        entity: validEntity,
+        body: {},
+        token: validToken,
+        expectedStatus: 200,
+        expectedBody: { swExists: true },
+    },
+    // Missing token
+    {
+        category: 'Authentication and Authorization',
+        description: 'should return 401 when token is missing',
+        method: 'POST',
+        url: '/api/{entity}/exists',
+        entity: validEntity,
+        body: validBodyWithParamsFilter,
+        token: '',
+        expectedStatus: 401,
+        expectedBody: {},
+    },
+    // Performance testing
+    {
+        category: 'Performance Testing',
+        description: 'should assess response time',
+        method: 'POST',
+        url: '/api/{entity}/exists',
+        entity: validEntity,
+        body: validBodyWithParamsFilter,
+        token: validToken,
+        expectedStatus: 200,
+        expectedBody: { swExists: true },
+        maxTimeResponse: validTimeResponse,
+    },
+    // Performance testing under load
+    {
+        category: 'Performance Testing',
+        description: 'should assess response times under load',
+        method: 'POST',
+        url: '/api/{entity}/exists',
+        entity: validEntity,
+        body: validBodyWithParamsFilter,
+        token: validToken,
+        expectedStatus: 200,
+        expectedBody: { swExists: true },
+        numberOfRequests: numberOfRequests,
+        maxTimeResponse: validTimeResponse,
+        maxTimeResponseForParallelRequest: validTimeResponseUnderLoad,
+    },
+    // Security testing - SQL injection
+    {
+        category: 'Security Testing',
+        description: 'should handle SQL injection attempts gracefully',
+        method: 'POST',
+        url: '/api/{entity}/exists',
+        entity: validEntity,
+        body: { paramsFilter: { key: '1 OR 1=1' } },
+        token: validToken,
+        expectedStatus: 200,
+        expectedBody: { swExists: false },
+    },
+    // Security testing - XSS
+    {
+        category: 'Security Testing',
+        description: 'should handle XSS attempts gracefully',
+        method: 'POST',
+        url: '/api/{entity}/exists',
+        entity: validEntity,
+        body: { paramsFilter: { key: '<script>alert("XSS")</script>' } },
+        token: validToken,
+        expectedStatus: 200,
+        expectedBody:  { swExists: false },
+    },
+]
+
+module.exports = {
+    testCases,
+};

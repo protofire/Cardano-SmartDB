@@ -4,11 +4,11 @@ export * from './Test.Entity.Mongo';
 export * from './Dummy.Entity.PostgreSQL';
 export * from './Test.Entity.PostgreSQL';
 
-export * from './UserOpt.Entity.PostgreSQL';
-export * from './UserNoOpt.Entity.PostgreSQL';
+export * from './ProductOpt.Entity.PostgreSQL';
+export * from './ProductNoOpt.Entity.PostgreSQL';
 
-export * from './UserOpt.Entity.Mongo';
-export * from './UserNoOpt.Entity.Mongo';
+export * from './ProductOpt.Entity.Mongo';
+export * from './ProductNoOpt.Entity.Mongo';
 
 export * from './index';
 
