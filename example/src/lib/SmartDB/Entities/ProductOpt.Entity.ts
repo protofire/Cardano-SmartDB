@@ -3,54 +3,50 @@ import { BaseEntity, Convertible, asEntity } from 'smart-db';
 
 @asEntity()
 export class ProductOptEntity extends BaseEntity {
-    protected static _apiRoute: string = 'user-opt';
-    protected static _className: string = 'ProductOpt';
+  protected static _apiRoute: string = 'product-opt';
+  protected static _className: string = 'ProductOpt';
 
-    // #region fields
+  // #region fields
 
-    @Convertible()
-    firstName!: string;
+  @Convertible() // Índice en el nombre para mejorar las búsquedas
+  name!: string;
 
-    @Convertible()
-    lastName!: string;
+  @Convertible()
+  description!: string;
 
-    @Convertible()
-    email!: string;
+  @Convertible() // No seleccionar este campo en las consultas por defecto
+  price!: number;
 
-    @Convertible() // Excluir por defecto
-    password!: string;
+  @Convertible()
+  stock!: number;
 
-    @Convertible()
-    birthDate!: Date;
+  @Convertible() // Índice en la categoría para mejorar las búsquedas
+  category!: string;
 
-    @Convertible()
-    createdAt!: Date;
+  @Convertible()
+  createdAt!: Date;
 
-    @Convertible()
-    updatedAt!: Date;
+  @Convertible()
+  updatedAt!: Date;
 
-    // #endregion fields
+  @Convertible() // Soft delete, no se selecciona por defecto
+  deletedAt?: Date;
 
-    // #region  db
+  // #endregion fields
 
-    public static defaultFieldsWhenUndefined: Record<string, boolean> = {};
+  // #region db
 
-    public static alwaysFieldsForSelect: Record<string, boolean> = {
-        ...BaseEntity.alwaysFieldsForSelect,
-        firstName: true,
-        lastName: true,
-        email: true,
-        birthDate: true,
-        createdAt: true,
-        updatedAt: true,
-    };
+  public static defaultFieldsWhenUndefined: Record<string, boolean> = {};
 
-    // Índices para mejorar el rendimiento de las búsquedas
-    public static indexes = {
-        emailIndex: { email: true },
-        nameIndex: { firstName: true, lastName: true },
-    };
+  public static alwaysFieldsForSelect: Record<string, boolean> = {
+    ...BaseEntity.alwaysFieldsForSelect,
+    name: true,
+    description: true,
+    stock: true,
+    category: true,
+    createdAt: true,
+    updatedAt: true,
+  };
 
-    // #endregion  db
+  // #endregion db
 }
-
