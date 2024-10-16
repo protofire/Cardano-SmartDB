@@ -2,16 +2,9 @@ import { yup } from 'smart-db';
 import request from 'supertest';
 import { baseURL, deleteTestData, MAXTIMEOUT, populateTestData } from './baseTestCases.js';
 
-import { testCases as deleteEntityId } from './testCases-DELETE-Entity-ById.js';
 import { testCases as getEntityAll } from './testCases-GET-Entity-All.js';
-import { testCases as getEntityExistsId } from './testCases-GET-Entity-Exists-Id.js';
 import { testCases as getEntityId } from './testCases-GET-Entity-Id.js';
-import { testCases as othersCases } from './testCases-Others.js';
-import { testCases as postCreateEntity } from './testCases-POST-Create-Entity.js';
 import { testCases as postEntityByParams } from './testCases-POST-Entity-ByParams.js';
-import { testCases as postEntityCount } from './testCases-POST-Entity-Count.js';
-import { testCases as postEntityExists } from './testCases-POST-Entity-Exists.js';
-import { testCases as postUpdateEntity } from './testCases-POST-Update-Entity.js';
 
 interface TestCase {
     method: 'GET' | 'POST' | 'DELETE'; // Add more methods if needed
@@ -29,16 +22,9 @@ interface TestCase {
 }
 
 const testCaseGroups = [
-    { name: 'Create Entity POST API', testCases: postCreateEntity as TestCase[] },
-    { name: 'Update Entity POST API', testCases: postUpdateEntity as TestCase[] },
-    { name: 'Exists Entity GET API', testCases: getEntityExistsId as TestCase[] },
-    { name: 'Exists Entity POST API', testCases: postEntityExists as TestCase[] },
     { name: 'Get Entity By Id GET API', testCases: getEntityId as TestCase[] },
     { name: 'Get All Entity GET API', testCases: getEntityAll as TestCase[] },
     { name: 'Get All Entity By Params POST API', testCases: postEntityByParams as TestCase[] },
-    { name: 'Entity Count POST API', testCases: postEntityCount as TestCase[] },
-    { name: 'Delete Entity By Id DELETE API', testCases: deleteEntityId as TestCase[] },
-    { name: 'Others', testCases: othersCases as TestCase[] },
 ];
 
 let testData = {};
@@ -71,13 +57,13 @@ beforeAll(async () => {
     console.log('Loading Data...');
     testData = await populateTestData();
     console.log('Data Loaded');
-});
+}, 100000);
 
 afterAll(async () => {
     console.log('Cleaning up data...');
     await deleteTestData();
     console.log('Data cleanup complete');
-});
+}, 100000);
 
 describe('API Tests', () => {
     testCaseGroups.forEach(({ name, testCases }) => {

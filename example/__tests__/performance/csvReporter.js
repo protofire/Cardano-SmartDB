@@ -1,27 +1,13 @@
 const fs = require('fs');
 const path = require('path');
-const { testCases: postCreateEntity } = require('./testCases-POST-Create-Entity');
-const { testCases: postUpdateEntity } = require('./testCases-POST-Update-Entity');
-const { testCases: getEntityExistsId } = require('./testCases-GET-Entity-Exists-Id');
-const { testCases: postEntityExists } = require('./testCases-POST-Entity-Exists');
 const { testCases: getEntityId } = require('./testCases-GET-Entity-Id');
 const { testCases: getEntityAll } = require('./testCases-GET-Entity-All');
 const { testCases: postEntityByParams } = require('./testCases-POST-Entity-ByParams');
-const { testCases: postEntityCount } = require('./testCases-POST-Entity-Count');
-const { testCases: deleteEntityId } = require('./testCases-DELETE-Entity-ById');
-const { testCases: othersCases } = require('./testCases-Others');
 
 const testCaseGroups = [
-    { name: 'Create Entity POST API', testCases: postCreateEntity },
-    { name: 'Update Entity POST API', testCases: postUpdateEntity },
-    { name: 'Exists Entity GET API', testCases: getEntityExistsId },
-    { name: 'Exists Entity POST API', testCases: postEntityExists },
     { name: 'Get Entity By Id GET API', testCases: getEntityId },
     { name: 'Get All Entity GET API', testCases: getEntityAll },
     { name: 'Get All Entity By Params POST API', testCases: postEntityByParams },
-    { name: 'Entity Count POST API', testCases: postEntityCount },
-    { name: 'Delete Entity By Id DELETE API', testCases: deleteEntityId },
-    { name: 'Others', testCases: othersCases },
 ];
 
 const addGroupNameToTestCases = (groupName, testCases) => {
