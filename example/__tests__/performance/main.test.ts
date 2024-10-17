@@ -5,6 +5,7 @@ import { baseURL, deleteTestData, MAXTIMEOUT, populateTestData } from './baseTes
 import { testCases as getEntityAll } from './testCases-GET-Entity-All.js';
 import { testCases as getEntityId } from './testCases-GET-Entity-Id.js';
 import { testCases as postEntityByParams } from './testCases-POST-Entity-ByParams.js';
+import { testCases as postEntityByParamsUsingName } from './testCases-POST-Entity-ByParams-using-name.js';
 
 interface TestCase {
     method: 'GET' | 'POST' | 'DELETE'; // Add more methods if needed
@@ -25,6 +26,7 @@ const testCaseGroups = [
     { name: 'Get Entity By Id GET API', testCases: getEntityId as TestCase[] },
     { name: 'Get All Entity GET API', testCases: getEntityAll as TestCase[] },
     { name: 'Get All Entity By Params POST API', testCases: postEntityByParams as TestCase[] },
+    { name: 'Get All Entity By Params Using Name POST API', testCases: postEntityByParamsUsingName as TestCase[] },
 ];
 
 let testData = {};
@@ -57,13 +59,13 @@ beforeAll(async () => {
     console.log('Loading Data...');
     testData = await populateTestData();
     console.log('Data Loaded');
-}, 100000);
+}, 1000000);
 
 afterAll(async () => {
     console.log('Cleaning up data...');
     await deleteTestData();
     console.log('Data cleanup complete');
-}, 100000);
+}, 1000000);
 
 describe('API Tests', () => {
     testCaseGroups.forEach(({ name, testCases }) => {

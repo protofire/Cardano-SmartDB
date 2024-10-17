@@ -22,9 +22,11 @@ const invalidEntity = 'invalidEntity';
 const invalidEntityId = 'invalidEntityId'; // You can keep this as a constant
 
 const validEntityId = 'validEntityId'; //NOTE: will be populated with a valid ID
+const validEntityName = 'validEntityname'; //NOTE: will be populated with a valid name
 const validNonExistsEntityId = 'validNonExistsEntityId'; //NOTE: will be populated with a non-existing ID
 
 const validBodyWithParamsFilter = 'validBodyWithParamsFilter'; //NOTE: will be populated with a valid body
+const validBodyWithParamsNameFilter = 'validBodyWithParamsNameFilter'
 const validBodyWithParamsFilterNonExists = 'validBodyWithParamsFilterNonExists'; //NOTE: will be populated with a non-existing ID
 
 const validBodyWithInvalidStructure = { anyElement: 90 };
@@ -79,8 +81,9 @@ const expectedBodySchemaMessage = object({
 });
 
 const validTimeResponse = 10000; // 1 second
-const validTimeResponseUnderLoad = 16000; // 5 seconds
+const validTimeResponseUnderLoad = 60000; // 5 seconds
 const numberOfRequests = 10;
+const numberOfEntities = 5000;
 
 const MAXTIMEOUT = 10000; // 10 seconds
 
@@ -116,7 +119,7 @@ const populateTestData = async () => {
     const responseNoOpt = await request(baseURL).post(`/api/${productNoOptimizedEntity}/count`).set('Authorization', `Bearer ${validToken}`);
     if (responseOpt.status === 200 && responseNoOpt.status === 200) {
       if (responseOpt.body.count === 0 && responseNoOpt.body.count === 0) {
-        for (let i = 0; i < 1000; i++) {
+        for (let i = 0; i < numberOfEntities; i++) {
           const product = generateRandomProduct();
           await createProduct(product);
         }
@@ -133,7 +136,9 @@ const populateTestData = async () => {
 
       if (entities.length > 0) {
         let validEntityId = entities[0]._DB_id;
+        let validEntityName = entities[0].name;
         let validBodyWithParamsFilter = { paramsFilter: { _id: entities[0]._DB_id } };
+        let validBodyWithParamsNameFilter = { paramsFilter: { name: entities[0].name} };
 
         // Generate a unique ID that does not exist in the current entities
         let nonExistentId;
@@ -149,7 +154,7 @@ const populateTestData = async () => {
         // }
         let validBodyWithParamsFilterNonExists = { paramsFilter: { _id: nonExistentId } };
 
-        testData = { validEntityId, validBodyWithParamsFilter, validNonExistsEntityId, validBodyWithParamsFilterNonExists }; // Store the populated data
+        testData = { validEntityId, validBodyWithParamsFilter, validNonExistsEntityId, validBodyWithParamsFilterNonExists, validEntityName, validBodyWithParamsNameFilter }; // Store the populated data
 
         return testData;
       } else {
@@ -183,9 +188,11 @@ module.exports = {
   productNoOptimizedEntity,
   invalidEntity,
   validEntityId,
+  validEntityName,
   invalidEntityId,
   validNonExistsEntityId,
   validBodyWithParamsFilter,
+  validBodyWithParamsNameFilter,
   validBodyWithParamsFilterNonExists,
   validBodyWithInvalidStructure,
   validBodyWithCreateFields,

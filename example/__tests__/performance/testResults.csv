@@ -1,13 +1,17 @@
 URL,Method,Test Case,Category,URL used,Status,Error Message,Execution Time
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should assess response time using optimized entity",Performance Testing,/api/product-opt/validEntityId,passed,"",25
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should assess response times under load using optimized entity",Performance Testing,/api/product-opt/validEntityId,passed,"",144
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should assess response time using optimized entity",Performance Testing,/api/product-opt/validEntityId,passed,"",173
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should assess response times under load using optimized entity",Performance Testing,/api/product-opt/validEntityId,passed,"",131
 /api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should assess response time using no optimized entity",Performance Testing,/api/product-no-opt/validEntityId,passed,"",16
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should assess response times under load using no optimized entity",Performance Testing,/api/product-no-opt/validEntityId,passed,"",99
-/api/{entity}/all,GET,"API Tests Get All Entity GET API should assess response time using optimized entity",Performance Testing,/api/product-opt/all,passed,"",245
-/api/{entity}/all,GET,"API Tests Get All Entity GET API should assess response times under load using optimized entity",Performance Testing,/api/product-opt/all,failed,"Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThanOrEqual[2m([22m[32mexpected[39m[2m)[22m",1988
-/api/{entity}/all,GET,"API Tests Get All Entity GET API should assess response time using no optimized entity",Performance Testing,/api/product-no-opt/all,passed,"",208
-/api/{entity}/all,GET,"API Tests Get All Entity GET API should assess response times under load using no optimized entity",Performance Testing,/api/product-no-opt/all,passed,"",1586
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should assess response time using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",18
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should assess response times under load using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",108
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should assess response time no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",17
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should assess response times under load no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",101
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should assess response times under load using no optimized entity",Performance Testing,/api/product-no-opt/validEntityId,passed,"",95
+/api/{entity}/all,GET,"API Tests Get All Entity GET API should assess response time using optimized entity",Performance Testing,/api/product-opt/all,passed,"",1031
+/api/{entity}/all,GET,"API Tests Get All Entity GET API should assess response times under load using optimized entity",Performance Testing,/api/product-opt/all,failed,"Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThanOrEqual[2m([22m[32mexpected[39m[2m)[22m",9521
+/api/{entity}/all,GET,"API Tests Get All Entity GET API should assess response time using no optimized entity",Performance Testing,/api/product-no-opt/all,passed,"",870
+/api/{entity}/all,GET,"API Tests Get All Entity GET API should assess response times under load using no optimized entity",Performance Testing,/api/product-no-opt/all,failed,"Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThanOrEqual[2m([22m[32mexpected[39m[2m)[22m",8526
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should assess response time using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",17
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should assess response times under load using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",103
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should assess response time no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",16
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should assess response times under load no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",99
+N/A,N/A,"API Tests Get All Entity By Params Using Name POST API should assess response time using optimized entity",N/A,N/A,passed,"",18
+N/A,N/A,"API Tests Get All Entity By Params Using Name POST API should assess response times under load using optimized entity",N/A,N/A,passed,"",133
+N/A,N/A,"API Tests Get All Entity By Params Using Name POST API should assess response time no using optimized entity",N/A,N/A,passed,"",22
+N/A,N/A,"API Tests Get All Entity By Params Using Name POST API should assess response times under load no using optimized entity",N/A,N/A,passed,"",105
