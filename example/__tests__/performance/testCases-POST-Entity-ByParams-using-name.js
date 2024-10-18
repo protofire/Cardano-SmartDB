@@ -1,13 +1,9 @@
 const yup = require('yup');
 const {
   validToken,
-  invalidToken,
   productOptimizedEntity,
   productNoOptimizedEntity,
-  invalidEntity,
   validBodyWithParamsNameFilter,
-  invalidBodyWithParamsFilter,
-  validBodyWithInvalidStructure,
   expectedBodySchemaArrayEntities,
   validTimeResponse,
   validTimeResponseUnderLoad,

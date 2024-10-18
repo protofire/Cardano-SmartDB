@@ -3,9 +3,11 @@ import request from 'supertest';
 import { baseURL, deleteTestData, MAXTIMEOUT, populateTestData } from './baseTestCases.js';
 
 import { testCases as getEntityAll } from './testCases-GET-Entity-All.js';
+import { testCases as postEntityWithSelect } from './testCases-POST-All-Entity-using-name-select-description.js';
 import { testCases as getEntityId } from './testCases-GET-Entity-Id.js';
 import { testCases as postEntityByParams } from './testCases-POST-Entity-ByParams.js';
 import { testCases as postEntityByParamsUsingName } from './testCases-POST-Entity-ByParams-using-name.js';
+import { testCases as postEntityByParamsUsingNameWithSelect } from './testCases-POST-Entity-ByParams-using-name-select-description.js';
 
 interface TestCase {
     method: 'GET' | 'POST' | 'DELETE'; // Add more methods if needed
@@ -25,8 +27,10 @@ interface TestCase {
 const testCaseGroups = [
     { name: 'Get Entity By Id GET API', testCases: getEntityId as TestCase[] },
     { name: 'Get All Entity GET API', testCases: getEntityAll as TestCase[] },
-    { name: 'Get All Entity By Params POST API', testCases: postEntityByParams as TestCase[] },
-    { name: 'Get All Entity By Params Using Name POST API', testCases: postEntityByParamsUsingName as TestCase[] },
+    { name: 'Get All Entity With Select Description POST API', testCases: postEntityWithSelect as TestCase[] },
+    { name: 'Get Entity By Params Using ID POST API', testCases: postEntityByParams as TestCase[] },
+    { name: 'Get Entity By Params Using Name POST API', testCases: postEntityByParamsUsingName as TestCase[] },
+    { name: 'Get Entity By Params Using Name And With Select Description POST API', testCases: postEntityByParamsUsingNameWithSelect as TestCase[] },
 ];
 
 let testData = {};
@@ -59,13 +63,13 @@ beforeAll(async () => {
     console.log('Loading Data...');
     testData = await populateTestData();
     console.log('Data Loaded');
-}, 1000000);
+}, MAXTIMEOUT);
 
 afterAll(async () => {
     console.log('Cleaning up data...');
     await deleteTestData();
     console.log('Data cleanup complete');
-}, 1000000);
+}, MAXTIMEOUT);
 
 describe('API Tests', () => {
     testCaseGroups.forEach(({ name, testCases }) => {

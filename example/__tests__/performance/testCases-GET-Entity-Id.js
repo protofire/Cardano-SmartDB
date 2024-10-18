@@ -1,12 +1,8 @@
 const {
   validToken,
-  invalidToken,
   productOptimizedEntity,
   productNoOptimizedEntity,
-  invalidEntity,
   validEntityId,
-  invalidEntityId,
-  validNonExistsEntityId,
   expectedBodySchemaEntity,
   validTimeResponse,
   validTimeResponseUnderLoad,

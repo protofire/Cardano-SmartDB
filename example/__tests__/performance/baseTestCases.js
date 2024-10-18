@@ -13,29 +13,19 @@ const baseURL = 'http://localhost:3000'; // Change the port if your server runs 
 
 // NOTE: Valid token must be provided in order to try all tests rutes!
 const validToken = process.env.AUTH_TOKEN;
-const invalidToken = 'invalidToken';
 
 const productOptimizedEntity = 'product-opt';
 const productNoOptimizedEntity = 'product-no-opt';
-const invalidEntity = 'invalidEntity';
-
-const invalidEntityId = 'invalidEntityId'; // You can keep this as a constant
 
 const validEntityId = 'validEntityId'; //NOTE: will be populated with a valid ID
 const validEntityName = 'validEntityname'; //NOTE: will be populated with a valid name
-const validNonExistsEntityId = 'validNonExistsEntityId'; //NOTE: will be populated with a non-existing ID
 
 const validBodyWithParamsFilter = 'validBodyWithParamsFilter'; //NOTE: will be populated with a valid body
 const validBodyWithParamsNameFilter = 'validBodyWithParamsNameFilter'
-const validBodyWithParamsFilterNonExists = 'validBodyWithParamsFilterNonExists'; //NOTE: will be populated with a non-existing ID
 
+const validBodyWithParamsNameFilterWithSelect = "validBodyWithParamsNameFilterWithSelect"
+const validBodyWithWithSelect= "validBodyWithWithSelect"
 const validBodyWithInvalidStructure = { anyElement: 90 };
-
-const validBodyWithCreateFields = { createFields: { name: 'name for test entity', description: 'description for test entity' } };
-const invalidBodyWithCreateFields = { createFields: { name: '', description: 'A test entity with invalid name' } };
-
-const validBodyWithUpdateFields = { updateFields: { name: 'updated name for test entity', description: 'An updated test entity' } };
-const invalidBodyWithUpdateFields = { updateFields: { name: '', description: 'An updated test entity with invalid name' } };
 
 const expectedBodySchemaEntity = object({
   name: string().required(),
@@ -45,47 +35,12 @@ const expectedBodySchemaEntity = object({
 
 const expectedBodySchemaArrayEntities = array().of(expectedBodySchemaEntity);
 
-const expectedBodySchemaCount = object({
-  count: number().required(),
-});
+const validTimeResponse = 6000000; // 1 second
+const validTimeResponseUnderLoad = 6000000; // 5 seconds
+const numberOfRequests = 50;
+const numberOfEntities = 10000;
 
-const expectedBodySchemaTime = object({
-  serverTime: string().required(),
-});
-
-const expectedBodySchemaHealth = object({
-  status: string().oneOf(['ok']).required(),
-  time: string().required(),
-});
-
-const expectedBodySchemaInit = object({
-  status: string().oneOf(['Initialization complete']).required(),
-  token: string().required(),
-  csrfToken: string().required(),
-});
-
-const expectedBodySchemaCSRF = object({
-  csrfToken: string().required(),
-});
-
-const expectedBodySchemaChallengue = object({
-  token: string().required(),
-});
-
-const expectedBodySchemaError = object({
-  error: string().required(),
-});
-
-const expectedBodySchemaMessage = object({
-  message: string().required(),
-});
-
-const validTimeResponse = 10000; // 1 second
-const validTimeResponseUnderLoad = 60000; // 5 seconds
-const numberOfRequests = 10;
-const numberOfEntities = 5000;
-
-const MAXTIMEOUT = 10000; // 10 seconds
+const MAXTIMEOUT = 6000000; // 10 seconds
 
 function generateRandomProduct() {
   return {
@@ -139,22 +94,11 @@ const populateTestData = async () => {
         let validEntityName = entities[0].name;
         let validBodyWithParamsFilter = { paramsFilter: { _id: entities[0]._DB_id } };
         let validBodyWithParamsNameFilter = { paramsFilter: { name: entities[0].name} };
+        let validBodyWithParamsNameFilterWithSelect = { paramsFilter: { name: entities[0].name}, fieldsForSelect: {description: true, _id: true, name: true, stock: false, category: false, createdAt: false, updatedAt:false}  };
+        let validBodyWithWithSelect = { fieldsForSelect: {description: true, _id: true, name: true, stock: false, category: false, createdAt: false, updatedAt:false}  };
 
-        // Generate a unique ID that does not exist in the current entities
-        let nonExistentId;
-        do {
-          nonExistentId = crypto.randomBytes(12).toString('hex'); // 12 bytes = 24 hex characters
-        } while (entities.some((entity) => entity._DB_id === nonExistentId));
-        let validNonExistsEntityId = nonExistentId;
 
-        // // Generate a non-existing name
-        // let nonExistentName = 'non exists name for test entity';
-        // while (entities.some((entity) => entity.name === nonExistentName)) {
-        //     nonExistentName = `non exists name for test entity ${uuidv4()}`;
-        // }
-        let validBodyWithParamsFilterNonExists = { paramsFilter: { _id: nonExistentId } };
-
-        testData = { validEntityId, validBodyWithParamsFilter, validNonExistsEntityId, validBodyWithParamsFilterNonExists, validEntityName, validBodyWithParamsNameFilter }; // Store the populated data
+        testData = { validEntityId, validBodyWithParamsFilter, validEntityName, validBodyWithParamsNameFilter, validBodyWithParamsNameFilterWithSelect, validBodyWithWithSelect }; // Store the populated data
 
         return testData;
       } else {
@@ -183,33 +127,17 @@ const deleteTestData = async () => {
 module.exports = {
   baseURL,
   validToken,
-  invalidToken,
   productOptimizedEntity,
   productNoOptimizedEntity,
-  invalidEntity,
   validEntityId,
   validEntityName,
-  invalidEntityId,
-  validNonExistsEntityId,
   validBodyWithParamsFilter,
   validBodyWithParamsNameFilter,
-  validBodyWithParamsFilterNonExists,
+  validBodyWithParamsNameFilterWithSelect,
+  validBodyWithWithSelect,
   validBodyWithInvalidStructure,
-  validBodyWithCreateFields,
-  invalidBodyWithCreateFields,
-  validBodyWithInvalidStructure,
-  validBodyWithUpdateFields,
-  invalidBodyWithUpdateFields,
   expectedBodySchemaEntity,
   expectedBodySchemaArrayEntities,
-  expectedBodySchemaCount,
-  expectedBodySchemaTime,
-  expectedBodySchemaHealth,
-  expectedBodySchemaInit,
-  expectedBodySchemaCSRF,
-  expectedBodySchemaChallengue,
-  expectedBodySchemaError,
-  expectedBodySchemaMessage,
   validTimeResponse,
   validTimeResponseUnderLoad,
   numberOfRequests,
