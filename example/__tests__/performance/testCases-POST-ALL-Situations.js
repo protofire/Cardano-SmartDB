@@ -1,21 +1,20 @@
+const yup = require('yup');
 const {
   validToken,
   productOptimizedEntity,
-  productNoOptimizedEntity,
   expectedBodySchemaArrayEntities,
   validTimeResponse,
-  validTimeResponseUnderLoad,
-  numberOfRequests,
 } = require('./baseTestCases');
 
 const testCases = [
   // Performance testing
   {
-    category: 'Performance Testing',
-    description: 'should assess response time using optimized entity',
-    method: 'GET',
+    category: 'Get all situations',
+    description: 'Get all',
+    method: 'POST',
     url: '/api/{entity}/all',
     entity: productOptimizedEntity,
+    body: {},
     token: validToken,
     expectedStatus: 200,
     expectedBodySchema: expectedBodySchemaArrayEntities,
@@ -23,24 +22,25 @@ const testCases = [
   },
   // Performance testing under load
   {
-    category: 'Performance Testing',
-    description: 'should assess response times under load using optimized entity',
-    method: 'GET',
+    category: 'Get all situations',
+    description: 'Get all using SELECT with id, name and description filds',
+    method: 'POST',
     url: '/api/{entity}/all',
     entity: productOptimizedEntity,
+    body: { fieldsForSelect: {description: true, _id: true, name: true, stock: false, category: false, createdAt: false, updatedAt:false}  },
     token: validToken,
     expectedStatus: 200,
     expectedBodySchema: expectedBodySchemaArrayEntities,
-    numberOfRequests: numberOfRequests,
     maxTimeResponse: validTimeResponse,
-    maxTimeResponseForParallelRequest: validTimeResponseUnderLoad,
-  }, // Performance testing
+  },
+  // Performance testing
   {
-    category: 'Performance Testing',
-    description: 'should assess response time using no optimized entity',
-    method: 'GET',
+    category: 'Get all situations',
+    description: 'Get all using limit in 4',
+    method: 'POST',
     url: '/api/{entity}/all',
-    entity: productNoOptimizedEntity,
+    entity: productOptimizedEntity,
+    body: {limit:4},
     token: validToken,
     expectedStatus: 200,
     expectedBodySchema: expectedBodySchemaArrayEntities,
@@ -48,17 +48,16 @@ const testCases = [
   },
   // Performance testing under load
   {
-    category: 'Performance Testing',
-    description: 'should assess response times under load using no optimized entity',
-    method: 'GET',
+    category: 'Get all situations',
+    description: 'Get all sorting by name',
+    method: 'POST',
     url: '/api/{entity}/all',
-    entity: productNoOptimizedEntity,
+    entity: productOptimizedEntity,
+    body: {sort:{name:1}},
     token: validToken,
     expectedStatus: 200,
     expectedBodySchema: expectedBodySchemaArrayEntities,
-    numberOfRequests: numberOfRequests,
     maxTimeResponse: validTimeResponse,
-    maxTimeResponseForParallelRequest: validTimeResponseUnderLoad,
   },
 ];
 

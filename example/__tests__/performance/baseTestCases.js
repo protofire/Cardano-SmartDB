@@ -17,15 +17,9 @@ const validToken = process.env.AUTH_TOKEN;
 const productOptimizedEntity = 'product-opt';
 const productNoOptimizedEntity = 'product-no-opt';
 
-const validEntityId = 'validEntityId'; //NOTE: will be populated with a valid ID
 const validEntityName = 'validEntityname'; //NOTE: will be populated with a valid name
 
-const validBodyWithParamsFilter = 'validBodyWithParamsFilter'; //NOTE: will be populated with a valid body
 const validBodyWithParamsNameFilter = 'validBodyWithParamsNameFilter'
-
-const validBodyWithParamsNameFilterWithSelect = "validBodyWithParamsNameFilterWithSelect"
-const validBodyWithWithSelect= "validBodyWithWithSelect"
-const validBodyWithInvalidStructure = { anyElement: 90 };
 
 const expectedBodySchemaEntity = object({
   name: string().required(),
@@ -36,7 +30,6 @@ const expectedBodySchemaEntity = object({
 const expectedBodySchemaArrayEntities = array().of(expectedBodySchemaEntity);
 
 const validTimeResponse = 6000000; // 1 second
-const validTimeResponseUnderLoad = 6000000; // 5 seconds
 const numberOfRequests = 50;
 const numberOfEntities = 10000;
 
@@ -90,15 +83,10 @@ const populateTestData = async () => {
       const entities = response.body;
 
       if (entities.length > 0) {
-        let validEntityId = entities[0]._DB_id;
         let validEntityName = entities[0].name;
-        let validBodyWithParamsFilter = { paramsFilter: { _id: entities[0]._DB_id } };
         let validBodyWithParamsNameFilter = { paramsFilter: { name: entities[0].name} };
-        let validBodyWithParamsNameFilterWithSelect = { paramsFilter: { name: entities[0].name}, fieldsForSelect: {description: true, _id: true, name: true, stock: false, category: false, createdAt: false, updatedAt:false}  };
-        let validBodyWithWithSelect = { fieldsForSelect: {description: true, _id: true, name: true, stock: false, category: false, createdAt: false, updatedAt:false}  };
 
-
-        testData = { validEntityId, validBodyWithParamsFilter, validEntityName, validBodyWithParamsNameFilter, validBodyWithParamsNameFilterWithSelect, validBodyWithWithSelect }; // Store the populated data
+        testData = {validEntityName, validBodyWithParamsNameFilter}; // Store the populated data
 
         return testData;
       } else {
@@ -129,17 +117,11 @@ module.exports = {
   validToken,
   productOptimizedEntity,
   productNoOptimizedEntity,
-  validEntityId,
   validEntityName,
-  validBodyWithParamsFilter,
   validBodyWithParamsNameFilter,
-  validBodyWithParamsNameFilterWithSelect,
-  validBodyWithWithSelect,
-  validBodyWithInvalidStructure,
   expectedBodySchemaEntity,
   expectedBodySchemaArrayEntities,
   validTimeResponse,
-  validTimeResponseUnderLoad,
   numberOfRequests,
   MAXTIMEOUT,
   populateTestData,

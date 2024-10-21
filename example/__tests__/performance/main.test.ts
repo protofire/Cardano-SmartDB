@@ -2,12 +2,8 @@ import { yup } from 'smart-db';
 import request from 'supertest';
 import { baseURL, deleteTestData, MAXTIMEOUT, populateTestData } from './baseTestCases.js';
 
-import { testCases as getEntityAll } from './testCases-GET-Entity-All.js';
-import { testCases as postEntityWithSelect } from './testCases-POST-All-Entity-using-name-select-description.js';
-import { testCases as getEntityId } from './testCases-GET-Entity-Id.js';
-import { testCases as postEntityByParams } from './testCases-POST-Entity-ByParams.js';
-import { testCases as postEntityByParamsUsingName } from './testCases-POST-Entity-ByParams-using-name.js';
-import { testCases as postEntityByParamsUsingNameWithSelect } from './testCases-POST-Entity-ByParams-using-name-select-description.js';
+import { testCases as getEntityAllSituations } from './testCases-POST-ALL-Situations.js';
+import { testCases as performanceComparison } from './testCases-POST-Optimized-Entity-Comparison.js';
 
 interface TestCase {
     method: 'GET' | 'POST' | 'DELETE'; // Add more methods if needed
@@ -24,15 +20,30 @@ interface TestCase {
     maxTimeResponseForParallelRequest?: number;
 }
 
-const testCaseGroups = [
-    { name: 'Get Entity By Id GET API', testCases: getEntityId as TestCase[] },
-    { name: 'Get All Entity GET API', testCases: getEntityAll as TestCase[] },
-    { name: 'Get All Entity With Select Description POST API', testCases: postEntityWithSelect as TestCase[] },
-    { name: 'Get Entity By Params Using ID POST API', testCases: postEntityByParams as TestCase[] },
-    { name: 'Get Entity By Params Using Name POST API', testCases: postEntityByParamsUsingName as TestCase[] },
-    { name: 'Get Entity By Params Using Name And With Select Description POST API', testCases: postEntityByParamsUsingNameWithSelect as TestCase[] },
-];
 
+const testCaseGroups = [
+    { name:  '#01 Get All case of use', testCases: getEntityAllSituations as TestCase[] },
+    { name:  '#02 Get All case of use', testCases: getEntityAllSituations as TestCase[] },
+    { name:  '#03 Get All case of use', testCases: getEntityAllSituations as TestCase[] },
+    { name:  '#04 Get All case of use', testCases: getEntityAllSituations as TestCase[] },
+    { name:  '#05 Get All case of use', testCases: getEntityAllSituations as TestCase[] },
+    { name:  '#06 Get All case of use', testCases: getEntityAllSituations as TestCase[] },
+    { name:  '#07 Get All case of use', testCases: getEntityAllSituations as TestCase[] },
+    { name:  '#08 Get All case of use', testCases: getEntityAllSituations as TestCase[] },
+    { name:  '#09 Get All case of use', testCases: getEntityAllSituations as TestCase[] },
+    { name:  '#10 Get All case of use', testCases: getEntityAllSituations as TestCase[] },
+
+    { name: '#01 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison as TestCase[] },
+    { name: '#02 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison as TestCase[] },
+    { name: '#03 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison as TestCase[] },
+    { name: '#04 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison as TestCase[] },
+    { name: '#05 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison as TestCase[] },
+    { name: '#06 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison as TestCase[] },
+    { name: '#07 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison as TestCase[] },
+    { name: '#08 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison as TestCase[] },
+    { name: '#09 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison as TestCase[] },
+    { name: '#10 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison as TestCase[] }
+];
 let testData = {};
 
 function parseTestCase(testCase: Record<string, any>, testData: Record<string, any>): Record<string, any> {

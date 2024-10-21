@@ -1,15 +1,33 @@
 const fs = require('fs');
 const path = require('path');
-const { testCases: getEntityId } = require('./testCases-GET-Entity-Id');
-const { testCases: getEntityAll } = require('./testCases-GET-Entity-All');
-const { testCases: postEntityByParams } = require('./testCases-POST-Entity-ByParams');
+
+const { testCases : getEntityAllSituations }= require ('./testCases-POST-ALL-Situations.js');
+const { testCases : performanceComparison }= require ('./testCases-POST-Optimized-Entity-Comparison.js');
+
 
 const testCaseGroups = [
-    { name: 'Get Entity By Id GET API', testCases: getEntityId },
-    { name: 'Get All Entity GET API', testCases: getEntityAll },
-    { name: 'Get All Entity By Params POST API', testCases: postEntityByParams },
-];
+    { name:  '#01 Get All case of use', testCases: getEntityAllSituations },
+    { name:  '#02 Get All case of use', testCases: getEntityAllSituations },
+    { name:  '#03 Get All case of use', testCases: getEntityAllSituations },
+    { name:  '#04 Get All case of use', testCases: getEntityAllSituations },
+    { name:  '#05 Get All case of use', testCases: getEntityAllSituations },
+    { name:  '#06 Get All case of use', testCases: getEntityAllSituations },
+    { name:  '#07 Get All case of use', testCases: getEntityAllSituations },
+    { name:  '#08 Get All case of use', testCases: getEntityAllSituations },
+    { name:  '#09 Get All case of use', testCases: getEntityAllSituations },
+    { name:  '#10 Get All case of use', testCases: getEntityAllSituations },
 
+    { name: '#01 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison },
+    { name: '#02 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison },
+    { name: '#03 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison },
+    { name: '#04 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison },
+    { name: '#05 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison },
+    { name: '#06 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison },
+    { name: '#07 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison },
+    { name: '#08 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison },
+    { name: '#09 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison },
+    { name: '#10 Comparison Between Optimized and Not Optimized Entity Filtering by Name', testCases: performanceComparison }
+];
 const addGroupNameToTestCases = (groupName, testCases) => {
     return testCases.map(testCase => ({ ...testCase, groupName }));
 };
