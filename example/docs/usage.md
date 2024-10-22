@@ -35,11 +35,17 @@
       - [Test Entity Files](#test-entity-files)
     - [Smart DB Entities](#smart-db-entities)
       - [Dummy Entity Files](#dummy-entity-files)
+  - [Optimization Tips for PostgreSQL Entities](#optimization-tips-for-postgresql-entities)
   - [Scaffold for Automating Entity and File Creation](#scaffold-for-automating-entity-and-file-creation)
     - [How to Use](#how-to-use)
   - [Root Backend File](#root-backend-file)
     - [Root Backend File Example](#root-backend-file-example)
     - [Endpoints Configuration](#endpoints-configuration)
+  - [Api Endpoints](#api-endpoints)
+    - [Base URL](#base-url)
+    - [Available Methods per Entity](#available-methods-per-entity)
+    - [Common Endpoints](#common-endpoints)
+    - [POST Request Body Parameters](#post-request-body-parameters)
   - [NextJs Api Handler Files](#nextjs-api-handler-files)
   
 ## Usage
@@ -772,6 +778,31 @@ export class DummyApi extends BaseSmartDBFrontEndApiCalls {
     // #endregion api
 }
 ```
+### Optimization Tips for PostgreSQL Entities
+
+1. **Indexing**:
+   - Proper use of indexes is crucial for optimizing query performance. In PostgreSQL, indexes speed up data retrieval significantly. Consider adding indexes on columns that are frequently queried or used in `WHERE`, `JOIN`, or `ORDER BY` clauses.
+   - Example: `@Index(['name'])` to index the `name` column, improving search efficiency.
+
+2. **Column Types**:
+   - Choosing the right column types can optimize both storage and performance. For example, using `varchar` for text columns is fine, but if the text is small and constrained in length, `char` may be more efficient.
+   - In the case of dates or timestamps, use the appropriate types like `timestamp` or `date` to avoid extra storage overhead.
+
+3. **Batch Inserts and Updates**:
+   - If you're performing bulk inserts or updates, consider batching them instead of doing them one by one. This reduces the overhead of multiple round-trips to the database.
+
+4. **Normalization and Joins**:
+   - Ensure your entities are properly normalized. Avoid redundant data where possible and use foreign keys to link related entities.
+   - However, be cautious with deep nested relationships, as multiple joins can slow down queries.
+
+5. **Pagination**:
+   - If your entity will return large result sets, consider implementing pagination to retrieve data in chunks instead of loading everything at once. This can improve both performance and user experience.
+   - Use `LIMIT` and `OFFSET` wisely to fetch data in parts.
+
+6. **Foreign Key Constraints**:
+   - Use foreign key constraints for better data integrity, but be mindful of cascading updates or deletes, as they may impact performance if not managed properly.
+
+By carefully planning your entity schema and optimizing queries with these practices, you'll improve both performance and maintainability of your database interactions.
 
 ### Scaffold for Automating Entity and File Creation
 
@@ -829,6 +860,110 @@ endpointsManager.setPublicEndPointsInternet([/^\/api\/blockfrost\/.+/]);
 ```
 
 By default, the library sets all endpoints as secured, accessible only with API keys.
+
+## API Endpoints
+
+The backend exposes several endpoints to handle different entities and their operations. The endpoints are structured under a base URL and can be accessed via specific routes for the available entities and methods.
+
+### Base URL
+
+The base URL of the API depends on the environment and is configured using the following environment variables:
+
+```
+NEXT_PUBLIC_REACT_SERVER_BASEURL="http://localhost"
+NEXT_PUBLIC_REACT_SERVER_URL="$NEXT_PUBLIC_REACT_SERVER_BASEURL:3000"
+NEXT_PUBLIC_REACT_SERVER_API_URL="$NEXT_PUBLIC_REACT_SERVER_URL/api"
+```
+
+All API endpoints start with the base path: `NEXT_PUBLIC_REACT_SERVER_API_URL`, followed by the entity name you want to interact with.
+
+### Available Methods per Entity
+
+Each entity has several methods you can use to perform CRUD (Create, Read, Update, Delete) operations and other custom operations. The general structure of the endpoints is:
+
+```
+/api/{entity}/{method}
+```
+
+Where:
+- `{entity}` is the name of the entity you want to access (e.g., `user`, `transaction`, etc.).
+- `{method}` is the method or operation you want to execute on that entity.
+
+### Common Endpoints
+
+#### Get All Entities
+- **Route**: `/api/{entity}/all`
+- **HTTP Method**: `GET`
+- **Description**: Returns all instances of the entity.
+
+#### Get Entities by Parameters
+- **Route**: `/api/{entity}/by-params`
+- **HTTP Method**: `POST`
+- **Description**: Filters entities based on parameters provided in the request body.
+
+#### Count Entities
+- **Route**: `/api/{entity}/count`
+- **HTTP Method**: `GET`
+- **Description**: Returns the total count of entities.
+
+#### Check if an Entity Exists
+- **Route**: `/api/{entity}/exists`
+- **HTTP Method**: `GET`
+- **Description**: Checks if an entity exists based on the request parameters.
+
+#### Create a New Entity
+- **Route**: `/api/{entity}`
+- **HTTP Method**: `POST`
+- **Description**: Creates a new instance of the entity.
+
+#### Update an Entity by ID
+- **Route**: `/api/{entity}/update/{id}`
+- **HTTP Method**: `PUT`
+- **Description**: Updates the entity with the given ID.
+
+#### Load Many-to-Many Relations
+- **Route**: `/api/{entity}/loadRelationMany/{id}/{relation}`
+- **HTTP Method**: `GET`
+- **Description**: Loads a many-to-many relation for the entity with the specified ID.
+
+#### Load One-to-One Relations
+- **Route**: `/api/{entity}/loadRelationOne/{id}/{relation}`
+- **HTTP Method**: `GET`
+- **Description**: Loads a one-to-one relation for the entity with the specified ID.
+
+#### Execute Custom API Handlers
+- **Route**: `/api/{entity}/{customMethod}`
+- **HTTP Method**: `GET` or `POST` (depending on the custom method)
+- **Description**: Executes a custom handler specified by `{customMethod}` if defined for the entity.
+
+#### Get or Delete an Entity by ID
+- **Route**: `/api/{entity}/{id}`
+- **HTTP Method**: `GET` (for retrieval) or `DELETE` (for deletion)
+- **Description**: Retrieves or deletes an entity using its ID.
+
+### POST Request Body Parameters
+
+For `POST` methods, such as the `by-params` and creating new entities, the following parameters can be included in the request body in JSON format to specify the query:
+
+- `skip: number` – The number of records to skip before starting to return results.
+- `paramsFilter: Record<string, any>` – A set of filters applied to find entities matching the provided values.
+- `limit: number` – The maximum number of results to return.
+- `sort: Record<string, number>` – A set of criteria to sort the results. A value of `1` indicates ascending order, and `-1` indicates descending order.
+- `fieldsForSelect: Record<string, boolean>` – Specific fields to select in the result. `true` to include a field, `false` to exclude it.
+
+#### Example JSON Body for `by-params`:
+
+```json
+{
+  "skip": 0,
+  "paramsFilter": { "status": "active", "category": "finance" },
+  "limit": 10,
+  "sort": { "createdAt": -1 },
+  "fieldsForSelect": { "name": true, "status": true }
+}
+```
+
+This example performs a query that filters entities with the `status` field as "active" and `category` as "finance", skips the first 0 records (starting from the beginning), returns a maximum of 10 results, sorts them by `createdAt` in descending order, and selects only the `name` and `status` fields in the results.
 
 ### NextJs Api Handler Files
 
