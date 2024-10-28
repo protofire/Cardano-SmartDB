@@ -11,7 +11,12 @@ export class TokenMetadataFrontEndApiCalls extends BaseFrontEndApiCalls {
         //-------------------------
         const tokensMetadata: TokenMetadataEntity[] = await this.get_Tokens_MetadataApi(
             Object.entries(assets).map(([key, value]) => {
-                const [CS, TN_Hex] = splitTokenLucidKey(key);
+                let [CS, TN_Hex] = splitTokenLucidKey(key);
+                // Handle 'lovelace' as ADA token
+                if (CS === 'lovelace') {
+                    CS = ''; // Set CS to empty for ADA
+                    TN_Hex = ''; // Set TN_Hex to empty for ADA
+                }
                 return { CS, TN_Hex };
             }),
             undefined,
@@ -19,7 +24,12 @@ export class TokenMetadataFrontEndApiCalls extends BaseFrontEndApiCalls {
         );
         const assetsWithDetails: TokensWithMetadataAndAmount = [];
         for (const [key, value] of Object.entries(assets)) {
-            const [CS, TN_Hex] = splitTokenLucidKey(key);
+            let  [CS, TN_Hex] = splitTokenLucidKey(key);
+            // Handle 'lovelace' as ADA token
+            if (key === 'lovelace') {
+                CS = ''; // Set CS to empty for ADA
+                TN_Hex = ''; // Set TN_Hex to empty for ADA
+            }   
             const tokenMetadata: TokenMetadataEntity | undefined = tokensMetadata.find((token) => token.CS === CS && token.TN_Hex === TN_Hex);
             const assetDetails: Token_With_Metadata_And_Amount = {
                 CS: CS,

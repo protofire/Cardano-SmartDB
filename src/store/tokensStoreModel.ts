@@ -134,7 +134,6 @@ export const TokensModel: ITokensModel = {
         let refreshServerTime = payload?.refresh ?? false;
         //----------------
         if (refreshServerTime === false && state.serverTime !== undefined && state.serverTimeLastFetch !== undefined) {
-            //--------------------------------------
             // si pasaron mas de 10 minutos refresca siempre
             // si no, no refresca
             //--------------------------------------
@@ -871,6 +870,12 @@ export const TokensModel: ITokensModel = {
         const tokensToUpdate = state.tokensWithDetails.filter((token) => token.followUp === true);
         const tokensNoUpdate = state.tokensWithDetails.filter((token) => token.followUp !== true);
         //----------------
+        //TODO NEW
+        if (tokensToUpdate.length === 0) {
+            console.error(`[TokensStore] - Nothing to update`);
+            return;
+        }
+        //----------------
         actions.setIsAddingTokens(true);
         //----------------
         let tokensToUpdateWithNewPrices: Token_With_Price_And_Date_And_Signature[] = [];
@@ -1125,3 +1130,6 @@ export const TokensModel: ITokensModel = {
     }),
     //----------------------------
 };
+
+
+//----------------------------
