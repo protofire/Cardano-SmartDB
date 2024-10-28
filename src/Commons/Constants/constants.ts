@@ -107,6 +107,10 @@ export const LOVELACE_UI = 'lovelace';
 
 //----------------------------------------------------------------------
 
+export const TOKEN_DEFAULT_DECIMALS = 6;
+
+//----------------------------------------------------------------------
+
 export const ITEMS_PER_PAGE = 5; // Set the number of items per page
 
 //----------------------------------------------------------------------
@@ -142,5 +146,9 @@ export const WALLET_CREATEDBY_LOGIN = 'Login';
 //-------------------------------------------------------------
 
 export const BLOCKFROST_URL_EPOCHS_LATEST_PARAMETERS = '/epochs/latest/parameters';
+
+//-------------------------------------------------------------
+
+export const PROYECT_NAME = process.env.NEXT_PUBLIC_PROYECT_NAME || 'Smart DB';
 
 //-------------------------------------------------------------

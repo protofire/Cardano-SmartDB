@@ -17,7 +17,7 @@ export * from './SmartUTxO.BackEnd.Applied.js';
 export * from './SmartUTxO.BackEnd.Api.Handlers.js';
 export * from './Transaction.BackEnd.Applied.js';
 export * from './Transaction.BackEnd.Api.Handlers.js';
-// export * from './Token.Metadata.BackEnd.All.js';
+export * from './Token.Metadata.BackEnd.All.js';
 export * from './Wallet.BackEnd.Applied.js';
 export * from './Wallet.BackEnd.Api.Handlers.js';
 

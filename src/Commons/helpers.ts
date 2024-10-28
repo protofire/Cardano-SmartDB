@@ -1,5 +1,5 @@
 import { Assets, C, Lucid, OutRef, PaymentKeyHash, Script, SignedMessage, UTxO, fromHex, toHex } from 'lucid-cardano';
-import { ADA_TX_FEE_MARGIN, ADA_UI, LUCID_NETWORK_MAINNET_INT, LUCID_NETWORK_TESTNET_INT, LucidLUCID_NETWORK_MAINNET_NAME } from './Constants/constants.js';
+import { ADA_TX_FEE_MARGIN, ADA_UI, LUCID_NETWORK_MAINNET_INT, LUCID_NETWORK_TESTNET_INT, LucidLUCID_NETWORK_MAINNET_NAME, TOKEN_ICON_ADA, TOKEN_ICON_GENERIC } from './Constants/constants.js';
 import { TxOutRef } from './classes.js';
 import { AC, CS, PaymentAndStakePubKeyHash, StakeCredentialPubKeyHash, Token_With_Metadata_And_Amount } from './types.js';
 import { hexToStr, isNullOrBlank, searchValueInArray, strToHex } from './utils.js';
@@ -118,20 +118,27 @@ export function splitTokenLucidKey(key: string): [string, string] {
 
 //---------------------------------------------------------------
 
-export function isValidUrl(url: string): boolean {
+export function isValidUrl(url?: string): boolean {
+    url = url?? '';
     // Regular expression to check if the URL is absolute and starts with http://, https://, or ipfs://
     const absoluteUrlPattern = /^(https?:\/\/|ipfs:\/\/).+/;
     // Check if the URL is an absolute URL, starts with a leading slash, or is an IPFS URL
-    return absoluteUrlPattern.test(url) || url.startsWith('/');
+    const res =  absoluteUrlPattern.test(url) || url.startsWith('/')  || url.startsWith('data:image') || url === 'ADA' || url === '' || url === undefined;
+    return res;
 }
 
-export function getUrlForImage(url: string): string {
-    if (isValidUrl(url)) {
+export function getUrlForImage(url?: string): string {
+    if (url === 'ADA') {
+        return TOKEN_ICON_ADA.toString(); // Return ADA icon URL if url is 'ADA'
+    } else if (!url || url === '') {
+        return TOKEN_ICON_GENERIC.toString(); // Return generic icon URL if url is empty or undefined
+    } else if (isValidUrl(url)) {
         return url.startsWith('ipfs://') ? `https://ipfs.io/ipfs/${url.slice(7)}` : url;
     } else {
         return '';
     }
 }
+
 
 export function isValidHexColor(color: string): boolean {
     // Regular expression to validate hex color (3 or 6 digits, with or without '#')
