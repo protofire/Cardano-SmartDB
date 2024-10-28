@@ -40,14 +40,11 @@
     <a href="https://protofire-docs.gitbook.io/smartdb"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/protofire/Cardano-SmartDB
-  ">View Demo</a>
+    <a href="https://github.com/protofire/Cardano-SmartDB">View Demo</a>
     ·
-    <a href="https://github.com/protofire/Cardano-SmartDB
-  /issues">Report Bug</a>
+    <a href="https://github.com/protofire/Cardano-SmartDB/issues">Report Bug</a>
     ·
-    <a href="https://github.com/protofire/Cardano-SmartDB
-  /issues">Request Feature</a>
+    <a href="https://github.com/protofire/Cardano-SmartDB/issues">Request Feature</a>
   </p>
 </div>
 
