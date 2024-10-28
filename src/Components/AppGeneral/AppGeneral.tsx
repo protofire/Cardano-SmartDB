@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useAppGeneral } from '../../hooks/useAppGeneral.js';
 
 export function AppGeneral() {

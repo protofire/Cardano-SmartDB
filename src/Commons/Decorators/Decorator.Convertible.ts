@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import { ConversionFunctions } from '../types.js';
 import { RegistryManager } from './registerManager.js';
 
-// export const conversionFunctionsByClass = new Map<Function, Map<string, ConversionFunctions<any>>>();
 export function Convertible<T>(conversions: ConversionFunctions<T> = {}) {
     return function (target: any, propertyKey: string): void {
         const reflectedType = Reflect.getMetadata(`design:type`, target, propertyKey);
@@ -41,11 +40,9 @@ export function Convertible<T>(conversions: ConversionFunctions<T> = {}) {
             }
         }
         let conversionFunctionsByProperty = RegistryManager.getFromConversionFunctionsRegistry(target.className ? target.className() : target.name);
-        // let conversionFunctionsByProperty = conversionFunctionsByClass.get(target.constructor);
         if (!conversionFunctionsByProperty) {
             conversionFunctionsByProperty = new Map<string, ConversionFunctions<any>>();
             RegistryManager.register(target.className ? target.className() : target.name, conversionFunctionsByProperty, 'conversionFunctions');
-            // conversionFunctionsByClass.set(target.constructor, conversionFunctionsByProperty);
         }
         conversionFunctionsByProperty.set(propertyKey, { ...conversions, type, isArray });
     };
@@ -53,7 +50,6 @@ export function Convertible<T>(conversions: ConversionFunctions<T> = {}) {
 
 
 export function getCombinedConversionFunctions<T>(target: any): Map<string, ConversionFunctions<any>> {
-    // export function getCombinedConversionFunctions<T>(target: Function): Map<string, ConversionFunctions<any>> {
     const combinedConversionFunctions = new Map<string, ConversionFunctions<any>>();
 
     let currentTarget = target;
