@@ -1,0 +1,14 @@
+
+.OpenInNewTabButton {
+    &-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        fill: currentColor; // This will inherit the color from the parent element or CSS
+        color: black; // Adjust to any color as needed
+        use {
+            stroke: white;
+        }
+    }
+}
