@@ -6,7 +6,6 @@ import { BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndApplie
 import { isFrontEndEnvironment, isNullOrBlank } from "../Commons/utils.js";
 import { console_log } from "../Commons/BackEnd/globalLogs.js";
 
-
 @BackEndAppliedFor(WalletEntity)
 export class WalletBackEndApplied extends BaseBackEndApplied {
     protected static _Entity = WalletEntity;
