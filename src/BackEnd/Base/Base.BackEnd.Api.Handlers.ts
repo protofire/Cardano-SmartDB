@@ -660,45 +660,6 @@ export class BaseBackEndApiHandlers {
         return validatedData;
     }
 
-    public static async checkDuplicate<T extends BaseEntity>(validatedData: any, id?: string) {
-        console_logLv2(1, this._Entity.className(), `checkDuplicate - Init`);
-        //-------------------------
-        const conversionFunctions = getCombinedConversionFunctions(this._Entity);
-        const query: any = {};
-        if (conversionFunctions) {
-            for (const [propertyKey, conversions] of conversionFunctions.entries()) {
-                if (conversions.isUnique === true) {
-                    if (validatedData.hasOwnProperty(propertyKey)) {
-                        if (validatedData[propertyKey] !== undefined) {
-                            query[propertyKey] = validatedData[propertyKey];
-                        }
-                    }
-                }
-            }
-            let conditions = Object.keys(query).map((key) => ({ [key]: query[key] }));
-            if (conditions.length > 0) {
-                //TODO reemplazar con chekIfExist, pero hay que agregar parametro id en el update para no contar a si mismo
-                let swExists: boolean = false;
-                if (id !== undefined) {
-                    console_logLv2(0, this._Entity.className(), `checkDuplicate - To Update - Conditions: ${showData(conditions)}`);
-                    swExists = await this._BackEndApplied.checkIfExists_({
-                        $and: [{ $or: conditions }, { _id: { $ne: id } }],
-                    });
-                } else {
-                    console_logLv2(0, this._Entity.className(), `checkDuplicate - To Create - Conditions: ${showData(conditions)}`);
-                    swExists = await this._BackEndApplied.checkIfExists_({ $or: conditions });
-                }
-                if (swExists) {
-                    const fieldsStr = Object.keys(query).map((key) => key);
-                    throw `${this._Entity.className()} already exists with same field(s): ${fieldsStr.join(', ')}`;
-                }
-            }
-        }
-        //-------------------------
-        console_logLv2(-1, this._Entity.className(), `checkDuplicate - OK`);
-        //-------------------------
-    }
-
     // #endregion restrict api handlers
 
     // #region api handlers
@@ -782,8 +743,6 @@ export class BaseBackEndApiHandlers {
                     return res.status(400).json({ error });
                 }
                 //-------------------------
-                await this.checkDuplicate<T>(validatedData);
-                //-------------------------
                 const instance = this._Entity.fromPlainObject<T>(validatedData);
                 const instance_ = await this._BackEndApplied.create(instance, optionsCreate);
                 //-------------------------
@@ -862,8 +821,6 @@ export class BaseBackEndApiHandlers {
                 }
                 //-------------------------
                 await this.restricUpdate<T>(instance, user);
-                //-------------------------
-                await this.checkDuplicate<T>(validatedData, instance._DB_id);
                 //-------------------------
                 await this._BackEndApplied.updateMeWithParams<T>(instance, validatedData, optionsUpdate);
                 //-------------------------

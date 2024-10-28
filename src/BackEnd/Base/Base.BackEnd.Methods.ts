@@ -226,6 +226,46 @@ export class BaseBackEndMethods {
 
     // #region class methods
 
+    public static async checkDuplicate<T extends BaseEntity>(Entity: typeof BaseEntity, validatedData: any, id?: string) {
+        //-------------------------
+        console_logLv2(1, Entity.className(), `checkDuplicate - Init`);
+        //-------------------------
+        const conversionFunctions = getCombinedConversionFunctions(Entity);
+        const query: any = {};
+        if (conversionFunctions) {
+            for (const [propertyKey, conversions] of conversionFunctions.entries()) {
+                if (conversions.isUnique === true) {
+                    if (validatedData.hasOwnProperty(propertyKey)) {
+                        if (validatedData[propertyKey] !== undefined) {
+                            query[propertyKey] = validatedData[propertyKey];
+                        }
+                    }
+                }
+            }
+            let conditions = Object.keys(query).map((key) => ({ [key]: query[key] }));
+            if (conditions.length > 0) {
+                //TODO reemplazar con chekIfExist, pero hay que agregar parametro id en el update para no contar a si mismo
+                let swExists: boolean = false;
+                if (id !== undefined) {
+                    console_logLv2(0, Entity.className(), `checkDuplicate - To Update - Conditions: ${showData(conditions)}`);
+                    swExists = await this.checkIfExists(Entity, {
+                        $and: [{ $or: conditions }, { _id: { $ne: id } }],
+                    });
+                } else {
+                    console_logLv2(0, Entity.className(), `checkDuplicate - To Create - Conditions: ${showData(conditions)}`);
+                    swExists = await this.checkIfExists(Entity, { $or: conditions });
+                }
+                if (swExists) {
+                    const fieldsStr = Object.keys(query).map((key) => key);
+                    throw `${Entity.className()} already exists with same field(s): ${fieldsStr.join(', ')}`;
+                }
+            }
+        }
+        //-------------------------
+        console_logLv2(-1, Entity.className(), `checkDuplicate - OK`);
+        //-------------------------
+    }
+
     public static async create<T extends BaseEntity>(instance: T, optionsCreate?: OptionsCreateOrUpdate): Promise<T> {
         try {
             if (isFrontEndEnvironment()) {
@@ -239,6 +279,8 @@ export class BaseBackEndMethods {
             if (optionsCreate !== undefined) {
                 useOptionCreate = optionsCreate;
             }
+            //-------------------------
+            await this.checkDuplicate(instance.getStatic(), instance);
             //----------------------------
             await this.getBack(instance.getStatic()).cascadeSaveChildRelations(instance, useOptionCreate);
             //--------------------------------------
@@ -397,6 +439,8 @@ export class BaseBackEndMethods {
             //-----------------------
             console_logLv2(1, instance.className(), `updateMeWithParams - swRefreshInstance: ${swRefreshInstance} - Init`);
             //----------------------------
+            await this.checkDuplicate(instance.getStatic(), instance, instance._DB_id);
+            //-------------------------
             if (process.env.USE_DATABASE === 'mongo') {
                 //----------------------------
                 console_logLv2(0, instance.className(), `updateMeWithParams - id: ${instance._DB_id}`);

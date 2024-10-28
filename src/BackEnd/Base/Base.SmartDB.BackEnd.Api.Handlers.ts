@@ -969,8 +969,6 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
                     return res.status(400).json({ error });
                 }
                 //-------------------------
-                await this.checkDuplicate<T>(validatedData);
-                //-------------------------
                 const instance = this._Entity.fromPlainObject<T>(validatedData);
                 instance._creator = user!.pkh;
                 const instance_ = await this._BackEndApplied.create(instance, optionsCreate);

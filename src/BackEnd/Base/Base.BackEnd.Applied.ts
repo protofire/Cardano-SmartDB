@@ -17,6 +17,10 @@ export class BaseBackEndApplied {
 
     // #region class methods applied to entity
 
+    public static async checkDuplicate_<T extends BaseEntity>( validatedData: any, id?: string) {
+        return await this.getBack().checkDuplicate<T>(this._Entity, validatedData, id);
+    }
+
     public static async create<T extends BaseEntity>(instance: T, optionsCreate?: OptionsCreateOrUpdate): Promise<T> {
         return await this.getBack().create<T>(instance, optionsCreate);
     }
