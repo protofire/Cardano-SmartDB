@@ -15,6 +15,7 @@ import {
     formatUTxO,
     pushSucessNotification,
     pushWarningNotification,
+    useTokensStore,
     useWalletStore,
 } from 'smart-db';
 import LoaderButton from '../../Commons/LoaderButton/LoaderButton';
@@ -29,6 +30,7 @@ export default function Home() {
     }, []);
     //--------------------------------------
     const walletStore = useWalletStore();
+    const tokensStore = useTokensStore();
     //--------------------------------------
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingSync, setIsLoadingSync] = useState(false);

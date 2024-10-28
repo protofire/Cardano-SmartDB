@@ -1,0 +1,58 @@
+@use '@example/styles/shared.module.scss';
+
+.tableModal {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+
+    th, td {
+        text-align: left;
+        padding: 8px; // Adjust the padding as needed
+    }
+}
+
+.tableHeader {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+
+    th {
+        text-align: left;
+        padding-left: 16px; // Adjust the left padding as needed
+    }
+}
+
+.scrollableTable {
+    display: block;
+    max-height: 250px;
+    overflow-y: auto;
+    width: 100%;
+
+    tbody {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+
+        td {
+            padding-left: 16px; // Adjust the left padding as needed
+        }
+
+        font-size: 0.75rem;
+    }
+
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 30px;
+    height: 30px;
+    margin-left: 10px;
+
+    .image {
+        width: 80%;
+        height: 80%;
+    }
+}

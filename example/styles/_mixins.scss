@@ -1,0 +1,106 @@
+
+@use './animations' as animate;
+
+@mixin modal {
+    position: fixed;
+    height: 100%;
+    z-index: 100;
+    width: 100%;
+    top: 0;
+    left: 0;
+    backdrop-filter: blur(1px);
+    background-color: rgba(0, 0, 0, 0.8);
+
+    .main {
+        position: absolute;
+        width: 90%;
+        left: 5%;
+        max-width: 425px;
+        top: 50px;
+
+        @media (min-width: 475px) {
+            left: calc((100% - 425px) / 2);
+        }
+
+        .popUp {
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            border-radius: 16px;
+            // background-color: colors.$purple-light-2;
+            background-color: white;
+            padding: 16px;
+
+            @media (min-width: 450px) {
+                padding: 32px;
+            }
+
+            .headerModal {
+
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+                padding: 16px; // Adjust the padding as needed
+
+                .titleModal {
+                    // font: font.$ft400-regular;
+                    font-size: 1.25rem;
+                    margin: 0;
+                    flex-grow: 1;
+                }
+
+                .buttonsModal {
+                    margin-right: auto;
+                    padding-left: 16px; // Adjust the left padding as needed
+                }
+
+                .closeButton {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    padding: 0;
+                    margin-left: 16px; // Adjust the left margin as needed
+                }
+
+                .icon {
+                    position: absolute;
+                    cursor: pointer;
+                    right: 10px;
+                    top: 10px;
+                    height: 24px;
+                    width: 24px;
+                    fill: white;
+
+                    @media (min-width: 350px) {
+                        right: 16px;
+                        top: 16px;
+                        height: 30px;
+                        width: 30px;
+                    }
+                }
+            }
+        }
+    }
+}
+
+@mixin underline() {
+    cursor: pointer;
+    position: relative;
+    height: 16px;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 16px;
+        left: 0%;
+        width: 0%;
+        height: 1px;
+        background-color: colors.$white;
+        transition: width 0.35s ease-in-out;
+    }
+
+    &:hover::before {
+        width: 100%;
+    }
+}

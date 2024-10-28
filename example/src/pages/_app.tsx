@@ -10,6 +10,7 @@ import 'react-notifications-component/dist/theme.css';
 import { AppGeneral, globalStore } from 'smart-db';
 import Layout from '../components/UI/Layout/Layout';
 import { metadata } from './_document';
+import 'smart-db/dist/styles.css';
 
 export default function MyApp({ Component, pageProps }: AppProps<{ session?: Session }>) {
     return (

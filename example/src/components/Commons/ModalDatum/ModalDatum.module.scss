@@ -1,0 +1,18 @@
+@use '@example/styles/shared.module.scss';
+@use '@example/styles/mixins' as mix;
+
+.modal {
+    @include mix.modal();
+
+    .main {
+        max-width: 800px;
+
+        @media (min-height: 768px) {
+            top: 100px;
+        }
+        left: 5%;
+        @media (min-width: 890px) {
+            left: calc((100% - 800px) / 2);
+        }
+    }
+}

@@ -1,0 +1,43 @@
+@mixin rotateClockwise(){
+
+  animation: rotateClockwise 12s linear infinite; 
+  
+  @keyframes rotateClockwise {
+    0%, 100% {
+      transform: rotate(0deg);
+      transform-origin: center center;
+    }
+    45% {
+      transform: rotate(-180deg);
+      transform-origin: center center;
+    }
+    55% {
+      transform: rotate(-180deg);
+      transform-origin: center center;
+    }
+    90% {
+      transform: rotate(0deg);
+      transform-origin: center center;
+    }
+  }
+
+}
+
+@mixin rowSkeleton(){
+  animation: shimmer 5s infinite linear;
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    50% {
+      background-position: 0% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+}
+
+
+
