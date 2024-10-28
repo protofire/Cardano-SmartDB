@@ -1,5 +1,5 @@
 import { NextApiResponse } from 'next';
-import { BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndAppliedFor.js';
+import { BackEndApiHandlersFor, BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndAppliedFor.js';
 import { console_error } from '../Commons/index.BackEnd.js';
 import { JobEntity } from '../Entities/Job.Entity.js';
 import { NextApiRequestAuthenticated } from '../lib/Auth/index.js';
@@ -84,6 +84,7 @@ export class JobBackEndApplied extends BaseBackEndApplied {
     // #endregion class methods
 }
 
+@BackEndApiHandlersFor(JobEntity)
 export class JobBackEndApiHandlers extends BaseBackEndApiHandlers {
     protected static _Entity = JobEntity;
     protected static _BackEndApplied = JobBackEndApplied;
