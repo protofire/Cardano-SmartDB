@@ -27,7 +27,7 @@ const testCases = [
     method: 'POST',
     url: '/api/{entity}/all',
     entity: productOptimizedEntity,
-    body: { fieldsForSelect: {description: true, _id: true, name: true, stock: false, category: false, createdAt: false, updatedAt:false}  },
+    body: { fieldsForSelect: {description: true, _id: true, name: true}  },
     token: validToken,
     expectedStatus: 200,
     expectedBodySchema: expectedBodySchemaArrayEntities,

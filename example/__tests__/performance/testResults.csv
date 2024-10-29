@@ -1,61 +1,81 @@
 URL,Method,Test Case,Category,URL used,Status,Error Message,Execution Time
-/api/{entity}/all,POST,"API Tests #01 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",585
-/api/{entity}/all,POST,"API Tests #01 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",337
-/api/{entity}/all,POST,"API Tests #01 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",15
-/api/{entity}/all,POST,"API Tests #01 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",572
-/api/{entity}/all,POST,"API Tests #02 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",542
-/api/{entity}/all,POST,"API Tests #02 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",302
-/api/{entity}/all,POST,"API Tests #02 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",9
-/api/{entity}/all,POST,"API Tests #02 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",607
-/api/{entity}/all,POST,"API Tests #03 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",534
-/api/{entity}/all,POST,"API Tests #03 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",301
-/api/{entity}/all,POST,"API Tests #03 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",8
-/api/{entity}/all,POST,"API Tests #03 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",578
-/api/{entity}/all,POST,"API Tests #04 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",537
-/api/{entity}/all,POST,"API Tests #04 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",315
-/api/{entity}/all,POST,"API Tests #04 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",8
-/api/{entity}/all,POST,"API Tests #04 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",611
-/api/{entity}/all,POST,"API Tests #05 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",551
-/api/{entity}/all,POST,"API Tests #05 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",307
-/api/{entity}/all,POST,"API Tests #05 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",8
-/api/{entity}/all,POST,"API Tests #05 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",566
-/api/{entity}/all,POST,"API Tests #06 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",549
-/api/{entity}/all,POST,"API Tests #06 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",314
-/api/{entity}/all,POST,"API Tests #06 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",8
-/api/{entity}/all,POST,"API Tests #06 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",639
-/api/{entity}/all,POST,"API Tests #07 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",556
-/api/{entity}/all,POST,"API Tests #07 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",312
-/api/{entity}/all,POST,"API Tests #07 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",7
-/api/{entity}/all,POST,"API Tests #07 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",582
-/api/{entity}/all,POST,"API Tests #08 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",556
-/api/{entity}/all,POST,"API Tests #08 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",308
-/api/{entity}/all,POST,"API Tests #08 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",8
-/api/{entity}/all,POST,"API Tests #08 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",640
-/api/{entity}/all,POST,"API Tests #09 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",572
-/api/{entity}/all,POST,"API Tests #09 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",327
-/api/{entity}/all,POST,"API Tests #09 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",8
-/api/{entity}/all,POST,"API Tests #09 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",588
-/api/{entity}/all,POST,"API Tests #10 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",570
-/api/{entity}/all,POST,"API Tests #10 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",319
-/api/{entity}/all,POST,"API Tests #10 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",7
-/api/{entity}/all,POST,"API Tests #10 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",645
-/api/{entity}/by-params,POST,"API Tests #01 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",9
-/api/{entity}/by-params,POST,"API Tests #01 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",10
-/api/{entity}/by-params,POST,"API Tests #02 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",8
-/api/{entity}/by-params,POST,"API Tests #02 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",9
-/api/{entity}/by-params,POST,"API Tests #03 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",8
-/api/{entity}/by-params,POST,"API Tests #03 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",9
-/api/{entity}/by-params,POST,"API Tests #04 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",8
-/api/{entity}/by-params,POST,"API Tests #04 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",9
-/api/{entity}/by-params,POST,"API Tests #05 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",10
-/api/{entity}/by-params,POST,"API Tests #05 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",9
-/api/{entity}/by-params,POST,"API Tests #06 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",7
-/api/{entity}/by-params,POST,"API Tests #06 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",7
-/api/{entity}/by-params,POST,"API Tests #07 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",7
-/api/{entity}/by-params,POST,"API Tests #07 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",9
-/api/{entity}/by-params,POST,"API Tests #08 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",7
-/api/{entity}/by-params,POST,"API Tests #08 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",8
-/api/{entity}/by-params,POST,"API Tests #09 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",7
-/api/{entity}/by-params,POST,"API Tests #09 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",10
-/api/{entity}/by-params,POST,"API Tests #10 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time using optimized entity",Performance Testing,/api/product-opt/by-params,passed,"",7
-/api/{entity}/by-params,POST,"API Tests #10 Comparison Between Optimized and Not Optimized Entity Filtering by Name should assess response time no using optimized entity",Performance Testing,/api/product-no-opt/by-params,passed,"",7
+/api/{entity}/all,POST,"API Tests #01 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",442
+/api/{entity}/all,POST,"API Tests #01 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",330
+/api/{entity}/all,POST,"API Tests #01 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",10
+/api/{entity}/all,POST,"API Tests #01 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",419
+/api/{entity}/all,POST,"API Tests #02 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",403
+/api/{entity}/all,POST,"API Tests #02 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",216
+/api/{entity}/all,POST,"API Tests #02 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",10
+/api/{entity}/all,POST,"API Tests #02 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",437
+/api/{entity}/all,POST,"API Tests #03 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",414
+/api/{entity}/all,POST,"API Tests #03 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",234
+/api/{entity}/all,POST,"API Tests #03 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",11
+/api/{entity}/all,POST,"API Tests #03 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",405
+/api/{entity}/all,POST,"API Tests #04 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",392
+/api/{entity}/all,POST,"API Tests #04 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",229
+/api/{entity}/all,POST,"API Tests #04 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",10
+/api/{entity}/all,POST,"API Tests #04 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",420
+/api/{entity}/all,POST,"API Tests #05 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",394
+/api/{entity}/all,POST,"API Tests #05 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",220
+/api/{entity}/all,POST,"API Tests #05 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",10
+/api/{entity}/all,POST,"API Tests #05 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",436
+/api/{entity}/all,POST,"API Tests #06 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",394
+/api/{entity}/all,POST,"API Tests #06 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",225
+/api/{entity}/all,POST,"API Tests #06 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",10
+/api/{entity}/all,POST,"API Tests #06 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",434
+/api/{entity}/all,POST,"API Tests #07 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",428
+/api/{entity}/all,POST,"API Tests #07 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",264
+/api/{entity}/all,POST,"API Tests #07 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",12
+/api/{entity}/all,POST,"API Tests #07 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",415
+/api/{entity}/all,POST,"API Tests #08 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",418
+/api/{entity}/all,POST,"API Tests #08 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",244
+/api/{entity}/all,POST,"API Tests #08 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",10
+/api/{entity}/all,POST,"API Tests #08 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",436
+/api/{entity}/all,POST,"API Tests #09 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",414
+/api/{entity}/all,POST,"API Tests #09 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",227
+/api/{entity}/all,POST,"API Tests #09 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",9
+/api/{entity}/all,POST,"API Tests #09 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",419
+/api/{entity}/all,POST,"API Tests #10 Get All case of use Get all",Get all situations,/api/product-opt/all,passed,"",408
+/api/{entity}/all,POST,"API Tests #10 Get All case of use Get all using SELECT with id, name and description filds",Get all situations,/api/product-opt/all,passed,"",253
+/api/{entity}/all,POST,"API Tests #10 Get All case of use Get all using limit in 4",Get all situations,/api/product-opt/all,passed,"",9
+/api/{entity}/all,POST,"API Tests #10 Get All case of use Get all sorting by name",Get all situations,/api/product-opt/all,passed,"",451
+/api/{entity}/by-params,POST,"API Tests #01 Performance Testing should assess response time using optimized entity filter by name",Performance Testing,/api/product-opt/by-params,passed,"",10
+/api/{entity}/by-params,POST,"API Tests #01 Performance Testing should assess response time no using optimized entity filter by name",Performance Testing,/api/product-no-opt/by-params,passed,"",12
+/api/{entity}/by-params,POST,"API Tests #01 Performance Testing should assess response time using optimized entity filter by name and category",Performance Testing,/api/product-opt/by-params,passed,"",9
+/api/{entity}/by-params,POST,"API Tests #01 Performance Testing should assess response time no using optimized entity by name and category",Performance Testing,/api/product-no-opt/by-params,passed,"",11
+/api/{entity}/by-params,POST,"API Tests #02 Performance Testing should assess response time using optimized entity filter by name",Performance Testing,/api/product-opt/by-params,passed,"",11
+/api/{entity}/by-params,POST,"API Tests #02 Performance Testing should assess response time no using optimized entity filter by name",Performance Testing,/api/product-no-opt/by-params,passed,"",10
+/api/{entity}/by-params,POST,"API Tests #02 Performance Testing should assess response time using optimized entity filter by name and category",Performance Testing,/api/product-opt/by-params,passed,"",18
+/api/{entity}/by-params,POST,"API Tests #02 Performance Testing should assess response time no using optimized entity by name and category",Performance Testing,/api/product-no-opt/by-params,passed,"",12
+/api/{entity}/by-params,POST,"API Tests #03 Performance Testing should assess response time using optimized entity filter by name",Performance Testing,/api/product-opt/by-params,passed,"",10
+/api/{entity}/by-params,POST,"API Tests #03 Performance Testing should assess response time no using optimized entity filter by name",Performance Testing,/api/product-no-opt/by-params,passed,"",10
+/api/{entity}/by-params,POST,"API Tests #03 Performance Testing should assess response time using optimized entity filter by name and category",Performance Testing,/api/product-opt/by-params,passed,"",10
+/api/{entity}/by-params,POST,"API Tests #03 Performance Testing should assess response time no using optimized entity by name and category",Performance Testing,/api/product-no-opt/by-params,passed,"",11
+/api/{entity}/by-params,POST,"API Tests #04 Performance Testing should assess response time using optimized entity filter by name",Performance Testing,/api/product-opt/by-params,passed,"",12
+/api/{entity}/by-params,POST,"API Tests #04 Performance Testing should assess response time no using optimized entity filter by name",Performance Testing,/api/product-no-opt/by-params,passed,"",14
+/api/{entity}/by-params,POST,"API Tests #04 Performance Testing should assess response time using optimized entity filter by name and category",Performance Testing,/api/product-opt/by-params,passed,"",12
+/api/{entity}/by-params,POST,"API Tests #04 Performance Testing should assess response time no using optimized entity by name and category",Performance Testing,/api/product-no-opt/by-params,passed,"",11
+/api/{entity}/by-params,POST,"API Tests #05 Performance Testing should assess response time using optimized entity filter by name",Performance Testing,/api/product-opt/by-params,passed,"",11
+/api/{entity}/by-params,POST,"API Tests #05 Performance Testing should assess response time no using optimized entity filter by name",Performance Testing,/api/product-no-opt/by-params,passed,"",18
+/api/{entity}/by-params,POST,"API Tests #05 Performance Testing should assess response time using optimized entity filter by name and category",Performance Testing,/api/product-opt/by-params,passed,"",10
+/api/{entity}/by-params,POST,"API Tests #05 Performance Testing should assess response time no using optimized entity by name and category",Performance Testing,/api/product-no-opt/by-params,passed,"",10
+/api/{entity}/by-params,POST,"API Tests #06 Performance Testing should assess response time using optimized entity filter by name",Performance Testing,/api/product-opt/by-params,passed,"",12
+/api/{entity}/by-params,POST,"API Tests #06 Performance Testing should assess response time no using optimized entity filter by name",Performance Testing,/api/product-no-opt/by-params,passed,"",18
+/api/{entity}/by-params,POST,"API Tests #06 Performance Testing should assess response time using optimized entity filter by name and category",Performance Testing,/api/product-opt/by-params,passed,"",10
+/api/{entity}/by-params,POST,"API Tests #06 Performance Testing should assess response time no using optimized entity by name and category",Performance Testing,/api/product-no-opt/by-params,passed,"",11
+/api/{entity}/by-params,POST,"API Tests #07 Performance Testing should assess response time using optimized entity filter by name",Performance Testing,/api/product-opt/by-params,passed,"",11
+/api/{entity}/by-params,POST,"API Tests #07 Performance Testing should assess response time no using optimized entity filter by name",Performance Testing,/api/product-no-opt/by-params,passed,"",14
+/api/{entity}/by-params,POST,"API Tests #07 Performance Testing should assess response time using optimized entity filter by name and category",Performance Testing,/api/product-opt/by-params,passed,"",10
+/api/{entity}/by-params,POST,"API Tests #07 Performance Testing should assess response time no using optimized entity by name and category",Performance Testing,/api/product-no-opt/by-params,passed,"",10
+/api/{entity}/by-params,POST,"API Tests #08 Performance Testing should assess response time using optimized entity filter by name",Performance Testing,/api/product-opt/by-params,passed,"",11
+/api/{entity}/by-params,POST,"API Tests #08 Performance Testing should assess response time no using optimized entity filter by name",Performance Testing,/api/product-no-opt/by-params,passed,"",10
+/api/{entity}/by-params,POST,"API Tests #08 Performance Testing should assess response time using optimized entity filter by name and category",Performance Testing,/api/product-opt/by-params,passed,"",9
+/api/{entity}/by-params,POST,"API Tests #08 Performance Testing should assess response time no using optimized entity by name and category",Performance Testing,/api/product-no-opt/by-params,passed,"",13
+/api/{entity}/by-params,POST,"API Tests #09 Performance Testing should assess response time using optimized entity filter by name",Performance Testing,/api/product-opt/by-params,passed,"",11
+/api/{entity}/by-params,POST,"API Tests #09 Performance Testing should assess response time no using optimized entity filter by name",Performance Testing,/api/product-no-opt/by-params,passed,"",9
+/api/{entity}/by-params,POST,"API Tests #09 Performance Testing should assess response time using optimized entity filter by name and category",Performance Testing,/api/product-opt/by-params,passed,"",9
+/api/{entity}/by-params,POST,"API Tests #09 Performance Testing should assess response time no using optimized entity by name and category",Performance Testing,/api/product-no-opt/by-params,passed,"",12
+/api/{entity}/by-params,POST,"API Tests #10 Performance Testing should assess response time using optimized entity filter by name",Performance Testing,/api/product-opt/by-params,passed,"",9
+/api/{entity}/by-params,POST,"API Tests #10 Performance Testing should assess response time no using optimized entity filter by name",Performance Testing,/api/product-no-opt/by-params,passed,"",10
+/api/{entity}/by-params,POST,"API Tests #10 Performance Testing should assess response time using optimized entity filter by name and category",Performance Testing,/api/product-opt/by-params,passed,"",9
+/api/{entity}/by-params,POST,"API Tests #10 Performance Testing should assess response time no using optimized entity by name and category",Performance Testing,/api/product-no-opt/by-params,passed,"",11
