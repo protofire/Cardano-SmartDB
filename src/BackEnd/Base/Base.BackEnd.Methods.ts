@@ -697,107 +697,123 @@ export class BaseBackEndMethods {
             //----------------------------
             console_logLv2(1, Entity.className(), `getByParams - Options: ${showData(optionsGet, false)} - Init`);
             //----------------------------
+            const isInclusionSelect = (fieldsForSelect: Record<string, boolean>): boolean | null => {
+                const hasTrue = Object.values(fieldsForSelect).some(value => value === true);
+                const hasFalse = Object.values(fieldsForSelect).some(value => value === false);
+                // Si hay mezcla, retornamos null para indicar error
+                if (hasTrue && hasFalse) {
+                    return null;
+                }
+                return hasTrue; // true = inclusión, false = exclusión
+            };
+            const processFieldsForSelect = (
+                allFields: string[],
+                userFields: Record<string, boolean> | undefined,
+                alwaysFields: Record<string, boolean>,
+                defaultFieldsWhenUndefined: Record<string, boolean>
+            ): Record<string, number> => {
+                //----------------------------
+                console_logLv2(0, Entity.className(), `getByParams - fieldsForSelect before always selects: ${showData(userFields, false)}`);
+                //----------------------------
+                if (userFields === undefined) {
+                    // una opcion es setear en undefined, o mejor dicho, no agregar fieldsForSelect en optionsGet
+                    // se usa a Entity.defaultFieldsWhenUndefined(),
+                    // defaultFieldsWhenUndefined en la mayoria de las clases es {}, lo que significa todos.
+                    // En algunas clases defaultFieldsWhenUndefined esta seteado en algunos campos, por que la clase tiene mucho y no quiero permitir ese tipo de carga
+                    userFields = defaultFieldsWhenUndefined;
+                }
+                //----------------------------
+                // Si no hay campos especificados, retornamos todos los campos
+                if (isEmptyObject(userFields)) {
+                    // si esta vacio, lo dejo asi, por que eso signifca que trae todos los campos y a veces quiero usarlo asi
+                    // para eso el usuario lo deja en fieldsForSelect: {},
+                    return Object.fromEntries(allFields.map(field => [field, 1]));
+                }
+                //----------------------------
+                const isInclusion = isInclusionSelect(userFields);
+                if (isInclusion === null) {
+                    throw `Invalid field selection: cannot mix inclusion and exclusion`
+                }
+                //----------------------------
+                // Campos que siempre deben incluirse
+                const alwaysFieldsList = Object.entries(alwaysFields)
+                    .filter(([_, value]) => value === true)
+                    .map(([key]) => key);
+                //----------------------------
+                if (isInclusion) {
+                    // Inclusión - traer campos marcados como true + always fields
+                    const userSelectedFields = Object.entries(userFields)
+                        .filter(([_, value]) => value === true)
+                        .map(([key]) => key);
+                    // Unimos los campos del usuario y los always fields, eliminando duplicados
+                    const uniqueFields = [...new Set([...userSelectedFields, ...alwaysFieldsList])];
+                    return Object.fromEntries(uniqueFields.map(field => [field, 1]));
+                } else {
+                    // Exclusión - todos los campos menos los excluidos, pero asegurando always fields
+                    const excludedFields = Object.entries(userFields)
+                        .filter(([_, value]) => value === false)
+                        .map(([key]) => key);
+            
+                    // Filtramos allFields quitando los excluidos, pero manteniendo always fields
+                    const resultFields = allFields.filter(field => 
+                        !excludedFields.includes(field) || alwaysFieldsList.includes(field)
+                    );
+                    return Object.fromEntries(resultFields.map(field => [field, 1]));
+                }
+            };
+            //----------------------------
+            let useOptionGet = optionsGet !== undefined ? optionsGet : optionsGetDefault;
+            //----------------------------
+            const allFields = Entity.getFields();
+            const userFields = useOptionGet.fieldsForSelect;
+            //----------------------------
+            const alwaysFieldsForSelect: Record<string, boolean> = Entity.alwaysFieldsForSelect;
+            const alwaysFieldsForCallbackOnAfterLoad: Record<string, boolean> = useOptionGet.doCallbackAfterLoad === true ? Entity.alwaysFieldsForCallbackOnAfterLoad : {};
+            const alwaysFieldsForLoadRelations: Record<string, boolean> = {};
+            if (useOptionGet.loadRelations !== undefined) {
+                Object.keys(useOptionGet.loadRelations).forEach((key) => {
+                    if (useOptionGet.loadRelations![key] === true) {
+                        alwaysFieldsForLoadRelations[key] = true;
+                    }
+                });
+            }
+            const unifiedAlwaysFields = {
+                ...alwaysFieldsForSelect,
+                ...alwaysFieldsForCallbackOnAfterLoad,
+                ...alwaysFieldsForLoadRelations,
+            };
+            //----------------------------
+            const fieldsForSelect = processFieldsForSelect(allFields, userFields, unifiedAlwaysFields, Entity.defaultFieldsWhenUndefined);
+            //----------------------------
+            console_logLv2(0, Entity.className(), `getByParams - fieldsForSelect after always selects: ${showData(fieldsForSelect, false)}`);
+            //----------------------------
+            if (paramsFilter === undefined) {
+                paramsFilter = {};
+            } else {
+                console_logLv2(0, Entity.className(), `getByParams - paramsFilter: ${showData(paramsFilter)}`);
+            }
+            //----------------------------
+            if (restricFilter === undefined) {
+                restricFilter = {};
+            } else {
+                console_logLv2(0, Entity.className(), `getByParams - restricFilter: ${showData(restricFilter)}`);
+            }
+            //----------------------------
+            let filters;
+            if (!isEmptyObject(paramsFilter) && !isEmptyObject(restricFilter)) {
+                filters = { $and: [paramsFilter, restricFilter] };
+            } else {
+                filters = { ...paramsFilter, ...restricFilter };
+            }
+            //----------------------------
+            if (useOptionGet.sort === undefined) {
+                useOptionGet.sort = Entity.defaultSortForSelect;
+            }
+            //----------------------------
             if (process.env.USE_DATABASE === 'mongo') {
                 //----------------------------
-                let useOptionGet = optionsGetDefault;
-                if (optionsGet !== undefined) {
-                    useOptionGet = optionsGet;
-                }
-                //----------------------------
-                if (useOptionGet.fieldsForSelect === undefined) {
-                    useOptionGet.fieldsForSelect = Entity.defaultFieldsWhenUndefined;
-                }
-                //----------------------------
-                let fieldsForSelectForMongo: Record<string, number> = {};
-                if (useOptionGet.fieldsForSelect !== undefined) {
-                    fieldsForSelectForMongo = Object.fromEntries(Object.keys(useOptionGet.fieldsForSelect).map((key) => [key, useOptionGet.fieldsForSelect![key] ? 1 : 0]));
-                }
-                //----------------------------
-                // console_logLv2(0, Entity.className(), `getByParams - fieldsForSelect before always selects: ${showData(fieldsForSelectForMongo, false)}`);
-                //----------------------------
-                if (isEmptyObject(fieldsForSelectForMongo)) {
-                    // si esta vacio, lo dejo asi, por que eso signifca que trae todos los campos y a veces quiero usarlo asi
-                    // para eso el usuario lo deja en fieldsForSelect: {}, o lo setea undefined, y aqui se llama a Entity.defaultFieldsWhenUndefined(),
-                    // que en la mayoria de las clases es {}, lo que significa todos.
-                    // En algunas clases esta seteado en algunos campos, por que la clase tiene mucho y no quiero permitir ese tipo de carga
-                    // tiene que elegir campos si o si o quedarse con los que estan en Entity.defaultFieldsWhenUndefined();, es el caso de funds y protocols
-                } else {
-                    // me aseguro que los campos que vienen esten bien seteados
-                    // y luego me aseguro de agregar todo lo que es necesario cuando se pide algun campo, es decir los vcampos minimos que se necesitan
-                    const isProjectionInclusionOrExclusion =
-                        isEmptyObject(fieldsForSelectForMongo) || Object.values(fieldsForSelectForMongo).every((value) => value === 1 || value === 0);
-                    if (!isProjectionInclusionOrExclusion) {
-                        throw `Invalid projection, must be all 1 or 0: ${toJson(fieldsForSelectForMongo)}`;
-                    }
-                    //----------------------------
-                    const alwaysFieldsForSelect: Record<string, boolean> = Entity.alwaysFieldsForSelect;
-                    //----------------------------
-                    const alwaysFieldsForCallbackOnAfterLoad: Record<string, boolean> = useOptionGet.doCallbackAfterLoad === true ? Entity.alwaysFieldsForCallbackOnAfterLoad : {};
-                    //----------------------------
-                    const alwaysFieldsForLoadRelations: Record<string, boolean> = {};
-                    //----------------------------
-                    if (useOptionGet.loadRelations !== undefined) {
-                        Object.keys(useOptionGet.loadRelations).forEach((key) => {
-                            if (useOptionGet.loadRelations![key] === true) {
-                                alwaysFieldsForLoadRelations[key] = true;
-                            }
-                        });
-                    }
-                    //----------------------------
-                    const unifiedAlwaysFields = {
-                        ...alwaysFieldsForSelect,
-                        ...alwaysFieldsForCallbackOnAfterLoad,
-                        ...alwaysFieldsForLoadRelations,
-                    };
-                    // Check if all values are either 1 or 0
-                    if (Object.values(fieldsForSelectForMongo).every((value) => value === 1)) {
-                        // si es una lista de inclusion me encargo de agregar los elementso que van always
-                        Object.keys(unifiedAlwaysFields)
-                            .filter((key) => unifiedAlwaysFields[key])
-                            .forEach((key) => {
-                                if (!fieldsForSelectForMongo.hasOwnProperty(key)) {
-                                    fieldsForSelectForMongo[key] = 1;
-                                }
-                            });
-                    } else if (Object.values(fieldsForSelectForMongo).every((value) => value === 0)) {
-                        // si es una lista de exclusion, me aseguro de sacar los elementos que tiene que estar siempre si o si
-                        Object.keys(unifiedAlwaysFields)
-                            .filter((key) => unifiedAlwaysFields[key])
-                            .forEach((key) => {
-                                if (fieldsForSelectForMongo.hasOwnProperty(key)) {
-                                    delete fieldsForSelectForMongo[key];
-                                }
-                            });
-                    }
-                }
-                //----------------------------
-                console_logLv2(0, Entity.className(), `getByParams - fieldsForSelect after always selects: ${showData(fieldsForSelectForMongo, false)}`);
-                //----------------------------
-                if (paramsFilter === undefined) {
-                    paramsFilter = {};
-                } else {
-                    console_logLv2(0, Entity.className(), `getByParams - paramsFilter: ${showData(paramsFilter)}`);
-                }
-                //----------------------------
-                if (restricFilter === undefined) {
-                    restricFilter = {};
-                } else {
-                    console_logLv2(0, Entity.className(), `getByParams - restricFilter: ${showData(restricFilter)}`);
-                }
-                //----------------------------
-                let filters;
-                if (!isEmptyObject(paramsFilter) && !isEmptyObject(restricFilter)) {
-                    filters = { $and: [paramsFilter, restricFilter] };
-                } else {
-                    filters = { ...paramsFilter, ...restricFilter };
-                }
-                //----------------------------
-                if (useOptionGet.sort === undefined) {
-                    useOptionGet.sort = Entity.defaultSortForSelect;
-                }
-                //----------------------------
                 // console_log (`pre getByParams ${Entity.className()}`)
-                const documents = await MongoDatabaseService.getByParams(Entity, filters, fieldsForSelectForMongo, useOptionGet);
+                const documents = await MongoDatabaseService.getByParams(Entity, filters, fieldsForSelect, useOptionGet);
                 // console_log (`post getByParams ${Entity.className()}`)
                 //----------------------------
                 const instances: T[] = [];
@@ -909,105 +925,8 @@ export class BaseBackEndMethods {
             }
             if (process.env.USE_DATABASE === 'postgresql') {
                 //----------------------------
-                let useOptionGet = optionsGetDefault;
-                if (optionsGet !== undefined) {
-                    useOptionGet = optionsGet;
-                }
-                //----------------------------
-                if (useOptionGet.fieldsForSelect === undefined) {
-                    useOptionGet.fieldsForSelect = Entity.defaultFieldsWhenUndefined;
-                }
-                //----------------------------
-                let fieldsForSelectForPostgreSQL: Record<string, number> = {};
-                if (useOptionGet.fieldsForSelect !== undefined) {
-                    fieldsForSelectForPostgreSQL = Object.fromEntries(Object.keys(useOptionGet.fieldsForSelect).map((key) => [key, useOptionGet.fieldsForSelect![key] ? 1 : 0]));
-                }
-                //----------------------------
-                // console_logLv2(0, Entity.className(), `getByParams - fieldsForSelect before always selects: ${showData(fieldsForSelectForPostgreSQL, false)}`);
-                //----------------------------
-                if (isEmptyObject(fieldsForSelectForPostgreSQL)) {
-                    // si esta vacio, lo dejo asi, por que eso signifca que trae todos los campos y a veces quiero usarlo asi
-                    // para eso el usuario lo deja en fieldsForSelect: {}, o lo setea undefined, y aqui se llama a Entity.defaultFieldsWhenUndefined(),
-                    //que en la mayoria de las clases es {}, lo que significa todos.
-                    // En algunas clases esta seteado en algunos campos, por que la clase tiene mucho y no quiero permitir ese tipo de carga
-                    // tiene que elegir campos si o si o quedarse con los que estan en Entity.defaultFieldsWhenUndefined();, es el caso de funds y protocols
-                } else {
-                    // me aseguro que los campos que vienen esten bien seteados
-                    // y luego me aseguro de agregar todo lo que es necesario cuando se pide algun campo, es decir los vcampos minimos que se necesitan
-                    const isProjectionInclusionOrExclusion =
-                        isEmptyObject(fieldsForSelectForPostgreSQL) || Object.values(fieldsForSelectForPostgreSQL).every((value) => value === 1 || value === 0);
-                    if (!isProjectionInclusionOrExclusion) {
-                        throw `Invalid projection, must be all 1 or 0: ${toJson(fieldsForSelectForPostgreSQL)}`;
-                    }
-                    //----------------------------
-                    const alwaysFieldsForSelect: Record<string, boolean> = Entity.alwaysFieldsForSelect;
-                    //----------------------------
-                    const alwaysFieldsForCallbackOnAfterLoad: Record<string, boolean> = useOptionGet.doCallbackAfterLoad === true ? Entity.alwaysFieldsForCallbackOnAfterLoad : {};
-                    //----------------------------
-                    const alwaysFieldsForLoadRelations: Record<string, boolean> = {};
-                    //----------------------------
-                    if (useOptionGet.loadRelations !== undefined) {
-                        Object.keys(useOptionGet.loadRelations).forEach((key) => {
-                            if (useOptionGet.loadRelations![key] === true) {
-                                alwaysFieldsForLoadRelations[key] = true;
-                            }
-                        });
-                    }
-                    //----------------------------
-                    const unifiedAlwaysFields = {
-                        ...alwaysFieldsForSelect,
-                        ...alwaysFieldsForCallbackOnAfterLoad,
-                        ...alwaysFieldsForLoadRelations,
-                    };
-                    // Check if all values are either 1 or 0
-                    if (Object.values(fieldsForSelectForPostgreSQL).every((value) => value === 1)) {
-                        // si es una lista de inclusion me encargo de agregar los elementso que van always
-                        Object.keys(unifiedAlwaysFields)
-                            .filter((key) => unifiedAlwaysFields[key])
-                            .forEach((key) => {
-                                if (!fieldsForSelectForPostgreSQL.hasOwnProperty(key)) {
-                                    fieldsForSelectForPostgreSQL[key] = 1;
-                                }
-                            });
-                    } else if (Object.values(fieldsForSelectForPostgreSQL).every((value) => value === 0)) {
-                        // si es una lista de exclusion, me aseguro de sacar los elementos que tiene que estar siempre si o si
-                        Object.keys(unifiedAlwaysFields)
-                            .filter((key) => unifiedAlwaysFields[key])
-                            .forEach((key) => {
-                                if (fieldsForSelectForPostgreSQL.hasOwnProperty(key)) {
-                                    delete fieldsForSelectForPostgreSQL[key];
-                                }
-                            });
-                    }
-                }
-                //----------------------------
-                console_logLv2(0, Entity.className(), `getByParams - fieldsForSelect after always selects: ${showData(fieldsForSelectForPostgreSQL, false)}`);
-                //----------------------------
-                if (paramsFilter === undefined) {
-                    paramsFilter = {};
-                } else {
-                    console_logLv2(0, Entity.className(), `getByParams - paramsFilter: ${showData(paramsFilter)}`);
-                }
-                //----------------------------
-                if (restricFilter === undefined) {
-                    restricFilter = {};
-                } else {
-                    console_logLv2(0, Entity.className(), `getByParams - restricFilter: ${showData(restricFilter)}`);
-                }
-                //----------------------------
-                let filters;
-                if (!isEmptyObject(paramsFilter) && !isEmptyObject(restricFilter)) {
-                    filters = { $and: [paramsFilter, restricFilter] };
-                } else {
-                    filters = { ...paramsFilter, ...restricFilter };
-                }
-                //----------------------------
-                if (useOptionGet.sort === undefined) {
-                    useOptionGet.sort = Entity.defaultSortForSelect;
-                }
-                //----------------------------
                 // console_log (`pre getByParams ${Entity.className()}`)
-                const documents = await PostgreSQLDatabaseService.getByParams(Entity, filters, fieldsForSelectForPostgreSQL, useOptionGet);
+                const documents = await PostgreSQLDatabaseService.getByParams(Entity, filters, fieldsForSelect, useOptionGet);
                 // console_logLv2(0, Entity.className(),  `post getByParams ${toJson(documents)}`)
                 //----------------------------
                 const instances: T[] = [];
