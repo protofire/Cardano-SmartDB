@@ -35,7 +35,6 @@ export class MongoDatabaseService {
                 instanceId = new Types.ObjectId(instance._DB_id);
                 if (instanceId === undefined) throw `id is undefined`;
             } catch (error) {
-                console_error(0, `Mongo`, `Error converting ${instanceId} to ObjectId - Error: ${error}`);
                 throw `Error: Error converting ${instanceId} to ObjectId - Error: ${error}`;
             }
             const document = await MongoModel.findOneAndUpdate({ _id: instanceId }, { $set: updateSet, $unset: updateUnSet }, { new: true });
@@ -68,7 +67,6 @@ export class MongoDatabaseService {
                 instanceId = new Types.ObjectId(instance._DB_id);
                 if (instanceId === undefined) throw `id is undefined`;
             } catch (error) {
-                console_error(0, `Mongo`, `Error converting ${instanceId} to ObjectId - Error: ${error}`);
                 throw `Error: Error converting ${instanceId} to ObjectId - Error: ${error}`;
             }
             const document = await MongoModel.findByIdAndDelete(instanceId).exec();
@@ -91,7 +89,6 @@ export class MongoDatabaseService {
                     instanceId = new Types.ObjectId(paramsFilterOrID);
                     if (instanceId === undefined) throw `id is undefined`;
                 } catch (error) {
-                    console_error(0, `Mongo`, `Error converting ${instanceId} to ObjectId - Error: ${error}`);
                     throw `Error: Error converting ${instanceId} to ObjectId - Error: ${error}`;
                 }
                 document = await MongoModel.findById(instanceId, { _id: 1 }).exec();
@@ -104,7 +101,7 @@ export class MongoDatabaseService {
                 //console_log(0, `Mongo`, `checkIfExists - True`);
                 return true;
             } else {
-                console_log(0, `Mongo`, `checkIfExists - False`);
+                // console_log(0, `Mongo`, `checkIfExists - False`);
                 return false;
             }
         } catch (error) {
@@ -377,27 +374,27 @@ export class MongoDatabaseService {
                 pipeline.push({ $project: fieldsForSelectForMongo });
             }
             //----------------------------
-            console_log(0, `Mongo`, `getByParams - pipeline: ${toJson(pipeline)}`);
+            // console_log(0, `Mongo`, `getByParams - pipeline: ${toJson(pipeline)}`);
             //----------------------------
             query = MongoModel.aggregate(pipeline);
             //----------------------------
             const documents = await query.exec();
             //----------------------------
-            console_log(
-                0,
-                `Mongo`,
-                `getByParam - pipeline - found ${documents.length} document(s)... - show: ${documents
-                    .map((item: any) =>
-                        toJson({
-                            _id: item._id,
-                            name: item.name ?? '',
-                            fieldsConverted: Object.keys(addFieldsStage.$addFields).map((field) => {
-                                return { field, value: item[field] };
-                            }),
-                        })
-                    )
-                    .join('      |     ')}`
-            );
+            // console_log(
+            //     0,
+            //     `Mongo`,
+            //     `getByParam - pipeline - found ${documents.length} document(s)... - show: ${documents
+            //         .map((item: any) =>
+            //             toJson({
+            //                 _id: item._id,
+            //                 name: item.name ?? '',
+            //                 fieldsConverted: Object.keys(addFieldsStage.$addFields).map((field) => {
+            //                     return { field, value: item[field] };
+            //                 }),
+            //             })
+            //         )
+            //         .join('      |     ')}`
+            // );
             //--------------------------
             return documents;
         } else {
@@ -465,7 +462,6 @@ export class MongoDatabaseService {
                         try {
                             paramsFilter[key] = new Types.ObjectId(paramsFilter[key]);
                         } catch (error) {
-                            console_error(0, `Mongo`, `Error converting ${key} to ObjectId - Error: ${error}`);
                             throw `Error converting ${key} to ObjectId - Error: ${error}`;
                         }
                     }
@@ -476,7 +472,6 @@ export class MongoDatabaseService {
                                 try {
                                     return new Types.ObjectId(id);
                                 } catch (error) {
-                                    console_error(0, `Mongo`, `Error converting ${id} to ObjectId in $in - Error: ${error}`);
                                     throw `Error: Error converting ${id} to ObjectId in $in - Error: ${error}`;
                                 }
                             });
@@ -485,7 +480,6 @@ export class MongoDatabaseService {
                                 try {
                                     return new Types.ObjectId(id);
                                 } catch (error) {
-                                    console_error(0, `Mongo`, `Error converting ${id} to ObjectId in $nin - Error: ${error}`);
                                     throw `Error: Error converting ${id} to ObjectId in $nin - Error: ${error}`;
                                 }
                             });
@@ -493,22 +487,15 @@ export class MongoDatabaseService {
                             try {
                                 paramsFilter[key].$eq = new Types.ObjectId(paramsFilter[key].$eq);
                             } catch (error) {
-                                console_error(0, `Mongo`, `Error converting ${paramsFilter[key].$eq} to ObjectId in $eq - Error: ${error}`);
                                 throw `Error converting ${paramsFilter[key].$eq} to ObjectId in $eq - Error: ${error}`;
                             }
                         } else if (paramsFilter[key].$ne) {
                             try {
                                 paramsFilter[key].$ne = new Types.ObjectId(paramsFilter[key].$ne);
                             } catch (error) {
-                                console_error(0, `Mongo`, `Error converting ${paramsFilter[key].$ne} to ObjectId in $ne - Error: ${error}`);
                                 throw `Error converting ${paramsFilter[key].$ne} to ObjectId in $ne - Error: ${error}`;
                             }
                         } else {
-                            console_error(
-                                0,
-                                `Mongo`,
-                                `Error converting ${paramsFilter[key].$ne} to ObjectId in $ne - Error: Error: ${key} is an ObjectId field, but the filter is not a valid filter for ObjectId fields`
-                            );
                             throw `Error converting ${paramsFilter[key].$ne} to ObjectId in $ne - Error: ${key} is an ObjectId field, but the filter is not a valid filter for ObjectId fields`;
                         }
                     } else {

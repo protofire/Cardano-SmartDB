@@ -11,15 +11,15 @@ export class PostgreSQLDatabaseService {
             //--------------------------
             await connectPostgres();
             //--------------------------
-            console_log(0, instance.className(), `create instance T : ${toJson(instance)}`);
+            // console_log((0, instance.className(), `create instance T : ${toJson(instance)}`);
             //--------------------------
             const postgreSQLInterface = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
             //--------------------------
-            console_log(0, instance.className(), `create postgreSQLInterface: ${toJson(postgreSQLInterface)}`);
+            // console_log((0, instance.className(), `create postgreSQLInterface: ${toJson(postgreSQLInterface)}`);
             //--------------------------
             const document = await databasePostgreSQL!.manager.save(postgreSQLInterface);
             //--------------------------
-            console_log(0, instance.className(), `create document: ${toJson(document)}`);
+            // console_log((0, instance.className(), `create document: ${toJson(document)}`);
             //--------------------------
             if (document) {
                 return document._id.toString();
@@ -46,7 +46,7 @@ export class PostgreSQLDatabaseService {
             // Aquí usamos el ID del objeto `instance` para identificar el registro a actualizar
             const id = postgreSQLEntity._id;
             if (!id) {
-                throw new Error('Instance does not have an id');
+                throw `Instance does not have an id`;
             }
             //--------------------------
             // Construimos el objeto de actualización, estableciendo los campos de `updateUnSet` en `NULL`
@@ -77,7 +77,7 @@ export class PostgreSQLDatabaseService {
             //--------------------------
             const id = postgreSQLEntity._id;
             if (!id) {
-                throw new Error('Instance does not have an id');
+                throw `Instance does not have an id`;
             }
             //--------------------------
             // Eliminamos el registro identificado por el ID
@@ -146,7 +146,7 @@ export class PostgreSQLDatabaseService {
     ) {
         try {
             //--------------------------
-            // console_log(0, `PostgreSQL`, `getByParams - Connecting to PostgreSQL...`);
+            // console_log((0, `PostgreSQL`, `getByParams - Connecting to PostgreSQL...`);
             //--------------------------
             await connectPostgres();
             const postgreSQLEntity = await Entity.getPostgreSQL().PostgreSQLModel();
@@ -154,45 +154,45 @@ export class PostgreSQLDatabaseService {
             const metadata = repository.metadata;
             let queryBuilder = repository.createQueryBuilder('entity');
             //--------------------------
-            // console.log('Initial Query:', queryBuilder.getQuery());
+            // console_log(0, `PostgreSQL`, `getByParams - Initial Query: ${queryBuilder.getQuery()}`);
             //--------------------------
             if (!isEmptyObject(paramsFilter)) {
                 // console_log(0, `PostgreSQL`, `getByParams - Applying filters: ${toJson(paramsFilter)}`);
                 queryBuilder = this.applyFilters(queryBuilder, metadata, paramsFilter);
             }
             //--------------------------
-            // console.log('After filter Query:', queryBuilder.getQuery());
+            // console_log(0, `PostgreSQL`, `getByParams - After filter Query: ${queryBuilder.getQuery()}`);
             //--------------------------
             if (!isEmptyObject(fieldsForSelect)) {
                 const selectedFields = Object.keys(fieldsForSelect)
                     .filter((key) => fieldsForSelect[key] === 1)
                     .map((key) => `entity.${key}`);
-                // console_log(0, `PostgreSQL`, `getByParams - Selecting fields: ${selectedFields}`);
+                // console_log((0, `PostgreSQL`, `getByParams - Selecting fields: ${selectedFields}`);
                 queryBuilder.select(selectedFields);
             }
             //--------------------------
-            // console.log('After Select Query:', queryBuilder.getQuery());
+            // console_log(0, `PostgreSQL`, `getByParams - After Select Query: ${queryBuilder.getQuery()}`);
             //--------------------------
             if (!isEmptyObject(useOptionGet.sort)) {
                 for (const [field, order] of Object.entries(useOptionGet!.sort!)) {
-                    // console_log(0, `PostgreSQL`, `getByParams - Sorting by ${field} in ${order === 1 ? 'ASC' : 'DESC'} order`);
+                    // console_log((0, `PostgreSQL`, `getByParams - Sorting by ${field} in ${order === 1 ? 'ASC' : 'DESC'} order`);
                     queryBuilder.addOrderBy(`entity.${field}`, order === 1 ? 'ASC' : 'DESC');
                 }
             }
             //--------------------------
             if (useOptionGet.skip !== undefined) {
-                // console_log(0, `PostgreSQL`, `getByParams - Skipping ${useOptionGet.skip} records`);
+                // console_log((0, `PostgreSQL`, `getByParams - Skipping ${useOptionGet.skip} records`);
                 queryBuilder.skip(useOptionGet.skip);
             }
             if (useOptionGet.limit !== undefined) {
-                // console_log(0, `PostgreSQL`, `getByParams - Limiting results to ${useOptionGet.limit}`);
+                // console_log((0, `PostgreSQL`, `getByParams - Limiting results to ${useOptionGet.limit}`);
                 queryBuilder.take(useOptionGet.limit);
             }
             //--------------------------
-            // console.log('Final Query:', queryBuilder.getQuery());
+            // console_log(0, `PostgreSQL`, `getByParams - Final Query: ${queryBuilder.getQuery()}`);
             //--------------------------
             let results = await queryBuilder.getRawMany();
-            // console_log(0, `PostgreSQL`, `getByParams - Raw results: ${toJson(results)}`);
+            // console_log((0, `PostgreSQL`, `getByParams - Raw results: ${toJson(results)}`);
             //--------------------------
             // Process the results to ensure consistent field naming
             results = results.map((result) => {
@@ -207,8 +207,8 @@ export class PostgreSQLDatabaseService {
                 return processedResult;
             });
             //--------------------------
-            // console_log(0, `PostgreSQL`, `getByParams - Found ${results.length} document(s)`);
-            // results.forEach((result) => console_log(0, `PostgreSQL`, `getByParams - Found ${toJson(result)}`));
+            // console_log((0, `PostgreSQL`, `getByParams - Found ${results.length} document(s)`);
+            // results.forEach((result) => // console_log(0, `PostgreSQL`, `getByParams - Found ${toJson(result)}`));
             //--------------------------
             return results;
             //--------------------------
@@ -241,9 +241,10 @@ export class PostgreSQLDatabaseService {
             throw `${error}`;
         }
     }
+
     private static applyFilters(queryBuilder: SelectQueryBuilder<any>, metadata: EntityMetadata, filters: Record<string, any>): SelectQueryBuilder<any> {
         //--------------------------
-        // console.log('Entering applyFilters with filters:', toJson(filters, null, 2));
+        // console_log(0, `PostgreSQL`, `applyFilters - Entering applyFilters with filters: ${toJson(filters, 2)}`);
         //--------------------------
         // Function to check if the field is of type JSONB
         const isJsonbField = (field: string): boolean => {
@@ -253,8 +254,7 @@ export class PostgreSQLDatabaseService {
         //--------------------------
         const applyFilter = (key: string, value: any, parentKey: string = '', index: number = 0): string => {
             const fullKey = parentKey ? `${parentKey}.${key}` : key;
-            // console.log(`Processing filter: ${fullKey} = ${toJson(value)}`);
-
+            // console_log(0, `PostgreSQL`, `applyFilters - Processing filter: ${fullKey} = ${toJson(value)}`);
             const createParam = (paramKey: string, paramValue: any) => {
                 // Append index to make each parameter unique
                 const safeParamKey = `${paramKey.replace(/[^a-zA-Z0-9_]/g, '_')}_${index}`;
@@ -270,6 +270,7 @@ export class PostgreSQLDatabaseService {
             };
 
             if (key.startsWith('$')) {
+                // console_log(0, `PostgreSQL`, `applyFilters - Processing operator: ${key}`);
                 switch (key) {
                     case '$or':
                     case '$and':
@@ -296,7 +297,7 @@ export class PostgreSQLDatabaseService {
                             )
                             .join(' OR ')})`;
                     default:
-                        throw new Error(`Unsupported operator: ${key}`);
+                        throw `Unsupported operator: ${key}`;
                 }
             } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
                 const conditions = Object.entries(value).map(([operator, operand], i) => {
@@ -347,8 +348,8 @@ export class PostgreSQLDatabaseService {
             .join(' AND ');
         queryBuilder.where(whereClause);
         //--------------------------
-        console.log('Filter Query:', queryBuilder.getQuery());
-        console.log('Filter parameters:', toJson(queryBuilder.getParameters()));
+        // console_log(0, `PostgreSQL`, `applyFilters - Filter Query: ${queryBuilder.getQuery()}`);
+        // console_log(0, `PostgreSQL`, `applyFilters - Filter parameters: ${toJson(queryBuilder.getParameters())}`);
         //--------------------------
         return queryBuilder;
     }
