@@ -1,3 +1,6 @@
+require('dotenv').config({ path: '.env.local' });
+require('dotenv').config();
+
 module.exports = {
     preset: 'ts-jest/presets/default-esm',
     transform: {

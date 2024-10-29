@@ -1,3 +1,6 @@
+require('dotenv').config({ path: '.env.local' });
+require('dotenv').config();
+
 module.exports = {
     coverageProvider: 'v8',
     testEnvironment: 'jsdom',
