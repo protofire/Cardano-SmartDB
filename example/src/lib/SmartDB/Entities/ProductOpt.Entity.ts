@@ -36,17 +36,5 @@ export class ProductOptEntity extends BaseEntity {
 
   // #region db
 
-  public static defaultFieldsWhenUndefined: Record<string, boolean> = {};
-
-  public static alwaysFieldsForSelect: Record<string, boolean> = {
-    ...BaseEntity.alwaysFieldsForSelect,
-    name: true,
-    description: true,
-    stock: true,
-    category: true,
-    createdAt: true,
-    updatedAt: true,
-  };
-
   // #endregion db
 }
