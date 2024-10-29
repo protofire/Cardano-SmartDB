@@ -173,6 +173,21 @@ export class BaseEntity extends BaseConstructor {
         return toJson(object);
     }
 
+    public static getFields<T extends BaseEntity>(useInterfaceNames:boolean = true): string[] {
+        const conversionFunctions = getCombinedConversionFunctions(this);
+        const fields: string[] = [];
+        if (conversionFunctions) {
+            for (const [propertyKey, conversions] of conversionFunctions.entries()) {
+                if (useInterfaceNames) {
+                    fields.push(conversions.interfaceName ?? propertyKey);
+                } else {
+                    fields.push(propertyKey);
+                }
+            }
+        }
+        return fields;
+    }
+
     public static filterByID<T extends BaseEntity>(id: string, list: T[]): T | undefined {
         const instance = list.filter((i) => i._DB_id == id);
         if (instance.length > 0) {
