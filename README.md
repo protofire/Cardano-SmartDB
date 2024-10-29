@@ -49,18 +49,17 @@
 </div>
 
 ## Table of Contents
-- [Smart DB Library](#smart-db-library)
-  - [Table of Contents](#table-of-contents)
-  - [Introduction](#introduction)
-  - [Features](#features)
-  - [Transaction Flow and Smart Selection](#transaction-flow-and-smart-selection)
-  - [Documentation](#documentation)
-  - [Installation](#installation)
-  - [Usage](#usage)
-  - [Conclusion](#conclusion)
-  - [Contribution](#contribution)
-  - [License](#license)
-  - [Acknowledgements](#acknowledgements)
+- [Table of Contents](#table-of-contents)
+- [Introduction](#introduction)
+- [Features](#features)
+- [Transaction Flow and Smart Selection](#transaction-flow-and-smart-selection)
+- [Documentation](#documentation)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Conclusion](#conclusion)
+- [Contribution](#contribution)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
 
 ## Introduction
 
@@ -78,7 +77,21 @@ The Smart DB Library is a Node.js package designed to simplify the interaction b
 - **Example Project**: Includes a comprehensive example project in the `example` folder demonstrating the use of the library.
 - **Node.js Dependency**: This is a Node.js library to add as a dependency in dApps projects.
 - **Database Flexibility**: Now supports both non-relational databases (using MongoDB via Mongoose) and relational databases (using PostgreSQL via TypeORM), giving developers the flexibility to choose the most appropriate database solution for their project.
-
+- **Query Optimization**:
+  - Selective field retrieval for optimized data transfer
+  - Sorting and pagination capabilities
+    - Support for sorting by any field
+    - Skip/limit pagination
+- **Database Optimization**:  
+  - Support for database indexes on entities
+  - Covered queries optimization for minimizing I/O operations
+  - Performance monitoring and comparison tools
+  - Comparative testing between optimized and non-optimized entities
+- **Token Metadata Management**:
+  - Automatic retrieval and storage of token metadata from BlockFrost API
+  - Local database storage to eliminate repeated external calls
+  - Efficient metadata lookup for frequently accessed tokens
+  
 ## Transaction Flow and Smart Selection
 
 The Smart DB Library implements a sophisticated transaction flow that includes:

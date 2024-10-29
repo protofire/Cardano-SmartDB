@@ -78,11 +78,18 @@ For information on how to use this example project, including setting up entitie
 
 ## Testing
 
-This project includes two main types of tests:
+This project includes three main types of tests:
 
 1. **API Tests**: These tests cover all non-transaction API endpoints, ensuring correct responses and behavior.
 
 2. **Concurrency Tests**: A specialized suite designed to evaluate the performance of the Smart UTXO and Smart Selection systems under various concurrent transaction scenarios.
+
+3. **Performance Tests**: A comparative testing suite that evaluates the impact of database optimizations by comparing optimized and non-optimized entity implementations.
+
+Each test suite provides unique insights:
+- API Tests verify endpoint functionality and response accuracy
+- Concurrency Tests measure Smart Selection effectiveness in high-concurrency scenarios
+- Performance Tests demonstrate the impact of database optimizations including indexes, field selection, and query parameters
 
 For more information on running tests and analyzing results, see our [Testing Guide](docs/tests.md).
 

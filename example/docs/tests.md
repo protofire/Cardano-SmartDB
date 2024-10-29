@@ -24,10 +24,17 @@
       - [UTXO to User Ratio Effects](#utxo-to-user-ratio-effects)
       - [Read UTXO Impact](#read-utxo-impact)
       - [Conclusion](#conclusion)
+  - [Performance Tests](#performance-tests)
+    - [Running Performance Tests](#running-performance-tests)
+    - [Test Structure](#test-structure-1)
+    - [Test Results](#test-results-1)
 
 ## Introduction
 
-This document provides a comprehensive guide to the extensive testing suite developed for the Smart DB Library example. The suite includes both API tests and in-depth concurrency tests, designed to rigorously evaluate the performance and reliability of the Smart UTXO and Smart Selection systems under various scenarios.
+This document provides a comprehensive guide to the testing suites developed for the Smart DB Library example. The suite includes:
+- API tests to verify endpoint functionality
+- Concurrency tests to evaluate Smart UTXO and Smart Selection systems
+- Performance tests to measure optimization impacts on database operations
 
 ## API Tests
 
@@ -247,3 +254,59 @@ The comprehensive test results demonstrate that the Smart Selection system signi
 5. Robustness: Smart Selection maintains higher success rates even in challenging high-concurrency environments, showing up to 93.75% improvement in some cases.
 
 These results validate the effectiveness of the Smart UTXO and Smart Selection systems in managing concurrent transactions, particularly in scenarios where traditional UTXO management would struggle. The system shows great promise for improving the scalability and user experience of dApps on the Cardano blockchain.
+
+## Performance Tests
+
+The performance tests are designed to evaluate the impact of database optimizations through comparison testing of optimized and non-optimized entity implementations.
+
+### Running Performance Tests
+
+Execute the following command to run the performance tests:
+
+```
+npm run test-performance
+```
+
+The tests generate detailed comparison results between optimized and non-optimized database operations.
+
+### Test Structure
+
+The tests in `__tests__/performance/main.test.ts` compare two implementations:
+
+1. ProductOpt: Entity with optimizations
+   - Strategic field indexing
+   - Composite indexes for common queries
+   - Optimized field selection
+
+2. ProductNoOpt: Base implementation without optimizations
+
+Test scenarios cover:
+- Complete vs selective field retrieval
+- Pagination testing
+- Sort operations
+- Index utilization
+
+Results are stored in:
+- `__tests__/performance/testResults.csv`: Raw test execution data
+- `__tests__/performance/Performance_Measure.xlsx`:
+  - Sheet 1: "Get All Situations" comparing retrieval methods
+  - Sheet 2: "Comparison of Performance" analyzing optimization impact
+
+### Test Results
+
+Our testing shows significant improvements through optimization:
+
+Query Optimization Results:
+- Selected field retrieval: 53.97% faster responses
+- Limited queries: 192.80% performance improvement
+- Sorted queries: Maintained consistent performance
+
+Database Optimization Impact:
+- Single field indexed queries: 15.74% faster
+- Composite index queries: 5.66% faster
+
+Key Findings:
+- Field selection provides the most significant performance gains
+- Pagination dramatically improves response times for large datasets
+- Indexes show notable improvements for filtered queries
+- Composite indexes provide moderate but consistent improvements

@@ -22,11 +22,22 @@
   - [Root Backend File](#root-backend-file)
     - [Root Backend File Example](#root-backend-file-example)
     - [Endpoints Configuration](#endpoints-configuration)
-  - [Api Endpoints](#api-endpoints)
-    - [Base URL](#base-url)
-    - [Available Methods per Entity](#available-methods-per-entity)
-    - [Common Endpoints](#common-endpoints)
-    - [POST Request Body Parameters](#post-request-body-parameters)
+- [API Endpoints](#api-endpoints)
+  - [Base URL](#base-url)
+  - [Available Methods per Entity](#available-methods-per-entity)
+  - [Common Endpoints](#common-endpoints)
+    - [Get All Entities](#get-all-entities)
+    - [Get Entities by Parameters](#get-entities-by-parameters)
+    - [Count Entities](#count-entities)
+    - [Check if an Entity Exists](#check-if-an-entity-exists)
+    - [Create a New Entity](#create-a-new-entity)
+    - [Update an Entity by ID](#update-an-entity-by-id)
+    - [Load Many-to-Many Relations](#load-many-to-many-relations)
+    - [Load One-to-One Relations](#load-one-to-one-relations)
+    - [Execute Custom API Handlers](#execute-custom-api-handlers)
+    - [Get or Delete an Entity by ID](#get-or-delete-an-entity-by-id)
+  - [Query Optimization](#query-optimization)
+    - [Example JSON Body for `by-params`:](#example-json-body-for-by-params)
   - [NextJs Api Handler Files](#nextjs-api-handler-files)
 
 ## Directory Structure
@@ -777,9 +788,9 @@ Where:
 - **HTTP Method**: `GET` (for retrieval) or `DELETE` (for deletion)
 - **Description**: Retrieves or deletes an entity using its ID.
 
-### POST Request Body Parameters
+### Query Optimization
 
-For `POST` methods, such as the `by-params` and creating new entities, the following parameters can be included in the request body in JSON format to specify the query:
+For `POST` methods, such as the `by-params` and creating new entities, the library provides several ways to optimize your queries. The following parameters can be included in the request body in JSON format:
 
 - `skip: number` – The number of records to skip before starting to return results.
 - `paramsFilter: Record<string, any>` – A set of filters applied to find entities matching the provided values.
@@ -791,7 +802,7 @@ For `POST` methods, such as the `by-params` and creating new entities, the follo
 
 ```json
 {
-  "skip": 0,
+  "skip": 1,
   "paramsFilter": { "status": "active", "category": "finance" },
   "limit": 10,
   "sort": { "createdAt": -1 },
@@ -799,7 +810,7 @@ For `POST` methods, such as the `by-params` and creating new entities, the follo
 }
 ```
 
-This example performs a query that filters entities with the `status` field as "active" and `category` as "finance", skips the first 0 records (starting from the beginning), returns a maximum of 10 results, sorts them by `createdAt` in descending order, and selects only the `name` and `status` fields in the results.
+This example performs a query that filters entities with the `status` field as "active" and `category` as "finance", skips the first 1 records (starting from the beginning), returns a maximum of 10 results, sorts them by `createdAt` in descending order, and selects only the `name` and `status` fields in the results.
 
 ### NextJs Api Handler Files
 
