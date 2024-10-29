@@ -35,6 +35,45 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  *   name: Normal Entities
  *   description: Operations related to normal entities (not linked to Blockchain Datums)
  */
+
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     QueryParameters:
+ *       type: object
+ *       description: |
+ *         Advanced query object that supports complex filtering with logical operators.
+ *         
+ *         Simple queries:
+ *         - Direct field matching: { field: "value" }
+ *         - Multiple conditions: { field1: "value1", field2: "value2" }
+ *         
+ *         Advanced queries using operators:
+ *         - Comparison: $eq, $ne, $gt, $lt, $gte, $lte
+ *         - Array: $in, $nin
+ *         - Logical: $and, $or, $not
+ *         - Element: $exists
+ *         - Regex: $regex
+ *         
+ *         Nested fields are supported using dot notation:
+ *         - { "nested.field": "value" }
+ *       example:
+ *         {
+ *           "$and": [
+ *             { "name": "John Smith" },
+ *             { "age": { "$gt": 25 } },
+ *             { "$or": [
+ *               { "status": { "$in": ["active", "pending"] } },
+ *               { "verified": { "$exists": true } }
+ *             ]}
+ *           ],
+ *           "address.city": { "$regex": "^New" }
+ *         }
+ *       additionalProperties: true
+ */
+
 /**
  * @swagger
  * /api/{entity}:
@@ -188,8 +227,8 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  *             type: object
  *             properties:
  *               paramsFilter:
- *                 type: object
- *                 description: Parameters to filter the entity
+ *                 $ref: '#/components/schemas/QueryParameters'
+ *                 description: Optional filtering parameters
  *     responses:
  *       200:
  *         description: Entity exists
@@ -292,7 +331,7 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  * @swagger
  * /api/{entity}/all:
  *   get:
- *     summary: Get all entities
+ *     summary: Get all entities without parameters
  *     tags: [Normal Entities]
  *     parameters:
  *       - in: path
@@ -316,13 +355,9 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  *         description: Unauthorized
  *       500:
  *         description: Internal server error
- */
-
-/**
- * @swagger
- * /api/{entity}/by-params:
+ *   
  *   post:
- *     summary: Get entities by parameters
+ *     summary: Get all entities with pagination, sorting and field selection
  *     tags: [Normal Entities]
  *     parameters:
  *       - in: path
@@ -334,15 +369,28 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  *     security:
  *       - BearerAuth: []
  *     requestBody:
- *       required: true
+ *       required: false
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               paramsFilter:
- *                 type: object
- *                 description: Parameters to filter the entities
+ *               fieldsForSelect:
+ *                 type: Record<string, boolean>
+ *                 description: Optional - Fields to include/exclude in the response. All values must be consistently either true (inclusion) or false (exclusion)
+ *                 example: { "field1": true, "field2": true }
+ *               skip:
+ *                 type: integer
+ *                 minimum: 1
+ *                 description: Optional - Number of records to skip
+ *               limit:
+ *                 type: integer
+ *                 minimum: 1
+ *                 description: Optional - Maximum number of records to return
+ *               sort:
+ *                 type: Record<string, 1 | -1>
+ *                 description: Optional - Sorting criteria. Keys are field names, values are 1 (ascending) or -1 (descending)
+ *                 example: { "fieldName": 1, "otherField": -1 }
  *     responses:
  *       200:
  *         description: Entities retrieved successfully
@@ -353,7 +401,62 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  *               items:
  *                 type: object
  *       400:
- *         description: Validation error
+ *         description: Validation error or invalid parameters
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ *
+ * /api/{entity}/by-params:
+ *   post:
+ *     summary: Get entities by parameters with filtering, pagination, sorting and field selection
+ *     tags: [Normal Entities]
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the entity
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               paramsFilter:
+ *                 $ref: '#/components/schemas/QueryParameters'
+ *                 description: Optional filtering parameters
+  *               fieldsForSelect:
+ *                 type: Record<string, boolean>
+ *                 description: Optional - Fields to include/exclude in the response. All values must be consistently either true (inclusion) or false (exclusion)
+ *                 example: { "field1": true, "field2": true }
+ *               skip:
+ *                 type: integer
+ *                 minimum: 1
+ *                 description: Optional - Number of records to skip
+ *               limit:
+ *                 type: integer
+ *                 minimum: 1
+ *                 description: Optional - Maximum number of records to return
+ *               sort:
+ *                 type: Record<string, 1 | -1>
+ *                 description: Optional - Sorting criteria. Keys are field names, values are 1 (ascending) or -1 (descending)
+ *                 example: { "fieldName": 1, "otherField": -1 }
+ *     responses:
+ *       200:
+ *         description: Entities retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       400:
+ *         description: Validation error or invalid parameters
  *       401:
  *         description: Unauthorized
  *       500:
@@ -384,8 +487,8 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  *             type: object
  *             properties:
  *               paramsFilter:
- *                 type: object
- *                 description: Parameters to filter the entities
+ *                 $ref: '#/components/schemas/QueryParameters'
+ *                 description: Optional filtering parameters
  *     responses:
  *       200:
  *         description: Count retrieved successfully
