@@ -3,9 +3,12 @@
 /_OLD
 /src/**/_OLD
 /example
+/my-app
 /smartDB.code-workspace
 /smart-db.tgz
 smart-db-*.tgz
+/*smart-db.tgz
+*smart-db-*.tgz
 /.git
 /package-lock.json
 .priv

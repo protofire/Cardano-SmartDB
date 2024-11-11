@@ -1,6 +1,6 @@
 {
     "name": "smart-db",
-    "version": "1.1.247",
+    "version": "1.1.261",
     "description": "Smart DB",
     "type": "module",
     "main": "index.js",
@@ -17,7 +17,8 @@
         "build": "npm run clean && tsc -p tsconfig.json && npm run build-css",
         "build-css": "postcss src/styles.scss -o dist/styles.css",
         "watchBuild": "tsc -w -p tsconfig.json && npm run build-css",
-        "pack": "npm version patch --no-git-tag-version && rm -f smart-db.tgz && rm -f smart-db-*.tgz && npm run build && npm pack && mv smart-db-*.tgz smart-db.tgz",
+        "deleteOldPack": "[ -f smart-db.tgz ] && rm smart-db.tgz && find . -name '*smart-db-*.tgz' -exec rm {} + || true",
+        "pack": "npm version patch --no-git-tag-version && npm run deleteOldPack && npm run build && PACK_FILE=$(npm pack) && mv \"$PACK_FILE\" smart-db.tgz",
         "watchPack": "chokidar \"src/**/*\" -c \"npm run pack\"",
         "clean": "rm -rf ./dist ./tsconfig.tsbuildinfo ",
         "cleanAll": "npm run clean && rm -rf ./node_modules"

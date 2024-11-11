@@ -1,38 +1,68 @@
 {
-    "compilerOptions": {
-        "target": "ES2021",
-        "module": "esnext",
-        "lib": ["dom", "dom.iterable", "esnext"],
-        "declaration": true,
-        "declarationMap": true,
-        //"emitDeclarationOnly": true,
-        "noEmit": false,
-        "allowJs": true,
-        "skipLibCheck": true,
-        "strict": true,
-        "forceConsistentCasingInFileNames": true,
-        "esModuleInterop": true,
-        "moduleResolution": "node",
-        "resolveJsonModule": true,
-        "isolatedModules": true,
-        "jsx": "preserve",
-        "incremental": true,
-        "sourceMap": true,
-        "inlineSources": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "plugins": [
-            {
-                "name": "next"
-            }
-        ],
-        "baseUrl": ".",
-        "paths": {
-            "@example/*": ["./*"],
-            // "smart-db/*": ["./node_modules/@manupadilla/smart-db/dist/*"],  // Alias for all smart-db subfolders
-            // "smart-db": ["./node_modules/@manupadilla/smart-db/dist"]  // Main alias for root
-        }
-    },
-    "include": ["next-env.d.ts", "jest.config.js", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts",  "__tests__/concurrency/**/*.ts", "__tests__/concurrency/**/*.tsx", "__tests__/concurrency/updateComparison.mts",],
-    "exclude": ["node_modules", "_OLD", "src/**/_OLD/*",  "jest.config.js", "jest.config.ts", "*.config.js", "_swagger/*.ts", "__tests__/api/*"]
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "esnext",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": false,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@example/*": [
+        "./*"
+      ],
+      "@/*": [
+        "./src/*"
+      ],
+      "smart-db/*": [
+        "node_modules/@manupadilla/smart-db/*"
+      ],
+      "smart-db": [
+        "node_modules/@manupadilla/smart-db"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "jest.config.js",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "__tests__/concurrency/**/*.ts",
+    "__tests__/concurrency/**/*.tsx",
+    "__tests__/concurrency/updateComparison.mts"
+  ],
+  "exclude": [
+    "node_modules",
+    "_OLD",
+    "src/**/_OLD/*",
+    "jest.config.js",
+    "jest.config.ts",
+    "*.config.js",
+    "_swagger/*.ts",
+    "__tests__/api/*"
+  ]
 }
