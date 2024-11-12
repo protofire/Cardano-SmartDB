@@ -57,6 +57,7 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [Conclusion](#conclusion)
+- [Cardano Catalyst Reports](#cardano-catalyst-reports)
 - [Contribution](#contribution)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
