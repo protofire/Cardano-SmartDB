@@ -242,6 +242,7 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
         //--------------------------------------
         for (const smartUTxO of smartUTxOs) {
             const found = realUTxOs.find((realUTxO) => realUTxO.txHash === smartUTxO.txHash && realUTxO.outputIndex === smartUTxO.outputIndex);
+            //TODO: hace falta agregar && smartUTxO.datum === realUTxO.datum a esa condición?
             if (!found) {
                 swDeleteSome = true;
                 //--------------------------------------

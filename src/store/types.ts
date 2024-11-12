@@ -102,6 +102,7 @@ export interface IUseWalletStore {
 
     getLucidForUseAsUtils: () => Promise<Lucid | undefined>;
     setLucidForUseAsUtils: (lucid: Lucid) => void;
+    _lucidForUseAsUtils: Lucid | undefined;
 
     protocolParameters: unknown;
 

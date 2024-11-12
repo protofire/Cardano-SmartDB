@@ -40,6 +40,8 @@ export function useWalletStore(): IUseWalletStore {
         getLucidForUseAsUtils: actions.getLucidForUseAsUtils,
         setLucidForUseAsUtils: actions.setLucidForUseAsUtils,
 
+        _lucidForUseAsUtils: state._lucidForUseAsUtils,
+
         protocolParameters: state.protocolParameters,
 
         info: state.info,

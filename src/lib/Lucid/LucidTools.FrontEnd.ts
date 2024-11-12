@@ -258,9 +258,7 @@ export class LucidToolsFrontEnd {
             //--------------------------------------
             const txCompleteHash = txComplete.toHash();
             //--------------------------------------
-            if (txCompleteHash !== txHash) alert('txCompleteHash !== txHash');
-            //--------------------------------------
-            const transaction = await TransactionFrontEndApiCalls.getOneByParamsApi<TransactionEntity>(TransactionEntity, { hash: txHash });
+            // const transaction = await TransactionFrontEndApiCalls.getOneByParamsApi<TransactionEntity>(TransactionEntity, { hash: txHash });
             //--------------------------------------
             console.log(`[Lucid] - Tx Resources:`);
             const txSize = txComplete.txComplete.to_bytes().length;
