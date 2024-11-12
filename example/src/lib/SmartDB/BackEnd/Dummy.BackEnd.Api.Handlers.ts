@@ -389,7 +389,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 await TransactionBackEndApplied.create(transaction);
                 //--------------------------------------
                 console_log(-1, this._Entity.className(), `Create Tx - txCborHex: ${showData(txCborHex)}`);
-                return res.status(200).json({ txCborHex });
+                return res.status(200).json({ txCborHex, txHash });
                 //--------------------------------------
             } catch (error) {
                 console_error(-1, this._Entity.className(), `Create Tx - Error: ${error}`);
@@ -508,7 +508,8 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 await TransactionBackEndApplied.create(transaction);
                 //--------------------------------------
                 console_log(-1, this._Entity.className(), `Claim Tx - txCborHex: ${showData(txCborHex)}`);
-                return res.status(200).json({ txCborHex });
+                
+                return res.status(200).json({ txCborHex, txHash });
                 //--------------------------------------
             } catch (error) {
                 console_error(-1, this._Entity.className(), `Claim Tx - Error: ${error}`);
@@ -647,7 +648,7 @@ export class DummyTxApiHandlers extends BaseSmartDBBackEndApiHandlers {
                 await TransactionBackEndApplied.create(transaction);
                 //--------------------------------------
                 console_log(-1, this._Entity.className(), `Update Tx - txCborHex: ${showData(txCborHex)}`);
-                return res.status(200).json({ txCborHex });
+                return res.status(200).json({ txCborHex, txHash });
                 //--------------------------------------
             } catch (error) {
                 console_error(-1, this._Entity.className(), `Update Tx - Error: ${error}`);
