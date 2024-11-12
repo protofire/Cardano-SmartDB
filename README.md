@@ -123,6 +123,18 @@ For information on how to use the Smart DB Library, including setting up entitie
 
 The Smart DB library bridges the gap between traditional web application development and blockchain-based data management. By abstracting complex blockchain operations into familiar JavaScript entity interactions, it offers a developer-friendly pathway to blockchain integration. The sophisticated transaction handling and UTXO management systems enable the development of high-performance, concurrent dApps on the Cardano blockchain.
 
+## Cardano Catalyst Reports
+Here are the links to the Catalyst Milestone reports for the Cardano Smart DB project. Each report provides an update on the project's progress, achievements, and next steps for each milestone.
+
+- [**Milestone 1 Report**](https://docs.google.com/document/d/1JfyuJceSvcd6JPbB1dk6CswelUD-9YNBhHsmnCC_gtg/edit?usp=drive_link)
+- [**Milestone 2 Report**](https://docs.google.com/document/d/1x0QuRGvYsMm_tkiH-LQCRiWGd4pJwuoxDmpJytsMF0I/edit?usp=drive_link)
+- [**Milestone 3 Report**](https://docs.google.com/document/d/1F36mhjyY7_zNAA7A3tcC1ILNPtY-Y5O7M9_eV5v6ZSk/edit?usp=drive_link)
+- [**Milestone 4 Report**](https://docs.google.com/document/d/1HZ3T2exp1-89egSQz68BjLLoT-_5peX-BBikxyn-lxs/edit?usp=drive_link)
+- [**Milestone 5 Report**](https://docs.google.com/document/d/1AC3yMv7RMhNhWUYSKhEsckpPm3LpHck-nGWYuivJctE/edit?usp=drive_link)
+- [**Milestone 6 Report**](https://docs.google.com/document/d/1_-8YYQC6W19ujIkq1Ndrv7I4Xqxk-GrOiuC3KCD7glY/edit?usp=drive_link)
+
+For more details on our progress and achievements, please refer to each report.
+
 ## Contribution
 
 Contributions to the Cardano Smart DB are welcome. Whether you're looking to fix bugs, add new features, or improve documentation, your help is appreciated.
