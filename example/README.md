@@ -66,7 +66,7 @@ These different entity types and their corresponding pages provide a comprehensi
 
 ## Documentation
 
-For detailed documentation, please visit our [Gitbook](https://protofire-docs.gitbook.io/smartdb-example/).
+For detailed documentation, please visit our [Gitbook](https://protofire-docs.gitbook.io/smartdb/smartdb-example/).
 
 ## Installation
 
