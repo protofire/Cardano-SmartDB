@@ -51,13 +51,13 @@
 ## Table of Contents
 - [Table of Contents](#table-of-contents)
 - [Introduction](#introduction)
-- [Documentation](#documentation)
 - [Features](#features)
 - [The Smart DB Ecosystem](#the-smart-db-ecosystem)
   - [Core Library](#core-library)
   - [Development Tools](#development-tools)
   - [Learning \& Implementation Resources](#learning--implementation-resources)
   - [Production Reference Implementation](#production-reference-implementation)
+- [Documentation](#documentation)
 - [Getting Started](#getting-started)
 - [Transaction Flow and Smart Selection](#transaction-flow-and-smart-selection)
 - [Installation](#installation)
@@ -71,10 +71,6 @@
 ## Introduction
 
 The Smart DB Library is a Node.js package designed to simplify the interaction between JavaScript entities, a database, and the Cardano blockchain. It enables developers to work with entities backed by a database and synced with the blockchain, providing a transparent and seamless experience.
-
-## Documentation
-
-For detailed documentation, please visit our [Gitbook](https://protofire-docs.gitbook.io/smartdb/).
 
 ## Features
 - **Hooks and Stores**: Provides useHooks and EasyPeasy stores to deal with wallet connection.
@@ -148,6 +144,20 @@ The Smart DB library is supported by a comprehensive ecosystem of tools, templat
   - Includes on-chain and off-chain integration
   - Showcases best practices for production deployment
   - Serves as a comprehensive reference implementation
+
+## Documentation
+
+For comprehensive, structured documentation covering the entire Smart DB ecosystem, including detailed guides, tutorials, and API references, please visit our [Gitbook Documentation](https://protofire-docs.gitbook.io/smartdb/).
+
+The Gitbook documentation includes:
+- Complete Smart DB library reference
+- Step-by-step guides for the Scaffold tools
+- Project template tutorials
+- Marketplace implementation examples
+- Best practices and common patterns
+- Testing and deployment guides
+
+While each repository contains its own README with specific information, the Gitbook serves as a unified resource where all documentation is organized and interconnected, making it easier to understand how all components work together.
 
 ## Getting Started
 
