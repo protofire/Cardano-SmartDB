@@ -51,9 +51,15 @@
 ## Table of Contents
 - [Table of Contents](#table-of-contents)
 - [Introduction](#introduction)
-- [Features](#features)
-- [Transaction Flow and Smart Selection](#transaction-flow-and-smart-selection)
 - [Documentation](#documentation)
+- [Features](#features)
+- [The Smart DB Ecosystem](#the-smart-db-ecosystem)
+  - [Core Library](#core-library)
+  - [Development Tools](#development-tools)
+  - [Learning \& Implementation Resources](#learning--implementation-resources)
+  - [Production Reference Implementation](#production-reference-implementation)
+- [Getting Started](#getting-started)
+- [Transaction Flow and Smart Selection](#transaction-flow-and-smart-selection)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Conclusion](#conclusion)
@@ -66,6 +72,10 @@
 
 The Smart DB Library is a Node.js package designed to simplify the interaction between JavaScript entities, a database, and the Cardano blockchain. It enables developers to work with entities backed by a database and synced with the blockchain, providing a transparent and seamless experience.
 
+## Documentation
+
+For detailed documentation, please visit our [Gitbook](https://protofire-docs.gitbook.io/smartdb/).
+
 ## Features
 - **Hooks and Stores**: Provides useHooks and EasyPeasy stores to deal with wallet connection.
 - **Seamless Blockchain Integration**: Simplify interactions with the Cardano blockchain using JavaScript entities.
@@ -75,7 +85,6 @@ The Smart DB Library is a Node.js package designed to simplify the interaction b
 - **Concurrent Transaction Handling**: Robust system for managing multiple simultaneous transactions with minimal conflicts.
 - **Authorization**: All API endpoints are secured with authorization logic using Next.js sessions and JWT tokens.
 - **API Handling**: The library handles all API routes, reducing the complexity in the projects that use our library.
-- **Example Project**: Includes a comprehensive example project in the `example` folder demonstrating the use of the library.
 - **Node.js Dependency**: This is a Node.js library to add as a dependency in dApps projects.
 - **Database Flexibility**: Now supports both non-relational databases (using MongoDB via Mongoose) and relational databases (using PostgreSQL via TypeORM), giving developers the flexibility to choose the most appropriate database solution for their project.
 - **Query Optimization**:
@@ -92,7 +101,64 @@ The Smart DB Library is a Node.js package designed to simplify the interaction b
   - Automatic retrieval and storage of token metadata from BlockFrost API
   - Local database storage to eliminate repeated external calls
   - Efficient metadata lookup for frequently accessed tokens
-  
+- **Developer Tools**: Includes scaffolding tools for entity generation, example projects, and project templates  
+- **Example Project**: Includes a comprehensive example project in the `example` folder demonstrating the use of the library.
+
+## The Smart DB Ecosystem
+
+The Smart DB library is supported by a comprehensive ecosystem of tools, templates, and examples designed to help developers build dApps on Cardano:
+
+### Core Library
+- **[Cardano Smart DB](https://github.com/protofire/Cardano-SmartDB)** (This Repository)
+  - The core library providing the foundational functionality for building dApps on Cardano
+  - Handles blockchain synchronization, UTXO management, database integration, and API generation
+  - Implements Smart Selection algorithm for optimal transaction handling
+  - Supports both MongoDB and PostgreSQL databases
+  - Provides comprehensive testing tools for concurrency and performance
+
+### Development Tools
+- **[Cardano SmartDB Scaffold](https://github.com/protofire/Cardano-SmartDB-Scaffold)**
+  - Automated tools for generating GraphQL schemas and code
+  - Streamlines entity creation and boilerplate code generation
+  - Generates consistent project structure following best practices
+  - Reduces development time through intelligent code generation
+  - Supports both MongoDB and PostgreSQL schema generation
+
+### Learning & Implementation Resources
+- **[SmartDB Example Project](https://github.com/protofire/Cardano-SmartDB/tree/main/example)**
+  - Basic example project demonstrating core Smart DB functionality
+  - Clear examples of entity creation and blockchain synchronization
+  - Includes comprehensive test suites for API endpoints
+  - Demonstrates concurrency handling with Smart Selection
+  - Perfect starting point for learning Smart DB concepts
+  - Includes Swagger documentation for API testing
+
+- **[SmartDB Project Template](https://github.com/protofire/Cardano-SmartDB-Template)**
+  - Production-ready template for starting new Smart DB projects
+  - Includes essential configurations and project structure
+  - Step-by-step guide for building a basic project
+  - Examples of common implementation patterns
+  - Designed for quick project bootstrapping
+
+### Production Reference Implementation
+- **[Cardano Simple Marketplace](https://github.com/protofire/Cardano-Simple-Marketplace)**
+  - Complete end-to-end implementation of a production dApp
+  - Full-featured NFT marketplace with buy/sell functionality
+  - Demonstrates advanced Smart DB features in a real-world context
+  - Includes on-chain and off-chain integration
+  - Showcases best practices for production deployment
+  - Serves as a comprehensive reference implementation
+
+## Getting Started
+
+To begin developing with Smart DB, we recommend the following path:
+
+1. Review this repository's documentation to understand core concepts
+2. Explore the Example Project to learn basic implementations
+3. Use the Scaffold tools to generate your initial project structure
+4. Reference the Project Template for implementation patterns
+5. Study the Simple Marketplace for advanced usage and production patterns
+
 ## Transaction Flow and Smart Selection
 
 The Smart DB Library implements a sophisticated transaction flow that includes:
@@ -107,10 +173,6 @@ For a comprehensive explanation of the transaction flow, smart UTXO management, 
 
 For detailed concurrency tests that rigorously assess the performance and reliability of the Smart UTXO and Smart Selection systems across various scenarios, please refer to our 
 [Concurrency Tests](example/docs/tests.md) or within the [GitBook](https://protofire-docs.gitbook.io/smartdb/smartdb-example/tests).
-
-## Documentation
-
-For detailed documentation, please visit our [Gitbook](https://protofire-docs.gitbook.io/smartdb/).
 
 ## Installation
 
@@ -133,6 +195,7 @@ Here are the links to the Catalyst Milestone reports for the Cardano Smart DB pr
 - [**Milestone 4 Report**](https://docs.google.com/document/d/1HZ3T2exp1-89egSQz68BjLLoT-_5peX-BBikxyn-lxs/edit?usp=drive_link)
 - [**Milestone 5 Report**](https://docs.google.com/document/d/1AC3yMv7RMhNhWUYSKhEsckpPm3LpHck-nGWYuivJctE/edit?usp=drive_link)
 - [**Milestone 6 Report**](https://docs.google.com/document/d/1_-8YYQC6W19ujIkq1Ndrv7I4Xqxk-GrOiuC3KCD7glY/edit?usp=drive_link)
+- [**Milestone 7 Report**](https://docs.google.com/document/d/1ChW2hPzBQj4k5J75zNerUtYpjcB-k_apki_nISmcqjs/edit?usp=drive_link)
 
 For more details on our progress and achievements, please refer to each report.
 
@@ -147,7 +210,6 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 ## Acknowledgements
 
 We express our deepest gratitude to the Cardano community for their unwavering support and valuable contributions to this project. This work is part of a funded project through Cardano Catalyst, a community-driven innovation platform. For more details on the proposal and its progress, please visit our proposal page on [IdeaScale](https://cardano.ideascale.com/c/idea/110478).
-
 
 [contributors-shield]: https://img.shields.io/github/contributors/protofire/Cardano-SmartDB.svg?style=for-the-badge
 [contributors-url]: https://github.com/protofire/Cardano-SmartDB/graphs/contributors
