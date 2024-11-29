@@ -154,6 +154,8 @@ async function smartDBMainApiHandlerWithContext(req: NextApiRequestAuthenticated
                     return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
                 }
                 //--------------------------------------
+                // TODO: aqui se podria implementar tomar del globalconfig las options y providers
+                // para que el usuario pueda sobreescribir esos metodos
                 const authOptions: NextAuthOptions = {
                     ...authOptionsBase,
                     providers: [CredentialsProvider(credentialProviderConfig)],

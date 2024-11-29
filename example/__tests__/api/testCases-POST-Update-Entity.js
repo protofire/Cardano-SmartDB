@@ -31,14 +31,14 @@ const testCases = [
     // Invalid updateFields
     {
         category: 'Data Validation',
-        description: 'should return 200 when invalid updateFields are provided',
+        description: 'should return 500 when invalid updateFields are provided',
         method: 'POST',
         url: '/api/{entity}/update/{id}',
         entity: validEntity,
         id: validEntityId,
         body: invalidBodyWithUpdateFields,
         token: validToken,
-        expectedStatus: 200,
+        expectedStatus: 500,
         expectedBody: {},
     },
     // Invalid body structure

@@ -1,6 +1,7 @@
-import { yup } from 'smart-db';
+import { toJson, yup } from 'smart-db';
 import request from 'supertest';
 import { baseURL, deleteTestData, MAXTIMEOUT, populateTestData } from './baseTestCases.js';
+import { v4 as uuidv4 } from 'uuid';
 
 import { testCases as deleteEntityId } from './testCases-DELETE-Entity-ById.js';
 import { testCases as getEntityAll } from './testCases-GET-Entity-All.js';
@@ -103,82 +104,96 @@ describe('API Tests', () => {
 
                     const parsedUrl = url.replace('{entity}', entity).replace('{id}', id || '');
 
-                    console.log(`Method: ${method}, URL: ${parsedUrl}, Body: ${JSON.stringify(body)}`);
+                    const uniqueIdentifier = uuidv4();
+                    const logBuffer: string[] = [];
+                    // Function to log messages to the buffer
+                    function bufferedLog(message: string) {
+                        logBuffer.push(message);
+                    }
+                    function flushLogs() {
+                        logBuffer.forEach((log) => console.log(log));
+                        logBuffer.length = 0;
+                    }
 
-                    const executeRequest = async () => {
-                        const start = Date.now();
-                        let response;
+                    bufferedLog(`[${uniqueIdentifier}] Test Group: ${name}, Test Case: ${parsedTestCase.description}`);
+                    bufferedLog(`[${uniqueIdentifier}] Method: ${method}, URL: ${parsedUrl}, Body: ${JSON.stringify(body)}`);
 
-                        const makeRequest = async (reqMethod: string, reqUrl: string, reqBody?: Record<string, any>) => {
-                            switch (reqMethod) {
-                                case 'GET':
-                                    return await request(baseURL)
-                                        .get(reqUrl)
-                                        .set('Authorization', token ? `Bearer ${token}` : '');
-                                case 'POST':
-                                    return await request(baseURL)
-                                        .post(reqUrl)
-                                        .set('Authorization', token ? `Bearer ${token}` : '')
-                                        .send(reqBody);
-                                case 'DELETE':
-                                    return await request(baseURL)
-                                        .delete(reqUrl)
-                                        .set('Authorization', token ? `Bearer ${token}` : '');
-                                // Add more cases for other methods if needed
-                                default:
-                                    throw new Error(`Unsupported method: ${reqMethod}`);
+                    try {
+                        const executeRequest = async () => {
+                            const start = Date.now();
+                            let response;
+
+                            const makeRequest = async (reqMethod: string, reqUrl: string, reqBody?: Record<string, any>) => {
+                                switch (reqMethod) {
+                                    case 'GET':
+                                        return await request(baseURL)
+                                            .get(reqUrl)
+                                            .set('Authorization', token ? `Bearer ${token}` : '');
+                                    case 'POST':
+                                        return await request(baseURL)
+                                            .post(reqUrl)
+                                            .set('Authorization', token ? `Bearer ${token}` : '')
+                                            .send(reqBody);
+                                    case 'DELETE':
+                                        return await request(baseURL)
+                                            .delete(reqUrl)
+                                            .set('Authorization', token ? `Bearer ${token}` : '');
+                                    // Add more cases for other methods if needed
+                                    default:
+                                        throw new Error(`Unsupported method: ${reqMethod}`);
+                                }
+                            };
+
+                            response = await makeRequest(method, parsedUrl, body);
+
+                            if (response.status === 308) {
+                                // console.log(`Handling 308 redirect for ${method} ${parsedUrl} to ${response.headers.location}`);
+                                response = await makeRequest(method, response.headers.location, body);
                             }
+
+                            bufferedLog(`[${uniqueIdentifier}] Response Status: ${response.status} - Error: ${toJson(response.text)}`);
+
+                            const end = Date.now();
+                            const responseTime = end - start;
+
+                            expect(response.status).toBe(expectedStatus);
+
+                            // console.log(`Response Body: ${showData(response.body, false)}`);
+
+                            if (expectedBody && Object.keys(expectedBody).length > 0) {
+                                expect(response.body).toEqual(expectedBody);
+                            }
+
+                            if (expectedBodySchema) {
+                                await expectedBodySchema.validate(response.body);
+                            }
+
+                            if (maxTimeResponse !== undefined) {
+                                expect(responseTime).toBeLessThanOrEqual(maxTimeResponse);
+                            }
+                            return responseTime;
                         };
 
-                        response = await makeRequest(method, parsedUrl, body);
+                        if (numberOfRequests && numberOfRequests > 1) {
+                            const requests = Array(numberOfRequests).fill(0).map(executeRequest);
+                            const responseTimes = await Promise.all(requests);
+                            const averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+                            const totalResponseTime = responseTimes.reduce((a, b) => a + b, 0);
 
-                        if (response.status === 308) {
-                            // console.log(`Handling 308 redirect for ${method} ${parsedUrl} to ${response.headers.location}`);
-                            response = await makeRequest(method, response.headers.location, body);
-                        }
-
-                        // console.log(`Response Status: ${response.status}, Method: ${method}`);
-
-                        const end = Date.now();
-                        const responseTime = end - start;
-
-                        expect(response.status).toBe(expectedStatus);
-
-                        // console.log(`Response Body: ${showData(response.body, false)}`);
-
-                        if (expectedBody && Object.keys(expectedBody).length > 0) {
-                            expect(response.body).toEqual(expectedBody);
-                        }
-
-                        if (expectedBodySchema) {
-                            try {
-                                await expectedBodySchema.validate(response.body);
-                            } catch (error: any) {
-                                throw new Error('Response Body Schema Validation - ' + error.message);
+                            bufferedLog(`[${uniqueIdentifier}] Average Response Time for ${numberOfRequests} requests: ${averageResponseTime} ms`);
+                            bufferedLog(`[${uniqueIdentifier}] Total Response Time for ${numberOfRequests} requests: ${totalResponseTime} ms`);
+                            
+                            if (maxTimeResponseForParallelRequest !== undefined) {
+                                expect(totalResponseTime).toBeLessThanOrEqual(maxTimeResponseForParallelRequest);
                             }
+                        } else {
+                            await executeRequest();
                         }
-
-                        if (maxTimeResponse !== undefined) {
-                            // console.log(`Response time for ${parsedUrl}: ${responseTime} ms`);
-                            expect(responseTime).toBeLessThanOrEqual(maxTimeResponse);
-                        }
-
-                        return responseTime;
-                    };
-
-                    if (numberOfRequests && numberOfRequests > 1) {
-                        const requests = Array(numberOfRequests).fill(0).map(executeRequest);
-                        const responseTimes = await Promise.all(requests);
-                        const averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
-                        const totalResponseTime = responseTimes.reduce((a, b) => a + b, 0);
-
-                        // console.log(`Average Response Time for ${numberOfRequests} requests: ${averageResponseTime} ms`);
-                        // console.log(`Total Response Time for ${numberOfRequests} requests: ${totalResponseTime} ms`);
-                        if (maxTimeResponseForParallelRequest !== undefined) {
-                            expect(totalResponseTime).toBeLessThanOrEqual(maxTimeResponseForParallelRequest);
-                        }
-                    } else {
-                        await executeRequest();
+                    } catch (error) {
+                        // Flush logs only if an error is caught
+                        bufferedLog(`[${uniqueIdentifier}] Error: ${error}`);
+                        flushLogs();
+                        throw error; // Re-throw to fail the test
                     }
                 },
                 MAXTIMEOUT

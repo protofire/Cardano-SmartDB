@@ -877,7 +877,7 @@ export function isObject(object: any) {
 }
 
 export const isNullOrBlank = (value: string | undefined): boolean => {
-    return value === undefined || value === null || value.trim() === '';
+    return value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
 };
 
 export const isArrayEmpty = (value: any[]): boolean => {

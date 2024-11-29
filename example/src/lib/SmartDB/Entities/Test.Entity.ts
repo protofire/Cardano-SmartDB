@@ -8,10 +8,10 @@ export class TestEntity extends BaseEntity {
 
     // #region fields
 
-    @Convertible()
+    @Convertible({ required: true })
     name!: string;
 
-    @Convertible()
+    @Convertible({ required: false })
     description!: string;
 
     // #endregion fields

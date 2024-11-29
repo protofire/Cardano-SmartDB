@@ -4,7 +4,7 @@ import { SignedMessage } from 'lucid-cardano';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { NextAuthOptions, User } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
-import { v4 } from 'uuid';
+// import { v4 } from 'uuid';
 import { WalletBackEndApplied } from '../../BackEnd/Wallet.BackEnd.Applied.js';
 import { EndpointsManager } from '../../Commons/BackEnd/endPointsManager.js';
 import { requestContext, requestId } from '../../Commons/BackEnd/globalContext.js';
@@ -27,6 +27,9 @@ import { WalletEntity } from '../../Entities/Wallet.Entity.js';
 import { generateChallengueToken, isValidChallengueToken, isValidCsrfToken, validateChallengueToken } from './Auth.utils.js';
 import { ChallengueJWTPayload, CredentialsAuthenticated, NextApiRequestAuthenticated, TokenJWTPayload } from './types.js';
 import { getGlobalBlockchainTime } from '../../Commons/BackEnd/globalBlockchainTime.js';
+import { getGlobalConfig } from '../../Commons/BackEnd/configManager.js';
+import { RegistryManager } from '../../Commons/Decorators/registerManager.js';
+
 
 /**
  * @swagger
@@ -709,6 +712,12 @@ export class AuthBackEnd {
                 throw `Invalid address`;
             }
             //-------------------------
+            // TODO: algo así puede ser la lectura de la entidad establecida
+            // faltaria desde ya que si no se establece ninguna se use la default
+            // const config = getGlobalConfig();
+            // const WalletEntityClass = config.getWalletEntityClass();
+            // const WalletBackEndApplied = RegistryManager.getFromBackEndAppliedRegistry(WalletEntityClass);
+            
             const WalletBackEndApplied = (await import('../../BackEnd/Wallet.BackEnd.Applied.js')).WalletBackEndApplied;
             //-------------------------
             const isCoreTeam = await WalletBackEndApplied.isCoreTeam(paymentPkh);

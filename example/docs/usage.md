@@ -214,7 +214,7 @@ The example code is organized to showcase the usage of the Smart DB library, pro
 ├── styles
 │   └── shared.module.scss
 ├── tsconfig.json
-└── tsconfig.server.json
+└── tsconfig.swagger.json
 ```
 
 ### Configuration and Contracts

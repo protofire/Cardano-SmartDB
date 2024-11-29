@@ -72,30 +72,6 @@ export class SmartUTxOEntity extends BaseEntity {
 
     // #region db
 
-    public static defaultFieldsWhenUndefined: Record<string, boolean> = {
-        address: false,
-        isPreparingForReading: false,
-        isReading: false,
-        isPreparingForConsuming: false,
-        isConsuming: false,
-        assets: false,
-        datumHash: false,
-        datum: false,
-        datumObj: false,
-        scriptRef: false
-    };
-
-    public static alwaysFieldsForSelect: Record<string, boolean> = {
-        ...super.alwaysFieldsForSelect,
-        txHash: true,
-        outputIndex: true,
-        _NET_id_CS: true,
-        _NET_id_TN: true,
-        _is_NET_id_Unique: true,
-        datumType: true,
-        
-    }
-
     // #endregion db
 
     // #region class methods

@@ -4,3 +4,5 @@ export * from './ProductOpt.Entity';
 export * from './ProductNoOpt.Entity';
 
 export * from './Free.Entity';
+
+export * from './CustomWallet.Entity';

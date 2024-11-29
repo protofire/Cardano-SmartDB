@@ -343,10 +343,12 @@ export class PostgreSQLDatabaseService {
             }
         };
         //--------------------------
-        const whereClause = Object.entries(filters)
-            .map(([key, value]) => applyFilter(key, value))
-            .join(' AND ');
-        queryBuilder.where(whereClause);
+        if (filters !== undefined) {
+            const whereClause = Object.entries(filters)
+                .map(([key, value]) => applyFilter(key, value))
+                .join(' AND ');
+            queryBuilder.where(whereClause);
+        }
         //--------------------------
         // console_log(0, `PostgreSQL`, `applyFilters - Filter Query: ${queryBuilder.getQuery()}`);
         // console_log(0, `PostgreSQL`, `applyFilters - Filter parameters: ${toJson(queryBuilder.getParameters())}`);

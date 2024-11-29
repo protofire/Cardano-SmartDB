@@ -5,6 +5,7 @@ export * from './BackEnd/apiHandlers/initApiRequestWithContext.js';
 export * from './BackEnd/apiHandlers/smartDBMainApiHandler.js';
 export * from './BackEnd/dbMongo.js';
 export * from './BackEnd/endPointsManager.js';
+export * from './BackEnd/configManager.js';
 export * from './BackEnd/globalBlockchainTime.js';
 export * from './BackEnd/globalContext.js';
 export * from './BackEnd/globalEmulator.js';

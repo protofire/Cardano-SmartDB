@@ -14,3 +14,6 @@ export * from './index';
 
 export * from './Free.Entity.Mongo';
 export * from './Free.Entity.PostgreSQL';
+
+export * from './CustomWallet.Entity.Mongo';
+export * from './CustomWallet.Entity.PostgreSQL';

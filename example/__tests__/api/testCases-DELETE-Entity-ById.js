@@ -110,34 +110,6 @@ const testCases = [
         expectedStatus: 401,
         expectedBody: {},
     },
-    // // Performance testing
-    // {
-    //     category: 'Performance Testing',
-    //     description: 'should assess response time',
-    //     method: 'DELETE',
-    //     url: '/api/{entity}/{id}',
-    //     entity: validEntity,
-    //     id: validEntityId,
-    //     token: validToken,
-    //     expectedStatus: 200,
-    //     expectedBody: { message: 'Entity deleted successfully' },
-    //     maxTimeResponse: validTimeResponse,
-    // },
-    // // Performance testing under load
-    // {
-    //     category: 'Performance Testing',
-    //     description: 'should assess response times under load',
-    //     method: 'DELETE',
-    //     url: '/api/{entity}/{id}',
-    //     entity: validEntity,
-    //     id: validEntityId,
-    //     token: validToken,
-    //     expectedStatus: 200,
-    //     expectedBody: { message: 'Entity deleted successfully' },
-    //     numberOfRequests: numberOfRequests,
-    //     maxTimeResponse: validTimeResponse,
-    //     maxTimeResponseForParallelRequest: validTimeResponseUnderLoad,
-    // },
     // Security testing - SQL injection
     {
         category: 'Security Testing',

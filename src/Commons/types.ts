@@ -464,6 +464,7 @@ export type ConversionFunctions<T> = {
     isDB_id?: boolean;
     isUnique?: boolean;
     isForDatum?: boolean;
+    required?: boolean;
     optionsGet?: OptionsGet | OptionsGetOne;
     optionsCreateOrUpdate?: OptionsCreateOrUpdate;
     toMongoInterface?: (value: any | undefined) => T | undefined;

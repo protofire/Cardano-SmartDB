@@ -972,7 +972,7 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
         let validatedData = await super.validateUpdateData(data);
         //-------------------
         let formSchema = yup.object().shape({
-            name: yup.string().required().label(`${this._Entity.className()} Name`),
+            //name: yup.string().required().label(`${this._Entity.className()} Name`),
         });
         //-------------------
         validatedData = await formSchema.validate(validatedData, { stripUnknown: false });

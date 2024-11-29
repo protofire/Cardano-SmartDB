@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const XLSX = require('xlsx'); // Add this for Excel output
+
 const { testCases: postCreateEntity } = require('./testCases-POST-Create-Entity');
 const { testCases: postUpdateEntity } = require('./testCases-POST-Update-Entity');
 const { testCases: getEntityExistsId } = require('./testCases-GET-Entity-Exists-Id');
@@ -24,10 +26,6 @@ const testCaseGroups = [
     { name: 'Others', testCases: othersCases },
 ];
 
-const addGroupNameToTestCases = (groupName, testCases) => {
-    return testCases.map(testCase => ({ ...testCase, groupName }));
-};
-
 class CSVReporter {
     constructor(globalConfig, options) {
         this._globalConfig = globalConfig;
@@ -38,11 +36,11 @@ class CSVReporter {
     onTestResult(test, testResult, aggregatedResult) {
         testResult.testResults.forEach((result) => {
             const matchingTestCase = testCaseGroups
-                .flatMap((group) => group.testCases.map(testCase => ({ ...testCase, groupName: group.name })))
+                .flatMap((group) => group.testCases.map((testCase) => ({ ...testCase, groupName: group.name })))
                 .find((testCase) => {
                     const testCaseDescription = `${result.ancestorTitles.join(' ')} ${result.title}`;
                     const fullName = `API Tests ${testCase.groupName} ${testCase.description}`;
-                    console.log (testCaseDescription, fullName);
+                    // console.log(testCaseDescription, fullName);
                     return testCaseDescription === fullName;
                 });
             const category = matchingTestCase ? matchingTestCase.category : 'N/A';
@@ -83,7 +81,30 @@ class CSVReporter {
             .map((row) => row.join(','))
             .join('\n');
 
-        fs.writeFileSync(path.join(__dirname, 'testResults.csv'), csvData);
+        const csvFilePath = path.join(__dirname, 'testResults.csv');
+        fs.writeFileSync(csvFilePath, csvData);
+
+        // Generate Excel
+        const excelData = this._results.map((result) => ({
+            URL: result.url,
+            Method: result.method,
+            'Test Case': result.testCase,
+            Category: result.category,
+            'URL Used': result.urlParsed,
+            Status: result.status,
+            'Error Message': result.errorMessage,
+            'Execution Time (ms)': result.executionTime,
+        }));
+
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Test Results');
+        const excelFilePath = path.join(__dirname, 'testResults.xlsx');
+        XLSX.writeFile(workbook, excelFilePath);
+
+        console.log(`CSV saved to: ${csvFilePath}`);
+        console.log(`Excel saved to: ${excelFilePath}`);
     }
 }
 

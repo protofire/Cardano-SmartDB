@@ -28,9 +28,6 @@ const testCaseGroups = [
     { name: '#09 Performance Testing', testCases: performanceComparison },
     { name: '#10 Performance Testing', testCases: performanceComparison },
 ];
-const addGroupNameToTestCases = (groupName, testCases) => {
-    return testCases.map((testCase) => ({ ...testCase, groupName }));
-};
 
 class CSVReporter {
     constructor(globalConfig, options) {
@@ -46,7 +43,7 @@ class CSVReporter {
                 .find((testCase) => {
                     const testCaseDescription = `${result.ancestorTitles.join(' ')} ${result.title}`;
                     const fullName = `API Tests ${testCase.groupName} ${testCase.description}`;
-                    console.log(testCaseDescription, fullName);
+                    // console.log(testCaseDescription, fullName);
                     return testCaseDescription === fullName;
                 });
             const category = matchingTestCase ? matchingTestCase.category : 'N/A';

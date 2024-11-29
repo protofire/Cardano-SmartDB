@@ -52,7 +52,7 @@ export class TestEntityMongo extends BaseEntityMongo {
 
         const schema = new Schema<Interface>({
             name: { type: String, required: true },
-            description: { type: String, required: true },
+            description: { type: String, required: false },
         });
 
         const ModelDB = models[this._mongoTableName] || model<Interface>(this._mongoTableName, schema);

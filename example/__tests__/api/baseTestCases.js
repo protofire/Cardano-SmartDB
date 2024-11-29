@@ -1,8 +1,3 @@
-const dotenv = require('dotenv');
-const dotenvExpand = require('dotenv-expand');
-const myEnv = dotenv.config({ path: './.env' });
-dotenvExpand.expand(myEnv);
-
 const { object, string, array, number, oneOf } = require('yup');
 const request = require('supertest');
 const crypto = require('crypto'); // Add the crypto
@@ -11,6 +6,9 @@ const baseURL = 'http://localhost:3000'; // Change the port if your server runs 
 
 // NOTE: Valid token must be provided in order to try all tests rutes!
 const validToken = process.env.AUTH_TOKEN;
+
+const USE_DATABASE = process.env.USE_DATABASE;
+
 const invalidToken = 'invalidToken';
 
 const validEntity = 'test';
@@ -109,9 +107,20 @@ const populateTestData = async () => {
 
                 // Generate a unique ID that does not exist in the current entities
                 let nonExistentId;
-                do {
-                    nonExistentId = crypto.randomBytes(12).toString('hex'); // 12 bytes = 24 hex characters
-                } while (entities.some((entity) => entity._DB_id === nonExistentId));
+                if (USE_DATABASE === 'mongo') {
+                    // Generate a 12-byte hex string for MongoDB
+                    do {
+                        nonExistentId = crypto.randomBytes(12).toString('hex'); // 24 hex characters
+                    } while (entities.some((entity) => entity._DB_id === nonExistentId));
+                } else if (USE_DATABASE === 'postgresql') {
+                    // Generate a random UUID for PostgreSQL
+                    const { v4: uuidv4 } = require('uuid');
+                    do {
+                        nonExistentId = Math.floor(Math.random()*100000); // Standard UUID format
+                    } while (entities.some((entity) => entity._DB_id === nonExistentId));
+                } else {
+                    throw new Error(`Unsupported database type: ${USE_DATABASE}`);
+                }
                 let validNonExistsEntityId = nonExistentId;
 
                 // // Generate a non-existing name

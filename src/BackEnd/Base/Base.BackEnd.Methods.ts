@@ -227,43 +227,77 @@ export class BaseBackEndMethods {
     // #region class methods
 
     public static async checkDuplicate<T extends BaseEntity>(Entity: typeof BaseEntity, validatedData: any, id?: string) {
-        //-------------------------
-        console_logLv2(1, Entity.className(), `checkDuplicate - Init`);
-        //-------------------------
-        const conversionFunctions = getCombinedConversionFunctions(Entity);
-        const query: any = {};
-        if (conversionFunctions) {
-            for (const [propertyKey, conversions] of conversionFunctions.entries()) {
-                if (conversions.isUnique === true) {
-                    if (validatedData.hasOwnProperty(propertyKey)) {
-                        if (validatedData[propertyKey] !== undefined) {
-                            query[propertyKey] = validatedData[propertyKey];
+        try {
+            //-------------------------
+            console_logLv2(1, Entity.className(), `checkDuplicate - Init`);
+            //-------------------------
+            const conversionFunctions = getCombinedConversionFunctions(Entity);
+            const query: any = {};
+            if (conversionFunctions) {
+                for (const [propertyKey, conversions] of conversionFunctions.entries()) {
+                    if (conversions.isUnique === true) {
+                        if (validatedData.hasOwnProperty(propertyKey)) {
+                            if (validatedData[propertyKey] !== undefined) {
+                                query[propertyKey] = validatedData[propertyKey];
+                            }
+                        }
+                    }
+                }
+                let conditions = Object.keys(query).map((key) => ({ [key]: query[key] }));
+                if (conditions.length > 0) {
+                    //TODO reemplazar con chekIfExist, pero hay que agregar parametro id en el update para no contar a si mismo
+                    let swExists: boolean = false;
+                    if (id !== undefined) {
+                        console_logLv2(0, Entity.className(), `checkDuplicate - To Update - Conditions: ${showData(conditions)}`);
+                        swExists = await this.checkIfExists(Entity, {
+                            $and: [{ $or: conditions }, { _id: { $ne: id } }],
+                        });
+                    } else {
+                        console_logLv2(0, Entity.className(), `checkDuplicate - To Create - Conditions: ${showData(conditions)}`);
+                        swExists = await this.checkIfExists(Entity, { $or: conditions });
+                    }
+                    if (swExists) {
+                        const fieldsStr = Object.keys(query).map((key) => key);
+                        throw `${Entity.className()} already exists with same field(s): ${fieldsStr.join(', ')}`;
+                    }
+                }
+            }
+            //-------------------------
+            console_logLv2(-1, Entity.className(), `checkDuplicate - OK`);
+            //-------------------------
+        } catch (error) {
+            console_errorLv2(-1, Entity.className(), `checkDuplicate - Error: ${error}`);
+            throw `${error}`;
+        }
+    }
+
+    public static async checkRequired<T extends BaseEntity>(Entity: typeof BaseEntity, validatedData: any) {
+        try {
+            //-------------------------
+            console_logLv2(1, Entity.className(), `checkRequired - Init`);
+            //-------------------------
+            const conversionFunctions = getCombinedConversionFunctions(Entity);
+            //-------------------------
+            if (conversionFunctions) {
+                for (const [propertyKey, conversions] of conversionFunctions.entries()) {
+                    if (conversions.required === true) {
+                        if (validatedData.hasOwnProperty(propertyKey)) {
+                            if (validatedData[propertyKey] === undefined || isNullOrBlank(validatedData[propertyKey])) {
+                                throw `${Entity.className()} - ${propertyKey} is required`;
+                            }
+                        } else {
+                            throw `${Entity.className()} - ${propertyKey} is required`;
                         }
                     }
                 }
             }
-            let conditions = Object.keys(query).map((key) => ({ [key]: query[key] }));
-            if (conditions.length > 0) {
-                //TODO reemplazar con chekIfExist, pero hay que agregar parametro id en el update para no contar a si mismo
-                let swExists: boolean = false;
-                if (id !== undefined) {
-                    console_logLv2(0, Entity.className(), `checkDuplicate - To Update - Conditions: ${showData(conditions)}`);
-                    swExists = await this.checkIfExists(Entity, {
-                        $and: [{ $or: conditions }, { _id: { $ne: id } }],
-                    });
-                } else {
-                    console_logLv2(0, Entity.className(), `checkDuplicate - To Create - Conditions: ${showData(conditions)}`);
-                    swExists = await this.checkIfExists(Entity, { $or: conditions });
-                }
-                if (swExists) {
-                    const fieldsStr = Object.keys(query).map((key) => key);
-                    throw `${Entity.className()} already exists with same field(s): ${fieldsStr.join(', ')}`;
-                }
-            }
+            //-------------------------
+            console_logLv2(-1, Entity.className(), `checkRequired - OK`);
+            //-------------------------
+        } catch (error) {
+            console_errorLv2(-1, Entity.className(), `checkRequired - Error: ${error}`);
+            throw `${error}`;
         }
-        //-------------------------
-        console_logLv2(-1, Entity.className(), `checkDuplicate - OK`);
-        //-------------------------
     }
 
     public static async create<T extends BaseEntity>(instance: T, optionsCreate?: OptionsCreateOrUpdate): Promise<T> {
@@ -281,6 +315,8 @@ export class BaseBackEndMethods {
             }
             //-------------------------
             await this.checkDuplicate(instance.getStatic(), instance);
+            //-------------------------
+            await this.checkRequired(instance.getStatic(), instance);
             //----------------------------
             await this.getBack(instance.getStatic()).cascadeSaveChildRelations(instance, useOptionCreate);
             //--------------------------------------
@@ -422,11 +458,7 @@ export class BaseBackEndMethods {
         }
     }
 
-    public static async updateMeWithParams<T extends BaseEntity>(
-        instance: T,
-        updateFields: Record<string, any>,
-        swRefreshInstance: boolean = true
-    ): Promise<void> {
+    public static async updateMeWithParams<T extends BaseEntity>(instance: T, updateFields: Record<string, any>, swRefreshInstance: boolean = true): Promise<void> {
         try {
             if (isNullOrBlank(instance._DB_id)) {
                 throw `id not defined`;
@@ -439,17 +471,15 @@ export class BaseBackEndMethods {
             //-----------------------
             console_logLv2(1, instance.className(), `updateMeWithParams - swRefreshInstance: ${swRefreshInstance} - Init`);
             //----------------------------
-            await this.checkDuplicate(instance.getStatic(), instance, instance._DB_id);
-            //-------------------------
-            if (process.env.USE_DATABASE === 'mongo') {
-                //----------------------------
-                console_logLv2(0, instance.className(), `updateMeWithParams - id: ${instance._DB_id}`);
-                console_logLv2(0, instance.className(), `updateMeWithParams - updateFields: ${showData(Object.keys(updateFields))} |`);
-                //----------------------------
-                let updateSet: Record<string, any> = {};
-                let updateUnSet: Record<string, any> = {};
-                //----------------------------
-                for (let key in updateFields) {
+            //----------------------------
+            console_logLv2(0, instance.className(), `updateMeWithParams - id: ${instance._DB_id}`);
+            console_logLv2(0, instance.className(), `updateMeWithParams - updateFields: ${showData(Object.keys(updateFields))} |`);
+            //----------------------------
+            let updateSet: Record<string, any> = {};
+            let updateUnSet: Record<string, any> = {};
+            //----------------------------
+            for (let key in updateFields) {
+                if (key !== '_DB_id') {
                     if (updateFields[key as keyof typeof updateFields] === undefined) {
                         updateUnSet = { ...updateUnSet, [key]: '' };
                     } else {
@@ -459,9 +489,23 @@ export class BaseBackEndMethods {
                         };
                     }
                 }
-                //----------------------------
-                console_logLv2(0, instance.className(), `updateMeWithParams - set fields: ${showData(Object.keys(updateSet))} |`);
-                console_logLv2(0, instance.className(), `updateMeWithParams - unset fields: ${showData(Object.keys(updateUnSet))} |`);
+            }
+            //----------------------------
+            console_logLv2(0, instance.className(), `updateMeWithParams - set fields: ${showData(Object.keys(updateSet))} |`);
+            console_logLv2(0, instance.className(), `updateMeWithParams - unset fields: ${showData(Object.keys(updateUnSet))} |`);
+            //----------------------------
+            // Merge instance with updateSet and updateUnSet to form a "final state"
+            const mergedInstance = { ...instance, ...updateSet };
+            // Remove unset fields from the mergedInstance
+            Object.keys(updateUnSet).forEach((key) => {
+                delete mergedInstance[key];
+            });
+            //----------------------------
+            await this.checkDuplicate(instance.getStatic(), mergedInstance, instance._DB_id);
+            //-------------------------
+            await this.checkRequired(instance.getStatic(), mergedInstance);
+            //----------------------------
+            if (process.env.USE_DATABASE === 'mongo') {
                 //----------------------------
                 const document = await MongoDatabaseService.update<T>(instance, updateSet, updateUnSet);
                 //----------------------------
@@ -487,29 +531,9 @@ export class BaseBackEndMethods {
                 //----------------------------
             } else if (process.env.USE_DATABASE === 'postgresql') {
                 //----------------------------
-                console_logLv2(0, instance.className(), `updateMeWithParams - id: ${instance._DB_id}`);
-                console_logLv2(0, instance.className(), `updateMeWithParams - updateFields: ${showData(Object.keys(updateFields))} |`);
-                //----------------------------
-                let updateSet: Record<string, any> = {};
-                let updateUnSet: Record<string, any> = {};
-                //----------------------------
-                for (let key in updateFields) {
-                    if (updateFields[key as keyof typeof updateFields] === undefined) {
-                        updateUnSet = { ...updateUnSet, [key]: '' };
-                    } else {
-                        updateSet = {
-                            ...updateSet,
-                            [key]: updateFields[key as keyof typeof updateFields],
-                        };
-                    }
-                }
-                //----------------------------
-                console_logLv2(0, instance.className(), `updateMeWithParams - set fields: ${showData(Object.keys(updateSet))} |`);
-                console_logLv2(0, instance.className(), `updateMeWithParams - unset fields: ${showData(Object.keys(updateUnSet))} |`);
-                //----------------------------
                 const result = await PostgreSQLDatabaseService.update<T>(instance, updateSet, updateUnSet);
                 //----------------------------
-                if (result.affected  == 1) {
+                if (result.affected == 1) {
                     //-----------------------
                     // voy a actualizar los campos manualmente en la instancia, asi no tengo que hacer un refresh
                     //-----------------------
@@ -535,11 +559,7 @@ export class BaseBackEndMethods {
         }
     }
 
-    public static async updateWithParams<T extends BaseEntity>(
-        Entity: typeof BaseEntity,
-        id: string,
-        updateFields: Record<string, any>
-    ): Promise<T> {
+    public static async updateWithParams<T extends BaseEntity>(Entity: typeof BaseEntity, id: string, updateFields: Record<string, any>): Promise<T> {
         //----------------------------
         try {
             if (isFrontEndEnvironment()) {
@@ -698,8 +718,8 @@ export class BaseBackEndMethods {
             console_logLv2(1, Entity.className(), `getByParams - Options: ${showData(optionsGet, false)} - Init`);
             //----------------------------
             const isInclusionSelect = (fieldsForSelect: Record<string, boolean>): boolean | null => {
-                const hasTrue = Object.values(fieldsForSelect).some(value => value === true);
-                const hasFalse = Object.values(fieldsForSelect).some(value => value === false);
+                const hasTrue = Object.values(fieldsForSelect).some((value) => value === true);
+                const hasFalse = Object.values(fieldsForSelect).some((value) => value === false);
                 // Si hay mezcla, retornamos null para indicar error
                 if (hasTrue && hasFalse) {
                     return null;
@@ -727,12 +747,12 @@ export class BaseBackEndMethods {
                 if (isEmptyObject(userFields)) {
                     // si esta vacio, lo dejo asi, por que eso signifca que trae todos los campos y a veces quiero usarlo asi
                     // para eso el usuario lo deja en fieldsForSelect: {},
-                    return Object.fromEntries(allFields.map(field => [field, 1]));
+                    return Object.fromEntries(allFields.map((field) => [field, 1]));
                 }
                 //----------------------------
                 const isInclusion = isInclusionSelect(userFields);
                 if (isInclusion === null) {
-                    throw `Invalid field selection: cannot mix inclusion and exclusion`
+                    throw `Invalid field selection: cannot mix inclusion and exclusion`;
                 }
                 //----------------------------
                 // Campos que siempre deben incluirse
@@ -747,18 +767,16 @@ export class BaseBackEndMethods {
                         .map(([key]) => key);
                     // Unimos los campos del usuario y los always fields, eliminando duplicados
                     const uniqueFields = [...new Set([...userSelectedFields, ...alwaysFieldsList])];
-                    return Object.fromEntries(uniqueFields.map(field => [field, 1]));
+                    return Object.fromEntries(uniqueFields.map((field) => [field, 1]));
                 } else {
                     // Exclusión - todos los campos menos los excluidos, pero asegurando always fields
                     const excludedFields = Object.entries(userFields)
                         .filter(([_, value]) => value === false)
                         .map(([key]) => key);
-            
+
                     // Filtramos allFields quitando los excluidos, pero manteniendo always fields
-                    const resultFields = allFields.filter(field => 
-                        !excludedFields.includes(field) || alwaysFieldsList.includes(field)
-                    );
-                    return Object.fromEntries(resultFields.map(field => [field, 1]));
+                    const resultFields = allFields.filter((field) => !excludedFields.includes(field) || alwaysFieldsList.includes(field));
+                    return Object.fromEntries(resultFields.map((field) => [field, 1]));
                 }
             };
             //----------------------------

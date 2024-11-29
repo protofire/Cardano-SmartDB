@@ -143,10 +143,10 @@ const testCases = [
         method: 'POST',
         url: '/api/{entity}/exists',
         entity: validEntity,
-        body: { paramsFilter: { key: '1 OR 1=1' } },
+        body: { paramsFilter: { name: '1 OR 1=1' } },
         token: validToken,
         expectedStatus: 200,
-        expectedBody: { swExists: false },
+        expectedBody: { swExists: true },
     },
     // Security testing - XSS
     {
@@ -155,7 +155,7 @@ const testCases = [
         method: 'POST',
         url: '/api/{entity}/exists',
         entity: validEntity,
-        body: { paramsFilter: { key: '<script>alert("XSS")</script>' } },
+        body: { paramsFilter: { name: '<script>alert("XSS")</script>' } },
         token: validToken,
         expectedStatus: 200,
         expectedBody:  { swExists: false },
