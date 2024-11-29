@@ -84,126 +84,158 @@ class CSVReporter {
         ]
             .map((row) => row.join(','))
             .join('\n');
-        fs.writeFileSync(path.join(__dirname, 'testResults.csv'), csvData);
 
-        // Filter and organize results for Excel sheets
-        const getAllSituations = this._results.filter((res) => res.category === 'Get all situations');
-        const performanceComparison = this._results.filter((res) => res.category.includes('Performance Testing'));
+        const csvFilePath = path.join(__dirname, 'testResults.csv');
+        fs.writeFileSync(csvFilePath, csvData);
 
-        // Prepare 'Get All Situations' data
-        const getAllTable = [['Get All Situations', 'Get All', 'Get all using SELECT with id, name and description fields', 'Get all using limit in 4', 'Get all sorting by name']];
-        for (let i = 0; i < 10; i++) {
-            const group = getAllSituations.slice(i * 4, (i + 1) * 4);
-            getAllTable.push([
-                i + 1,
-                `${group[0]?.executionTime || 'N/A'} ms`,
-                `${group[1]?.executionTime || 'N/A'} ms`,
-                `${group[2]?.executionTime || 'N/A'} ms`,
-                `${group[3]?.executionTime || 'N/A'} ms`,
-            ]);
+        const excelFilePath = path.join(__dirname, 'testResults.xlsx');
+        const excelPerformanceFilePath = path.join(__dirname, 'Performance_Measure.xlsx');
+
+
+        {
+            // Generate Excel
+            const excelData = this._results.map((result) => ({
+                URL: result.url,
+                Method: result.method,
+                'Test Case': result.testCase,
+                Category: result.category,
+                'URL Used': result.urlParsed,
+                Status: result.status,
+                'Error Message': result.errorMessage,
+                'Execution Time (ms)': result.executionTime,
+            }));
+
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Test Results');
+            XLSX.writeFile(workbook, excelFilePath);
         }
-        // Calculate averages and percentage difference
-        const averages = [
-            null,
-            ...getAllTable
+        {
+            // Filter and organize results for Excel sheets
+            const getAllSituations = this._results.filter((res) => res.category === 'Get all situations');
+            const performanceComparison = this._results.filter((res) => res.category.includes('Performance Testing'));
+
+            // Prepare 'Get All Situations' data
+            const getAllTable = [
+                ['Get All Situations', 'Get All', 'Get all using SELECT with id, name and description fields', 'Get all using limit in 4', 'Get all sorting by name'],
+            ];
+            for (let i = 0; i < 10; i++) {
+                const group = getAllSituations.slice(i * 4, (i + 1) * 4);
+                getAllTable.push([
+                    i + 1,
+                    `${group[0]?.executionTime || 'N/A'} ms`,
+                    `${group[1]?.executionTime || 'N/A'} ms`,
+                    `${group[2]?.executionTime || 'N/A'} ms`,
+                    `${group[3]?.executionTime || 'N/A'} ms`,
+                ]);
+            }
+            // Calculate averages and percentage difference
+            const averages = [
+                null,
+                ...getAllTable
+                    .slice(1)
+                    .reduce((acc, row) => {
+                        row.slice(1).forEach((val, i) => (acc[i] += parseFloat(val) || 0));
+                        return acc;
+                    }, Array(4).fill(0))
+                    .map((val) => `${(val / 10).toFixed(2)} ms`),
+            ];
+            getAllTable.push(['Average', ...averages.slice(1)]);
+            getAllTable.push(['Percentage difference', null, '53.97%', '192.80%', '0.22%']);
+
+            // Prepare 'Performance Comparison' data
+            const performanceTable = [
+                [
+                    'Comparison of Performance',
+                    'SELECT Name using Optimized entity',
+                    'SELECT Name using Non-Optimized entity',
+                    'SELECT Name and Category using Optimized entity',
+                    'SELECT Name and Category using Non-Optimized entity',
+                ],
+            ];
+            for (let i = 0; i < 10; i++) {
+                const group = performanceComparison.slice(i * 4, (i + 1) * 4);
+                performanceTable.push([
+                    i + 1,
+                    `${group[0]?.executionTime || 'N/A'} ms`,
+                    `${group[1]?.executionTime || 'N/A'} ms`,
+                    `${group[2]?.executionTime || 'N/A'} ms`,
+                    `${group[3]?.executionTime || 'N/A'} ms`,
+                ]);
+            }
+            // Calculate averages and percentage differences
+            const perfAvg = performanceTable
                 .slice(1)
                 .reduce((acc, row) => {
                     row.slice(1).forEach((val, i) => (acc[i] += parseFloat(val) || 0));
                     return acc;
                 }, Array(4).fill(0))
-                .map((val) => `${(val / 10).toFixed(2)} ms`),
-        ];
-        getAllTable.push(['Average', ...averages.slice(1)]);
-        getAllTable.push(['Percentage difference', null, '53.97%', '192.80%', '0.22%']);
+                .map((val) => `${(val / 10).toFixed(2)} ms`);
 
-        // Prepare 'Performance Comparison' data
-        const performanceTable = [
-            [
-                'Comparison of Performance',
-                'SELECT Name using Optimized entity',
-                'SELECT Name using Non-Optimized entity',
-                'SELECT Name and Category using Optimized entity',
-                'SELECT Name and Category using Non-Optimized entity',
-            ],
-        ];
-        for (let i = 0; i < 10; i++) {
-            const group = performanceComparison.slice(i * 4, (i + 1) * 4);
-            performanceTable.push([
-                i + 1,
-                `${group[0]?.executionTime || 'N/A'} ms`,
-                `${group[1]?.executionTime || 'N/A'} ms`,
-                `${group[2]?.executionTime || 'N/A'} ms`,
-                `${group[3]?.executionTime || 'N/A'} ms`,
-            ]);
-        }
-        // Calculate averages and percentage differences
-        const perfAvg = performanceTable
-            .slice(1)
-            .reduce((acc, row) => {
-                row.slice(1).forEach((val, i) => (acc[i] += parseFloat(val) || 0));
-                return acc;
-            }, Array(4).fill(0))
-            .map((val) => `${(val / 10).toFixed(2)} ms`);
+            performanceTable.push(['Average', ...perfAvg]);
 
-        performanceTable.push(['Average', ...perfAvg]);
+            const percentageDiff1 = (((parseFloat(perfAvg[1]) - parseFloat(perfAvg[0])) / parseFloat(perfAvg[0])) * 100).toFixed(2);
+            const percentageDiff2 = (((parseFloat(perfAvg[3]) - parseFloat(perfAvg[2])) / parseFloat(perfAvg[2])) * 100).toFixed(2);
+            performanceTable.push(['Percentage difference', null, `${percentageDiff1}%`, null, `${percentageDiff2}%`]);
 
-        const percentageDiff1 = (((parseFloat(perfAvg[1]) - parseFloat(perfAvg[0])) / parseFloat(perfAvg[0])) * 100).toFixed(2);
-        const percentageDiff2 = (((parseFloat(perfAvg[3]) - parseFloat(perfAvg[2])) / parseFloat(perfAvg[2])) * 100).toFixed(2);
-        performanceTable.push(['Percentage difference', null, `${percentageDiff1}%`, null, `${percentageDiff2}%`]);
+            // Write to Excel with styled sheets
+            const workbook = XLSX.utils.book_new();
+            const sheet1 = XLSX.utils.aoa_to_sheet(getAllTable);
+            const sheet2 = XLSX.utils.aoa_to_sheet(performanceTable);
+            XLSX.utils.book_append_sheet(workbook, sheet1, 'Get All Situations');
+            XLSX.utils.book_append_sheet(workbook, sheet2, 'Performance Comparison');
 
-        // Write to Excel with styled sheets
-        const workbook = XLSX.utils.book_new();
-        const sheet1 = XLSX.utils.aoa_to_sheet(getAllTable);
-        const sheet2 = XLSX.utils.aoa_to_sheet(performanceTable);
-        XLSX.utils.book_append_sheet(workbook, sheet1, 'Get All Situations');
-        XLSX.utils.book_append_sheet(workbook, sheet2, 'Performance Comparison');
+            // Apply styles to all sheets
+            ['Get All Situations', 'Performance Comparison'].forEach((sheetName) => {
+                const ws = workbook.Sheets[sheetName];
+                if (ws) {
+                    // Set column widths
+                    ws['!cols'] = Array(5).fill({ wch: 22 });
 
-        // Apply styles to all sheets
-        ['Get All Situations', 'Performance Comparison'].forEach((sheetName) => {
-            const ws = workbook.Sheets[sheetName];
-            if (ws) {
-                // Set column widths
-                ws['!cols'] = Array(5).fill({ wch: 22 });
-
-                // Apply styles to header row
-                const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
-                for (let C = range.s.c; C <= range.e.c; ++C) {
-                    const address = XLSX.utils.encode_cell({ r: range.s.r, c: C });
-                    if (!ws[address]) continue;
-                    ws[address].s = {
-                        font: { bold: true, color: { rgb: 'FFFFFF' } },
-                        fill: { fgColor: { rgb: '4472C4' } },
-                        alignment: { horizontal: 'center', vertical: 'center' },
-                    };
-                }
-
-                // Apply styles to numeric cells and special rows (Average, Percentage difference)
-                for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+                    // Apply styles to header row
+                    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
                     for (let C = range.s.c; C <= range.e.c; ++C) {
-                        const address = XLSX.utils.encode_cell({ r: R, c: C });
-                        const cell = ws[address];
-                        if (!cell) continue;
-                        if (R === range.e.r - 1 || R === range.e.r) {
-                            // Average and Percentage difference rows
-                            cell.s = {
-                                font: { bold: true },
-                                fill: { fgColor: { rgb: 'FFFF00' } },
-                                alignment: { horizontal: 'center' },
-                            };
-                        } else if (typeof cell.v === 'number') {
-                            // Numeric cells
-                            cell.z = '#,##0.00';
-                            cell.s = { alignment: { horizontal: 'right' } };
-                        } else {
-                            // Default text alignment
-                            cell.s = { alignment: { horizontal: 'center' } };
+                        const address = XLSX.utils.encode_cell({ r: range.s.r, c: C });
+                        if (!ws[address]) continue;
+                        ws[address].s = {
+                            font: { bold: true, color: { rgb: 'FFFFFF' } },
+                            fill: { fgColor: { rgb: '4472C4' } },
+                            alignment: { horizontal: 'center', vertical: 'center' },
+                        };
+                    }
+
+                    // Apply styles to numeric cells and special rows (Average, Percentage difference)
+                    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+                        for (let C = range.s.c; C <= range.e.c; ++C) {
+                            const address = XLSX.utils.encode_cell({ r: R, c: C });
+                            const cell = ws[address];
+                            if (!cell) continue;
+                            if (R === range.e.r - 1 || R === range.e.r) {
+                                // Average and Percentage difference rows
+                                cell.s = {
+                                    font: { bold: true },
+                                    fill: { fgColor: { rgb: 'FFFF00' } },
+                                    alignment: { horizontal: 'center' },
+                                };
+                            } else if (typeof cell.v === 'number') {
+                                // Numeric cells
+                                cell.z = '#,##0.00';
+                                cell.s = { alignment: { horizontal: 'right' } };
+                            } else {
+                                // Default text alignment
+                                cell.s = { alignment: { horizontal: 'center' } };
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
 
-        XLSX.writeFile(workbook, path.join(__dirname, 'Performance_Measure.xlsx'));
+            XLSX.writeFile(workbook, excelPerformanceFilePath);
+        }
+        console.log(`CSV saved to: ${csvFilePath}`);
+        console.log(`Excel saved to: ${excelFilePath}`);
+        console.log(`Excel Performance saved to: ${excelPerformanceFilePath}`);
     }
 }
 

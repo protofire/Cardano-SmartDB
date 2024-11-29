@@ -1,112 +1,112 @@
 URL,Method,Test Case,Category,URL used,Status,Error Message,Execution Time
-/api/{entity},POST,"API Tests Create Entity POST API should return 200 when valid entity, body with createFields, and token are provided",Positive and Negative Scenarios,/api/test,failed,"Error: Count entity failed",1
-/api/{entity},POST,"API Tests Create Entity POST API should return 500 when invalid createFields are provided",Data Validation,/api/test,failed,"Error: Count entity failed",0
-/api/{entity},POST,"API Tests Create Entity POST API should return 400 when body has incorrect structure",Data Validation,/api/test,failed,"Error: Count entity failed",0
-/api/{entity},POST,"API Tests Create Entity POST API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity,failed,"Error: Count entity failed",0
-/api/{entity},POST,"API Tests Create Entity POST API should return 401 when invalid token is provided",Authentication and Authorization,/api/test,failed,"Error: Count entity failed",0
-/api/{entity},POST,"API Tests Create Entity POST API should return 404 when entity is missing",Data Validation,/api/,failed,"Error: Count entity failed",0
-/api/{entity},POST,"API Tests Create Entity POST API should return 400 when createFields are missing",Data Validation,/api/test,failed,"Error: Count entity failed",0
-/api/{entity},POST,"API Tests Create Entity POST API should return 401 when token is missing",Authentication and Authorization,/api/test,failed,"Error: Count entity failed",0
-/api/{entity},POST,"API Tests Create Entity POST API should assess response time",Performance Testing,/api/test,failed,"Error: Count entity failed",0
-/api/{entity},POST,"API Tests Create Entity POST API should assess response times under load",Performance Testing,/api/test,failed,"Error: Count entity failed",0
-/api/{entity},POST,"API Tests Create Entity POST API should handle SQL injection attempts gracefully",Security Testing,/api/test,failed,"Error: Count entity failed",0
-/api/{entity},POST,"API Tests Create Entity POST API should handle XSS attempts gracefully",Security Testing,/api/test,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 200 when valid entity, ID, body with updateFields, and token are provided",Positive and Negative Scenarios,/api/test/update/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 500 when invalid updateFields are provided",Data Validation,/api/test/update/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 400 when body has incorrect structure",Data Validation,/api/test/update/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/update/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 500 when invalid ID is provided",Data Validation,/api/test/update/invalidEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 404 when non-existent ID is provided",Error Handling,/api/test/update/validNonExistsEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/update/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 404 when entity is missing",Data Validation,/api//update/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 400 when ID is missing",Data Validation,/api/test/update/,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 400 when updateFields are missing",Data Validation,/api/test/update/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 401 when token is missing",Authentication and Authorization,/api/test/update/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should assess response time",Performance Testing,/api/test/update/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should assess response times under load",Performance Testing,/api/test/update/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should handle SQL injection attempts gracefully",Security Testing,/api/test/update/1 OR 1=1,failed,"Error: Count entity failed",0
-/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should handle XSS attempts gracefully",Security Testing,/api/test/update/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 200 and swExists true when valid entity, ID, and token are provided",Positive and Negative Scenarios,/api/test/exists/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 400 when invalid ID is provided",Data Validation,/api/test/exists/invalidEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 200 when Non Exists ID is provided",Positive and Negative Scenarios,/api/test/exists/validNonExistsEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/exists/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/exists/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 404 when entity is missing",Data Validation,/api//exists/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 400 when ID is missing",Data Validation,/api/test/exists/,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 401 when token is missing",Authentication and Authorization,/api/test/exists/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 401 when valid entity and ID are provided but token is invalid",Authentication and Authorization,/api/test/exists/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 404 when invalid entity and valid ID are provided",Error Handling,/api/invalidEntity/exists/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 400 when valid entity and invalid ID are provided",Data Validation,/api/test/exists/invalidEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should assess response time",Performance Testing,/api/test/exists/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should assess response times under load",Performance Testing,/api/test/exists/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should handle SQL injection attempts gracefully",Security Testing,/api/test/exists/1 OR 1=1,failed,"Error: Count entity failed",0
-/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should handle XSS attempts gracefully",Security Testing,/api/test/exists/<script>alert("XSS")</script>,failed,"Error: Count entity failed",0
-/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 200 and swExists true when valid entity, body with paramsFilter, and token are provided",Positive and Negative Scenarios,/api/test/exists,failed,"Error: Count entity failed",0
-/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 200 when Non Exists ID is provided in the body with paramsFilter",Positive and Negative Scenarios,/api/test/exists,failed,"Error: Count entity failed",0
-/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 200 when body without paramsFilter is provided",Positive and Negative Scenarios,/api/test/exists,failed,"Error: Count entity failed",0
-/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/exists,failed,"Error: Count entity failed",0
-/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/exists,failed,"Error: Count entity failed",0
-/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 404 when entity is missing",Data Validation,/api//exists,failed,"Error: Count entity failed",0
-/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 200 when body is not provided",Positive and Negative Scenarios,/api/test/exists,failed,"Error: Count entity failed",0
-/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 401 when token is missing",Authentication and Authorization,/api/test/exists,failed,"Error: Count entity failed",0
-/api/{entity}/exists,POST,"API Tests Exists Entity POST API should assess response time",Performance Testing,/api/test/exists,failed,"Error: Count entity failed",0
-/api/{entity}/exists,POST,"API Tests Exists Entity POST API should assess response times under load",Performance Testing,/api/test/exists,failed,"Error: Count entity failed",0
-/api/{entity}/exists,POST,"API Tests Exists Entity POST API should handle SQL injection attempts gracefully",Security Testing,/api/test/exists,failed,"Error: Count entity failed",0
-/api/{entity}/exists,POST,"API Tests Exists Entity POST API should handle XSS attempts gracefully",Security Testing,/api/test/exists,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 200 and the entity when valid entity, ID, and token are provided",Positive and Negative Scenarios,/api/test/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 500 when invalid ID is provided",Data Validation,/api/test/invalidEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 404 when Non Exists ID is provided",Positive and Negative Scenarios,/api/test/validNonExistsEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 404 when entity is missing",Data Validation,/api//validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 405 when ID is missing",Data Validation,/api/test/,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 401 when token is missing",Authentication and Authorization,/api/test/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 401 when valid entity and ID are provided but token is invalid",Authentication and Authorization,/api/test/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 404 when invalid entity and valid ID are provided",Error Handling,/api/invalidEntity/validEntityId,failed,"Error: Count entity failed",1
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 500 when valid entity and invalid ID are provided",Data Validation,/api/test/invalidEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should assess response time",Performance Testing,/api/test/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should assess response times under load",Performance Testing,/api/test/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should handle SQL injection attempts gracefully",Security Testing,/api/test/1 OR 1=1,failed,"Error: Count entity failed",0
-/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should handle XSS attempts gracefully",Security Testing,/api/test/<script>alert("XSS")</script>,failed,"Error: Count entity failed",0
-/api/{entity}/all,GET,"API Tests Get All Entity GET API should return 200 and a list of entities when valid entity and token are provided",Positive and Negative Scenarios,/api/test/all,failed,"Error: Count entity failed",0
-/api/{entity}/all,GET,"API Tests Get All Entity GET API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/all,failed,"Error: Count entity failed",0
-/api/{entity}/all,GET,"API Tests Get All Entity GET API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/all,failed,"Error: Count entity failed",0
-/api/{entity}/all,GET,"API Tests Get All Entity GET API should return 404 when entity is missing",Data Validation,/api//all,failed,"Error: Count entity failed",1
-/api/{entity}/all,GET,"API Tests Get All Entity GET API should return 401 when token is missing",Authentication and Authorization,/api/test/all,failed,"Error: Count entity failed",0
-/api/{entity}/all,GET,"API Tests Get All Entity GET API should assess response time",Performance Testing,/api/test/all,failed,"Error: Count entity failed",0
-/api/{entity}/all,GET,"API Tests Get All Entity GET API should assess response times under load",Performance Testing,/api/test/all,failed,"Error: Count entity failed",0
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 200 and a list of entities when valid entity, body with paramsFilter, and token are provided",Positive and Negative Scenarios,/api/test/by-params,failed,"Error: Count entity failed",0
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/by-params,failed,"Error: Count entity failed",0
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/by-params,failed,"Error: Count entity failed",0
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 404 when entity is missing",Data Validation,/api//by-params,failed,"Error: Count entity failed",0
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 200 when body has incorrect structure",Data Validation,/api/test/by-params,failed,"Error: Count entity failed",0
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 200 when paramsFilter is missing",Data Validation,/api/test/by-params,failed,"Error: Count entity failed",0
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 401 when token is missing",Authentication and Authorization,/api/test/by-params,failed,"Error: Count entity failed",0
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should assess response time",Performance Testing,/api/test/by-params,failed,"Error: Count entity failed",0
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should assess response times under load",Performance Testing,/api/test/by-params,failed,"Error: Count entity failed",0
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should handle SQL injection attempts gracefully",Security Testing,/api/test/by-params,failed,"Error: Count entity failed",0
-/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should handle XSS attempts gracefully",Security Testing,/api/test/by-params,failed,"Error: Count entity failed",0
-/api/{entity}/count,POST,"API Tests Entity Count POST API should return 200 when body has incorrect structure",Data Validation,/api/test/count,failed,"Error: Count entity failed",0
-/api/{entity}/count,POST,"API Tests Entity Count POST API should return 200 when paramsFilter is missing",Data Validation,/api/test/count,failed,"Error: Count entity failed",0
-/api/{entity}/count,POST,"API Tests Entity Count POST API should return 401 when token is missing",Authentication and Authorization,/api/test/count,failed,"Error: Count entity failed",0
-/api/{entity}/count,POST,"API Tests Entity Count POST API should assess response time",Performance Testing,/api/test/count,failed,"Error: Count entity failed",0
-/api/{entity}/count,POST,"API Tests Entity Count POST API should assess response times under load",Performance Testing,/api/test/count,failed,"Error: Count entity failed",0
-/api/{entity}/count,POST,"API Tests Entity Count POST API should handle SQL injection attempts gracefully",Security Testing,/api/test/count,failed,"Error: Count entity failed",0
-/api/{entity}/count,POST,"API Tests Entity Count POST API should handle XSS attempts gracefully",Security Testing,/api/test/count,failed,"Error: Count entity failed",0
-/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 200 and delete the entity when valid entity, ID, and token are provided",Positive and Negative Scenarios,/api/test/validEntityId,failed,"Error: Count entity failed",3
-/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 500 when invalid ID is provided",Data Validation,/api/test/invalidEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 404 when Non Exists ID is provided",Positive and Negative Scenarios,/api/test/validNonExistsEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 404 when entity is missing",Data Validation,/api//validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 405 when ID is missing",Data Validation,/api/test/,failed,"Error: Count entity failed",0
-/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 401 when token is missing",Authentication and Authorization,/api/test/validEntityId,failed,"Error: Count entity failed",0
-/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should handle SQL injection attempts gracefully",Security Testing,/api/test/1 OR 1=1,failed,"Error: Count entity failed",0
-/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should handle XSS attempts gracefully",Security Testing,/api/test/<script>alert("XSS")</script>,failed,"Error: Count entity failed",0
-/api/time/get,GET,"API Tests Others should return 200 and the current server time",Time,/api/time/get,failed,"Error: Count entity failed",0
-/api/health,GET,"API Tests Others should return 200 and status ok when the application is healthy",Health Check,/api/health,failed,"Error: Count entity failed",0
-/api/init,POST,"API Tests Others should return 200 and initialization complete",Initialization,/api/init,failed,"Error: Count entity failed",0
-/api/auth/csrf,GET,"API Tests Others should return 200 and the CSRF token",CSRF Token,/api/auth/csrf,failed,"Error: Count entity failed",0
-/api/smart-db-auth/get-challengue,GET,"API Tests Others get-challengue should return 200 and a challenge token",Smart DB Auth,/api/smart-db-auth/get-challengue,failed,"Error: Count entity failed",0
-/api/smart-db-auth/get-challengue,POST,"API Tests Others get-challengue should return 405 when method is not allowed",Smart DB Auth,/api/smart-db-auth/get-challengue,failed,"Error: Count entity failed",0
-/api/smart-db-auth/get-token,GET,"API Tests Others get-token should return 405 when method is not allowed",Smart DB Auth,/api/smart-db-auth/get-token,failed,"Error: Count entity failed",0
+/api/{entity},POST,"API Tests Create Entity POST API should return 200 when valid entity, body with createFields, and token are provided",Positive and Negative Scenarios,/api/test,passed,"",16
+/api/{entity},POST,"API Tests Create Entity POST API should return 500 when invalid createFields are provided",Data Validation,/api/test,passed,"",11
+/api/{entity},POST,"API Tests Create Entity POST API should return 400 when body has incorrect structure",Data Validation,/api/test,passed,"",9
+/api/{entity},POST,"API Tests Create Entity POST API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity,passed,"",8
+/api/{entity},POST,"API Tests Create Entity POST API should return 401 when invalid token is provided",Authentication and Authorization,/api/test,passed,"",9
+/api/{entity},POST,"API Tests Create Entity POST API should return 404 when entity is missing",Data Validation,/api/,passed,"",9
+/api/{entity},POST,"API Tests Create Entity POST API should return 400 when createFields are missing",Data Validation,/api/test,passed,"",8
+/api/{entity},POST,"API Tests Create Entity POST API should return 401 when token is missing",Authentication and Authorization,/api/test,passed,"",7
+/api/{entity},POST,"API Tests Create Entity POST API should assess response time",Performance Testing,/api/test,passed,"",15
+/api/{entity},POST,"API Tests Create Entity POST API should assess response times under load",Performance Testing,/api/test,passed,"",112
+/api/{entity},POST,"API Tests Create Entity POST API should handle SQL injection attempts gracefully",Security Testing,/api/test,passed,"",12
+/api/{entity},POST,"API Tests Create Entity POST API should handle XSS attempts gracefully",Security Testing,/api/test,passed,"",11
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 200 when valid entity, ID, body with updateFields, and token are provided",Positive and Negative Scenarios,/api/test/update/validEntityId,passed,"",10
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 500 when invalid updateFields are provided",Data Validation,/api/test/update/validEntityId,passed,"",8
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 400 when body has incorrect structure",Data Validation,/api/test/update/validEntityId,passed,"",6
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/update/validEntityId,passed,"",3
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 500 when invalid ID is provided",Data Validation,/api/test/update/invalidEntityId,passed,"",18
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 404 when non-existent ID is provided",Error Handling,/api/test/update/validNonExistsEntityId,passed,"",8
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/update/validEntityId,passed,"",5
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 404 when entity is missing",Data Validation,/api//update/validEntityId,passed,"",5
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 400 when ID is missing",Data Validation,/api/test/update/,passed,"",11
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 400 when updateFields are missing",Data Validation,/api/test/update/validEntityId,passed,"",6
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should return 401 when token is missing",Authentication and Authorization,/api/test/update/validEntityId,passed,"",5
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should assess response time",Performance Testing,/api/test/update/validEntityId,passed,"",10
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should assess response times under load",Performance Testing,/api/test/update/validEntityId,passed,"",60
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should handle SQL injection attempts gracefully",Security Testing,/api/test/update/1 OR 1=1,passed,"",9
+/api/{entity}/update/{id},POST,"API Tests Update Entity POST API should handle XSS attempts gracefully",Security Testing,/api/test/update/validEntityId,passed,"",8
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 200 and swExists true when valid entity, ID, and token are provided",Positive and Negative Scenarios,/api/test/exists/validEntityId,passed,"",9
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 400 when invalid ID is provided",Data Validation,/api/test/exists/invalidEntityId,passed,"",6
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 200 when Non Exists ID is provided",Positive and Negative Scenarios,/api/test/exists/validNonExistsEntityId,passed,"",13
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/exists/validEntityId,passed,"",4
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/exists/validEntityId,passed,"",5
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 404 when entity is missing",Data Validation,/api//exists/validEntityId,passed,"",5
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 400 when ID is missing",Data Validation,/api/test/exists/,passed,"",7
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 401 when token is missing",Authentication and Authorization,/api/test/exists/validEntityId,passed,"",6
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 401 when valid entity and ID are provided but token is invalid",Authentication and Authorization,/api/test/exists/validEntityId,passed,"",5
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 404 when invalid entity and valid ID are provided",Error Handling,/api/invalidEntity/exists/validEntityId,passed,"",3
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should return 400 when valid entity and invalid ID are provided",Data Validation,/api/test/exists/invalidEntityId,passed,"",10
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should assess response time",Performance Testing,/api/test/exists/validEntityId,passed,"",8
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should assess response times under load",Performance Testing,/api/test/exists/validEntityId,passed,"",53
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should handle SQL injection attempts gracefully",Security Testing,/api/test/exists/1 OR 1=1,passed,"",9
+/api/{entity}/exists/{id},GET,"API Tests Exists Entity GET API should handle XSS attempts gracefully",Security Testing,/api/test/exists/<script>alert("XSS")</script>,passed,"",7
+/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 200 and swExists true when valid entity, body with paramsFilter, and token are provided",Positive and Negative Scenarios,/api/test/exists,passed,"",8
+/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 200 when Non Exists ID is provided in the body with paramsFilter",Positive and Negative Scenarios,/api/test/exists,passed,"",9
+/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 200 when body without paramsFilter is provided",Positive and Negative Scenarios,/api/test/exists,passed,"",17
+/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/exists,passed,"",4
+/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/exists,passed,"",4
+/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 404 when entity is missing",Data Validation,/api//exists,passed,"",5
+/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 200 when body is not provided",Positive and Negative Scenarios,/api/test/exists,passed,"",7
+/api/{entity}/exists,POST,"API Tests Exists Entity POST API should return 401 when token is missing",Authentication and Authorization,/api/test/exists,passed,"",4
+/api/{entity}/exists,POST,"API Tests Exists Entity POST API should assess response time",Performance Testing,/api/test/exists,passed,"",8
+/api/{entity}/exists,POST,"API Tests Exists Entity POST API should assess response times under load",Performance Testing,/api/test/exists,passed,"",47
+/api/{entity}/exists,POST,"API Tests Exists Entity POST API should handle SQL injection attempts gracefully",Security Testing,/api/test/exists,passed,"",8
+/api/{entity}/exists,POST,"API Tests Exists Entity POST API should handle XSS attempts gracefully",Security Testing,/api/test/exists,passed,"",7
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 200 and the entity when valid entity, ID, and token are provided",Positive and Negative Scenarios,/api/test/validEntityId,passed,"",9
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 500 when invalid ID is provided",Data Validation,/api/test/invalidEntityId,passed,"",9
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 404 when Non Exists ID is provided",Positive and Negative Scenarios,/api/test/validNonExistsEntityId,passed,"",7
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/validEntityId,passed,"",8
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/validEntityId,passed,"",5
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 404 when entity is missing",Data Validation,/api//validEntityId,passed,"",4
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 405 when ID is missing",Data Validation,/api/test/,passed,"",6
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 401 when token is missing",Authentication and Authorization,/api/test/validEntityId,passed,"",5
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 401 when valid entity and ID are provided but token is invalid",Authentication and Authorization,/api/test/validEntityId,passed,"",5
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 404 when invalid entity and valid ID are provided",Error Handling,/api/invalidEntity/validEntityId,passed,"",4
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should return 500 when valid entity and invalid ID are provided",Data Validation,/api/test/invalidEntityId,passed,"",9
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should assess response time",Performance Testing,/api/test/validEntityId,passed,"",8
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should assess response times under load",Performance Testing,/api/test/validEntityId,passed,"",52
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should handle SQL injection attempts gracefully",Security Testing,/api/test/1 OR 1=1,passed,"",10
+/api/{entity}/{id},GET,"API Tests Get Entity By Id GET API should handle XSS attempts gracefully",Security Testing,/api/test/<script>alert("XSS")</script>,passed,"",8
+/api/{entity}/all,GET,"API Tests Get All Entity GET API should return 200 and a list of entities when valid entity and token are provided",Positive and Negative Scenarios,/api/test/all,passed,"",11
+/api/{entity}/all,GET,"API Tests Get All Entity GET API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/all,passed,"",4
+/api/{entity}/all,GET,"API Tests Get All Entity GET API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/all,passed,"",5
+/api/{entity}/all,GET,"API Tests Get All Entity GET API should return 404 when entity is missing",Data Validation,/api//all,passed,"",9
+/api/{entity}/all,GET,"API Tests Get All Entity GET API should return 401 when token is missing",Authentication and Authorization,/api/test/all,passed,"",4
+/api/{entity}/all,GET,"API Tests Get All Entity GET API should assess response time",Performance Testing,/api/test/all,passed,"",8
+/api/{entity}/all,GET,"API Tests Get All Entity GET API should assess response times under load",Performance Testing,/api/test/all,passed,"",55
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 200 and a list of entities when valid entity, body with paramsFilter, and token are provided",Positive and Negative Scenarios,/api/test/by-params,passed,"",8
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/by-params,passed,"",3
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/by-params,passed,"",4
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 404 when entity is missing",Data Validation,/api//by-params,passed,"",5
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 200 when body has incorrect structure",Data Validation,/api/test/by-params,passed,"",8
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 200 when paramsFilter is missing",Data Validation,/api/test/by-params,passed,"",8
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should return 401 when token is missing",Authentication and Authorization,/api/test/by-params,passed,"",4
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should assess response time",Performance Testing,/api/test/by-params,passed,"",7
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should assess response times under load",Performance Testing,/api/test/by-params,passed,"",58
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should handle SQL injection attempts gracefully",Security Testing,/api/test/by-params,passed,"",8
+/api/{entity}/by-params,POST,"API Tests Get All Entity By Params POST API should handle XSS attempts gracefully",Security Testing,/api/test/by-params,passed,"",8
+/api/{entity}/count,POST,"API Tests Entity Count POST API should return 200 when body has incorrect structure",Data Validation,/api/test/count,passed,"",7
+/api/{entity}/count,POST,"API Tests Entity Count POST API should return 200 when paramsFilter is missing",Data Validation,/api/test/count,passed,"",8
+/api/{entity}/count,POST,"API Tests Entity Count POST API should return 401 when token is missing",Authentication and Authorization,/api/test/count,passed,"",4
+/api/{entity}/count,POST,"API Tests Entity Count POST API should assess response time",Performance Testing,/api/test/count,passed,"",7
+/api/{entity}/count,POST,"API Tests Entity Count POST API should assess response times under load",Performance Testing,/api/test/count,passed,"",52
+/api/{entity}/count,POST,"API Tests Entity Count POST API should handle SQL injection attempts gracefully",Security Testing,/api/test/count,passed,"",6
+/api/{entity}/count,POST,"API Tests Entity Count POST API should handle XSS attempts gracefully",Security Testing,/api/test/count,passed,"",7
+/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 200 and delete the entity when valid entity, ID, and token are provided",Positive and Negative Scenarios,/api/test/validEntityId,passed,"",12
+/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 500 when invalid ID is provided",Data Validation,/api/test/invalidEntityId,passed,"",8
+/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 404 when Non Exists ID is provided",Positive and Negative Scenarios,/api/test/validNonExistsEntityId,passed,"",7
+/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 404 when invalid entity is provided",Error Handling,/api/invalidEntity/validEntityId,passed,"",4
+/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 401 when invalid token is provided",Authentication and Authorization,/api/test/validEntityId,passed,"",5
+/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 404 when entity is missing",Data Validation,/api//validEntityId,passed,"",4
+/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 405 when ID is missing",Data Validation,/api/test/,passed,"",7
+/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should return 401 when token is missing",Authentication and Authorization,/api/test/validEntityId,passed,"",4
+/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should handle SQL injection attempts gracefully",Security Testing,/api/test/1 OR 1=1,passed,"",8
+/api/{entity}/{id},DELETE,"API Tests Delete Entity By Id DELETE API should handle XSS attempts gracefully",Security Testing,/api/test/<script>alert("XSS")</script>,passed,"",8
+/api/time/get,GET,"API Tests Others should return 200 and the current server time",Time,/api/time/get,passed,"",4
+/api/health,GET,"API Tests Others should return 200 and status ok when the application is healthy",Health Check,/api/health,passed,"",4
+/api/init,POST,"API Tests Others should return 200 and initialization complete",Initialization,/api/init,passed,"",5
+/api/auth/csrf,GET,"API Tests Others should return 200 and the CSRF token",CSRF Token,/api/auth/csrf,passed,"",286
+/api/smart-db-auth/get-challengue,GET,"API Tests Others get-challengue should return 200 and a challenge token",Smart DB Auth,/api/smart-db-auth/get-challengue,passed,"",34
+/api/smart-db-auth/get-challengue,POST,"API Tests Others get-challengue should return 405 when method is not allowed",Smart DB Auth,/api/smart-db-auth/get-challengue,passed,"",3
+/api/smart-db-auth/get-token,GET,"API Tests Others get-token should return 405 when method is not allowed",Smart DB Auth,/api/smart-db-auth/get-token,passed,"",4

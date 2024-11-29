@@ -52,7 +52,7 @@ export class BaseSmartDBEntityMongo extends BaseEntityMongo  {
 
     // #region mongo db
 
-    public static smartDBSchema = {
+    public static smartDBSchema = { 
         _creator: { type: String, required: true },
         _NET_address: { type: String, required: true },
         _NET_id_CS: { type: String, required: true },

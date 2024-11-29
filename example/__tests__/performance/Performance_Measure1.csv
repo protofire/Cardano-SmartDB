@@ -1,0 +1,13 @@
+﻿Get All Situations,Get All,"Get all using SELECT with id, name and description fields",Get all using limit in 4,Get all sorting by name
+1.00,464 ms,279 ms,9 ms,482 ms
+2.00,436 ms,287 ms,8 ms,457 ms
+3.00,434 ms,266 ms,8 ms,493 ms
+4.00,437 ms,262 ms,8 ms,471 ms
+5.00,440 ms,277 ms,9 ms,459 ms
+6.00,436 ms,277 ms,7 ms,475 ms
+7.00,434 ms,274 ms,10 ms,512 ms
+8.00,430 ms,279 ms,10 ms,470 ms
+9.00,463 ms,272 ms,7 ms,458 ms
+10.00,443 ms,267 ms,7 ms,502 ms
+Average,441.70 ms,274.00 ms,8.30 ms,477.90 ms
+Percentage difference,,53.97%,192.80%,0.22%
