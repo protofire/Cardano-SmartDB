@@ -50,9 +50,12 @@ export class PostgreSQLDatabaseService {
             }
             //--------------------------
             // Construimos el objeto de actualización, estableciendo los campos de `updateUnSet` en `NULL`
-            const updateObject = { ...updateSet };
+            const updateObject: Record<string, any> = {};
+            Object.keys(updateSet).forEach((field: string) => {
+                updateObject[this.quoteColumnName(field)] = updateSet[field];
+            });
             Object.keys(updateUnSet).forEach((field: string) => {
-                updateObject[field] = null; // Establecer los campos a NULL en lugar de "unset"
+                updateObject[this.quoteColumnName(field)] = null;
             });
             //--------------------------
             // Realizamos la actualización en PostgreSQL
@@ -124,8 +127,9 @@ export class PostgreSQLDatabaseService {
             const queryBuilder = repository.createQueryBuilder('entity');
             //--------------------------
             if (typeof paramsFilterOrID === 'string') {
-                queryBuilder.where('entity._id = :id', { id: paramsFilterOrID });
+                queryBuilder.where(`${this.quoteColumnName('entity._id')} = :id`, { id: paramsFilterOrID });
             } else {
+                const metadata = repository.metadata;
                 this.applyFilters(queryBuilder, metadata, paramsFilterOrID);
             }
             //--------------------------
@@ -166,7 +170,7 @@ export class PostgreSQLDatabaseService {
             if (!isEmptyObject(fieldsForSelect)) {
                 const selectedFields = Object.keys(fieldsForSelect)
                     .filter((key) => fieldsForSelect[key] === 1)
-                    .map((key) => `entity.${key}`);
+                    .map((key) => this.quoteColumnName(`entity.${key}`));
                 // console_log((0, `PostgreSQL`, `getByParams - Selecting fields: ${selectedFields}`);
                 queryBuilder.select(selectedFields);
             }
@@ -176,7 +180,7 @@ export class PostgreSQLDatabaseService {
             if (!isEmptyObject(useOptionGet.sort)) {
                 for (const [field, order] of Object.entries(useOptionGet!.sort!)) {
                     // console_log((0, `PostgreSQL`, `getByParams - Sorting by ${field} in ${order === 1 ? 'ASC' : 'DESC'} order`);
-                    queryBuilder.addOrderBy(`entity.${field}`, order === 1 ? 'ASC' : 'DESC');
+                    queryBuilder.addOrderBy(this.quoteColumnName(`entity.${field}`), order === 1 ? 'ASC' : 'DESC');
                 }
             }
             //--------------------------
@@ -241,7 +245,15 @@ export class PostgreSQLDatabaseService {
             throw `${error}`;
         }
     }
-
+    
+     // Utility function to quote column names
+     private static quoteColumnName(columnName: string): string {
+        return columnName
+            .split('.')
+            .map((part) => `"${part}"`)
+            .join('.');
+    }
+    
     private static applyFilters(queryBuilder: SelectQueryBuilder<any>, metadata: EntityMetadata, filters: Record<string, any>): SelectQueryBuilder<any> {
         //--------------------------
         // console_log(0, `PostgreSQL`, `applyFilters - Entering applyFilters with filters: ${toJson(filters, 2)}`);
@@ -260,13 +272,6 @@ export class PostgreSQLDatabaseService {
                 const safeParamKey = `${paramKey.replace(/[^a-zA-Z0-9_]/g, '_')}_${index}`;
                 queryBuilder.setParameter(safeParamKey, paramValue);
                 return safeParamKey;
-            };
-
-            const quoteColumnName = (columnName: string) => {
-                return columnName
-                    .split('.')
-                    .map((part) => `"${part}"`)
-                    .join('.');
             };
 
             if (key.startsWith('$')) {
@@ -303,32 +308,32 @@ export class PostgreSQLDatabaseService {
                 const conditions = Object.entries(value).map(([operator, operand], i) => {
                     switch (operator) {
                         case '$eq':
-                            return `${quoteColumnName(`entity.${fullKey}`)} = :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`entity.${fullKey}`)} = :${createParam(fullKey, operand)}`;
                         case '$ne':
-                            return `${quoteColumnName(`entity.${fullKey}`)} != :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`entity.${fullKey}`)} != :${createParam(fullKey, operand)}`;
                         case '$gt':
-                            return `${quoteColumnName(`entity.${fullKey}`)} > :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`entity.${fullKey}`)} > :${createParam(fullKey, operand)}`;
                         case '$gte':
-                            return `${quoteColumnName(`entity.${fullKey}`)} >= :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`entity.${fullKey}`)} >= :${createParam(fullKey, operand)}`;
                         case '$lt':
-                            return `${quoteColumnName(`entity.${fullKey}`)} < :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`entity.${fullKey}`)} < :${createParam(fullKey, operand)}`;
                         case '$lte':
-                            return `${quoteColumnName(`entity.${fullKey}`)} <= :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`entity.${fullKey}`)} <= :${createParam(fullKey, operand)}`;
                         case '$in':
                             // Use @> for JSONB, otherwise use IN
                             if (isJsonbField(fullKey)) {
-                                return `${quoteColumnName(`entity.${fullKey}`)} @> :${createParam(fullKey, toJson(operand))}::jsonb`;
+                                return `${this.quoteColumnName(`entity.${fullKey}`)} @> :${createParam(fullKey, toJson(operand))}::jsonb`;
                             }
-                            return `${quoteColumnName(`entity.${fullKey}`)} IN (:...${createParam(fullKey, operand)})`;
+                            return `${this.quoteColumnName(`entity.${fullKey}`)} IN (:...${createParam(fullKey, operand)})`;
                         case '$nin':
                             if (isJsonbField(fullKey)) {
-                                return `${quoteColumnName(`entity.${fullKey}`)} NOT @> :${createParam(fullKey, toJson(operand))}::jsonb`;
+                                return `${this.quoteColumnName(`entity.${fullKey}`)} NOT @> :${createParam(fullKey, toJson(operand))}::jsonb`;
                             }
-                            return `${quoteColumnName(`entity.${fullKey}`)} NOT IN (:...${createParam(fullKey, operand)})`;
+                            return `${this.quoteColumnName(`entity.${fullKey}`)} NOT IN (:...${createParam(fullKey, operand)})`;
                         case '$regex':
-                            return `${quoteColumnName(`entity.${fullKey}`)} ~ :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`entity.${fullKey}`)} ~ :${createParam(fullKey, operand)}`;
                         case '$exists':
-                            return operand ? `${quoteColumnName(`entity.${fullKey}`)} IS NOT NULL` : `${quoteColumnName(`entity.${fullKey}`)} IS NULL`;
+                            return operand ? `${this.quoteColumnName(`entity.${fullKey}`)} IS NOT NULL` : `${this.quoteColumnName(`entity.${fullKey}`)} IS NULL`;
                         default:
                             throw new Error(`Unsupported operator: ${operator}`);
                     }
@@ -337,9 +342,9 @@ export class PostgreSQLDatabaseService {
             } else if (typeof value === 'string' && value.startsWith('/') && value.endsWith('/')) {
                 // Handle regex filter
                 const regexPattern = value.slice(1, -1);
-                return `${quoteColumnName(`entity.${fullKey}`)} ~ :${createParam(fullKey, regexPattern)}`;
+                return `${this.quoteColumnName(`entity.${fullKey}`)} ~ :${createParam(fullKey, regexPattern)}`;
             } else {
-                return `${quoteColumnName(`entity.${fullKey}`)} = :${createParam(fullKey, value)}`;
+                return `${this.quoteColumnName(`entity.${fullKey}`)} = :${createParam(fullKey, value)}`;
             }
         };
         //--------------------------
