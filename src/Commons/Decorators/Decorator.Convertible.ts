@@ -107,3 +107,37 @@ export function getCombinedConversionFunctions<T>(target: any): Map<string, Conv
     }
     return combinedConversionFunctions;
 }
+
+
+// Examples:
+
+// const createdAtFields = getFilteredConversionFunctions(Entity, (conversion) => conversion.isCreatedAt === true);
+// for (const [propertyKey, conversion] of createdAtFields.entries()) {
+//     console.log(`Field with @CreatedAt: ${propertyKey}`);
+// }
+
+// const updatedAtFields = getFilteredConversionFunctions(Entity, (conversion) => conversion.isUpdatedAt === true);
+// for (const [propertyKey, conversion] of updatedAtFields.entries()) {
+//     console.log(`Field with @UpdatedAt: ${propertyKey}`);
+// }
+
+// const bigintFields = getFilteredConversionFunctions(Entity, (conversion) => conversion.type === BigInt);
+// for (const [propertyKey, conversion] of bigintFields.entries()) {
+//     console.log(`BigInt field: ${propertyKey}`);
+// }
+
+export function getFilteredConversionFunctions<T>(
+    target: any,
+    filterFn: (conversion: ConversionFunctions<any>, propertyKey: string) => boolean
+): Map<string, ConversionFunctions<any>> {
+    const combinedConversionFunctions = getCombinedConversionFunctions(target);
+    const filteredConversionFunctions = new Map<string, ConversionFunctions<any>>();
+
+    for (const [propertyKey, conversion] of combinedConversionFunctions.entries()) {
+        if (filterFn(conversion, propertyKey)) {
+            filteredConversionFunctions.set(propertyKey, conversion);
+        }
+    }
+
+    return filteredConversionFunctions;
+}

@@ -4,6 +4,7 @@ import { console_error, console_log } from '../../Commons/BackEnd/globalLogs.js'
 import { OptionsGet } from '../../Commons/types.js';
 import { isEmptyObject, toJson } from '../../Commons/utils.js';
 import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
+import { getFilteredConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
 
 export class PostgreSQLDatabaseService {
     public static async create<T extends BaseEntity>(instance: T): Promise<string> {
@@ -16,6 +17,13 @@ export class PostgreSQLDatabaseService {
             const postgreSQLInterface = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
             //--------------------------
             // console_log((0, instance.className(), `create postgreSQLInterface: ${toJson(postgreSQLInterface)}`);
+            //--------------------------
+            // Exclude createdAt and updatedAt fields
+            const excludedFields = getFilteredConversionFunctions(instance, (conversion) => conversion.isCreatedAt === true || conversion.isUpdatedAt === true);
+            // Remove excluded fields
+            for (const [field] of excludedFields.entries()) {
+                delete postgreSQLInterface[field];
+            }
             //--------------------------
             const document = await databasePostgreSQL!.manager.save(postgreSQLInterface);
             //--------------------------
@@ -52,11 +60,18 @@ export class PostgreSQLDatabaseService {
             // Construimos el objeto de actualización, estableciendo los campos de `updateUnSet` en `NULL`
             const updateObject: Record<string, any> = {};
             Object.keys(updateSet).forEach((field: string) => {
-                updateObject[this.quoteColumnName(field)] = updateSet[field];
+                updateObject[field] = updateSet[field];
             });
             Object.keys(updateUnSet).forEach((field: string) => {
-                updateObject[this.quoteColumnName(field)] = null;
+                updateObject[field] = null;
             });
+            //--------------------------
+            // Exclude createdAt and updatedAt fields
+            const excludedFields = getFilteredConversionFunctions(instance, (conversion) => conversion.isCreatedAt === true || conversion.isUpdatedAt === true);
+            // Remove excluded fields
+            for (const [field] of excludedFields.entries()) {
+                delete updateObject[field];
+            }
             //--------------------------
             // Realizamos la actualización en PostgreSQL
             const result = await repository.update({ _id: id }, updateObject);
@@ -245,15 +260,21 @@ export class PostgreSQLDatabaseService {
             throw `${error}`;
         }
     }
-    
-     // Utility function to quote column names
-     private static quoteColumnName(columnName: string): string {
+
+    // Utility function to quote column names without double quoting
+    private static quoteColumnName(columnName: string): string {
         return columnName
             .split('.')
-            .map((part) => `"${part}"`)
+            .map((part) => {
+                // Check if the part is already quoted
+                if (part.startsWith('"') && part.endsWith('"')) {
+                    return part; // Return as-is if already quoted
+                }
+                return `"${part}"`; // Otherwise, add quotes
+            })
             .join('.');
     }
-    
+
     private static applyFilters(queryBuilder: SelectQueryBuilder<any>, metadata: EntityMetadata, filters: Record<string, any>): SelectQueryBuilder<any> {
         //--------------------------
         // console_log(0, `PostgreSQL`, `applyFilters - Entering applyFilters with filters: ${toJson(filters, 2)}`);

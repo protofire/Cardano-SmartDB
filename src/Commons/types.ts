@@ -464,6 +464,8 @@ export type ConversionFunctions<T> = {
     isDB_id?: boolean;
     isUnique?: boolean;
     isForDatum?: boolean;
+    isCreatedAt?: boolean;
+    isUpdatedAt?: boolean;
     required?: boolean;
     optionsGet?: OptionsGet | OptionsGetOne;
     optionsCreateOrUpdate?: OptionsCreateOrUpdate;

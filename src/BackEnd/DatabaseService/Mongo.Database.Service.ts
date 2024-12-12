@@ -5,7 +5,7 @@ import { connectMongoDB } from '../../Commons/BackEnd/dbMongo.js';
 import { console_error, console_log } from '../../Commons/BackEnd/globalLogs.js';
 import { getMongoTableName, isEmptyObject, isString, toJson } from '../../Commons/utils.js';
 import { OptionsGet } from '../../Commons/types.js';
-import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
+import { getCombinedConversionFunctions, getFilteredConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
 
 export class MongoDatabaseService {
     public static async create<T extends BaseEntity>(instance: T): Promise<string> {
@@ -13,6 +13,14 @@ export class MongoDatabaseService {
             await connectMongoDB();
             const MongoModel = instance.getMongo().MongoModel();
             const mongoInterface = await instance.getMongo().toMongoInterface(instance);
+            //--------------------------
+            // Exclude createdAt and updatedAt fields
+            const excludedFields = getFilteredConversionFunctions(instance, (conversion) => conversion.isCreatedAt === true || conversion.isUpdatedAt === true);
+            // Remove excluded fields
+            for (const [field] of excludedFields.entries()) {
+                delete mongoInterface[field];
+            }
+            //--------------------------
             const Mongo = new MongoModel(mongoInterface);
             const document = await Mongo.save();
             if (document) {
@@ -37,7 +45,19 @@ export class MongoDatabaseService {
             } catch (error) {
                 throw `Error: Error converting ${instanceId} to ObjectId - Error: ${error}`;
             }
-            const document = await MongoModel.findOneAndUpdate({ _id: instanceId }, { $set: updateSet, $unset: updateUnSet }, { new: true });
+            //--------------------------
+            // Exclude createdAt and updatedAt fields
+            const excludedFields = getFilteredConversionFunctions(instance, (conversion) => conversion.isCreatedAt === true || conversion.isUpdatedAt === true);
+            // Remove excluded fields
+            // Filter fields from updateSet and updateUnSet
+            const filteredUpdateSet = { ...updateSet };
+            const filteredUpdateUnSet = { ...updateUnSet };
+            for (const [field] of excludedFields.entries()) {
+                delete filteredUpdateSet[field];
+                delete filteredUpdateUnSet[field];
+            }
+            //--------------------------
+            const document = await MongoModel.findOneAndUpdate({ _id: instanceId }, { $set: filteredUpdateSet, $unset: filteredUpdateUnSet }, { new: true });
             return document;
         } catch (error) {
             console_error(0, `Mongo`, `update - Error: ${error}`);
