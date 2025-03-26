@@ -37,18 +37,3 @@ export const initApiRequestWithContext = async (
     });
 };
 
-
-export const warpApiRequestWithContext = async (
-    req: NextApiRequestAuthenticated,
-    res: NextApiResponse,
-    apiHandler: (req: NextApiRequestAuthenticated, res: NextApiResponse) => Promise<void>
-) => {
-    return new Promise<void>((resolve) => {
-        requestContext.run(async () => {
-            //--------------------------------------
-            await apiHandler(req, res);
-            //--------------------------------------
-            resolve();
-        });
-    });
-};

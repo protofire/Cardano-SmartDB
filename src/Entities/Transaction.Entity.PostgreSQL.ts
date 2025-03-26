@@ -1,13 +1,13 @@
-import type { OutRef, PaymentKeyHash, UTxO } from 'lucid-cardano';
+import type { OutRef, PaymentKeyHash, UTxO } from '@lucid-evolution/lucid';
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { PostgreSQLDatabaseService } from '../BackEnd/DatabaseService/PostgreSQL.Database.Service.js';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
 import { TransactionDatum, TransactionRedeemer } from '../Commons/index.js';
-import { getPostgreSQLTableName } from '../Commons/utils.js';
 import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js'; // Assuming you have a BaseEntityPostgreSQL class
 import { TransactionEntity } from './Transaction.Entity.js'; // Assuming TransactionEntity is implemented in TypeORM
 
 @PostgreSQLAppliedFor([TransactionEntity])
-@Entity(getPostgreSQLTableName(TransactionEntity.className()))
+@Entity({ name: PostgreSQLDatabaseService.getTableName(TransactionEntity.className()) })
 @Index(['paymentPKH', 'date'])
 @Index(['type', 'date'])
 @Index(['status', 'date'])
@@ -71,8 +71,11 @@ export class TransactionEntityPostgreSQL extends BaseEntityPostgreSQL {
     @Column({ type: 'jsonb', nullable: true })
     error!: Object | undefined;
 
+    @Column({ type: 'varchar', nullable: true })
+    parse_info!: string;
+
     @Column({ type: 'jsonb', nullable: true })
-    ids!: Record<string, string>;
+    ids!: Record<string, string | undefined>;
 
     @Column({ type: 'jsonb', nullable: true })
     redeemers!: Record<string, TransactionRedeemer>;
@@ -81,10 +84,31 @@ export class TransactionEntityPostgreSQL extends BaseEntityPostgreSQL {
     datums!: Record<string, TransactionDatum>;
 
     @Column({ type: 'jsonb', nullable: true })
-    consuming_UTxOs!: OutRef[] ;
+    consuming_UTxOs!: UTxO[];
 
     @Column({ type: 'jsonb', nullable: true })
-    reading_UTxOs!: OutRef[] ;
+    reading_UTxOs!: UTxO[];
+
+    @Column({ type: 'bigint', nullable: true })
+    valid_from?: bigint;
+
+    @Column({ type: 'bigint', nullable: true })
+    valid_until?: bigint;
+
+    @Column({ type: 'bigint', nullable: true })
+    unit_mem?: bigint;
+
+    @Column({ type: 'bigint', nullable: true })
+    unit_steps?: bigint;
+
+    @Column({ type: 'bigint', nullable: true })
+    fee?: bigint;
+
+    @Column({ type: 'int', nullable: true })
+    size?: number;
+
+    @Column({ type: 'varchar', nullable: true })
+    CBORHex?: string;
 
     @CreateDateColumn()
     createdAt!: Date;

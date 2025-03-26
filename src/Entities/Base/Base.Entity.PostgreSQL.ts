@@ -50,19 +50,19 @@ export class BaseEntityPostgreSQL {
     //     throw `${this.Entity.className()} - postgreSQL model not implemented`;
     // }
 
-    public static PostgreSQLModel() {
+    public static DBModel() {
         return this;
     }
 
-    public MongoModel(): any {
-        return this.getPostgreSQLStatic().PostgreSQLModel();
+    public DBModel(): any {
+        return this.getPostgreSQLStatic().DBModel();
     }
     // #endregion postgreSQL db
     // #endregion internal class methods
 
     // #region conversions methods
 
-    public static async toPostgreSQLInterface<T extends BaseEntity>(instance: T, cascadeSave?: boolean): Promise<any> {
+    public static async toDBInterface<T extends BaseEntity>(instance: T, cascadeSave?: boolean): Promise<any> {
         const conversionFunctions = getCombinedConversionFunctions(this.getStatic());
         const interfaceObj: any = new this();
         if (conversionFunctions) {
@@ -73,7 +73,7 @@ export class BaseEntityPostgreSQL {
                         // busco su entity postgreSQL y llamo a toPostgreSQLInterface
                         const postgreSQLEntity = value.getPostgreSQL();
                         if (postgreSQLEntity) {
-                            value = await postgreSQLEntity.toPostgreSQLInterface(value, cascadeSave);
+                            value = await postgreSQLEntity.toDBInterface(value, cascadeSave);
                         } else {
                             throw `${this.className()} - ${propertyKey}: ${value.className()} - ${value} - PostgreSQLEntity not found`;
                         }
@@ -165,7 +165,7 @@ export class BaseEntityPostgreSQL {
         return interfaceObj as any;
     }
 
-    public static async fromPostgreSQLInterface<T extends BaseEntity>(dataInterface: any): Promise<T> {
+    public static async fromDBInterface<T extends BaseEntity>(dataInterface: any): Promise<T> {
         const instance = new this.Entity() as T;
         // from interface siempre crea una instancia por que siempre va a ser llamada con un documento
         // pero por eso al llamar de forma anidada, debo verificar que exista el documento
@@ -228,6 +228,9 @@ export class BaseEntityPostgreSQL {
                                     for (let i = 0; i < value_ids.length; i++) {
                                         let value_id = value_ids[i];
                                         if (process.env.USE_DATABASE === 'postgresql') {
+                                            if (value_id === null) {
+                                                value_id = undefined;
+                                            }
                                             value_id = value_id?.toString ? value_id.toString() : value_id;
                                         }
                                         if (value_id) {
@@ -241,6 +244,9 @@ export class BaseEntityPostgreSQL {
                                 // ManyToOne es una relacion de muchos registros de esta tabla con un registro de otra tabla
                                 let value_id = plainDataInterface[conversions.interfaceName || propertyKey];
                                 if (process.env.USE_DATABASE === 'postgresql') {
+                                    if (value_id === null) {
+                                        value_id = undefined;
+                                    }
                                     value_id = value_id?.toString ? value_id.toString() : value_id;
                                 }
                                 (instance as any)[propertyKey] = value_id;

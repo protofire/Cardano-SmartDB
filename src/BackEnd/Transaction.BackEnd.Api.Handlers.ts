@@ -2,7 +2,7 @@ import { NextApiRequestAuthenticated } from '../lib/Auth/index.js';
 import { NextApiResponse } from 'next';
 import { BackEndApiHandlersFor, sanitizeForDatabase, showData } from '../Commons/index.js';
 import { console_error, console_log } from '../Commons/BackEnd/globalLogs.js';
-import { yup }  from '../Commons/yupLocale.js';
+import { yup } from '../Commons/yupLocale.js';
 import { TransactionEntity } from '../Entities/Transaction.Entity.js';
 import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
 import { TransactionBackEndApplied } from './Transaction.BackEnd.Applied.js';
@@ -15,7 +15,15 @@ export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
     // protected static _BackEndMethods = this._BackEndApplied.getBack();
 
     // #region custom api handlers
-    protected static _ApiHandlers: string[] = ['status-updater', 'update-canceled-transaction', 'update-failed-transaction', 'begin-status-updater', 'submit-and-begin-status-updater', 'get-status'];
+    protected static _ApiHandlers: string[] = [
+        'status-updater',
+        'update-canceled-transaction',
+        'update-failed-transaction',
+        'begin-status-updater',
+        'submit-and-begin-status-updater',
+        'get-status',
+        'release-utxos',
+    ];
 
     protected static async executeApiHandlers(command: string, req: NextApiRequestAuthenticated, res: NextApiResponse) {
         //--------------------
@@ -59,6 +67,13 @@ export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
                     req.query = {};
                 }
                 return await this.getTransactionStatusApiHandler(req, res);
+            } else if (query[0] === 'release-utxos') {
+                if (query.length === 2) {
+                    req.query = { txHash: query[1] };
+                } else {
+                    req.query = {};
+                }
+                return await this.releaseUTxOsApiHandler(req, res);
             } else {
                 console_error(-1, this._Entity.className(), `executeApiHandlers - Error: Api Handler function not found`);
                 return res.status(500).json({ error: `Api Handler function not found` });
@@ -72,7 +87,6 @@ export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
 
     // #region api handlers
 
-    
     public static async updateCanceledTransactionApiHandler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
         if (req.method === 'POST') {
             //-------------------------
@@ -113,7 +127,7 @@ export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
                 //--------------------------------------
                 const { error } = validatedBody;
                 //-------------------------
-                await this._BackEndApplied.setCanceledTransactionByHash(txHash, error);
+                await this._BackEndApplied.setUserCanceledTransactionByHash(txHash, error);
                 //-------------------------
                 console_log(-1, this._Entity.className(), `updateCanceledTransactionApiHandler - GET - OK`);
                 //-------------------------
@@ -131,7 +145,7 @@ export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
     public static async updateFailedTransactionApiHandler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
         if (req.method === 'POST') {
             //-------------------------
-            console_log(1, this._Entity.className(), `updateFailedTransactionApiHandler - GET - Init`);
+            console_log(1, this._Entity.className(), `updateFailedTransactionApiHandler - POST - Init`);
             console_log(0, this._Entity.className(), `query: ${showData(req.query)}`);
             //-------------------------
             try {
@@ -194,7 +208,9 @@ export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
                 const sanitizedQuery = sanitizeForDatabase(req.query);
                 //-------------------------
                 const schemaQuery = yup.object().shape({
-                    swCheckAgainTxWithTimeOut: yup.boolean(),
+                    swCheckAgainTxTimeOut: yup.boolean(),
+                    swCheckAgainTxPendingTimeOut: yup.boolean(),
+                    swCheckAgainTxFailed: yup.boolean(),
                 });
                 //-------------------------
                 let validatedQuery;
@@ -205,12 +221,12 @@ export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
                     return res.status(400).json({ error });
                 }
                 //--------------------------------------
-                const { swCheckAgainTxWithTimeOut } = validatedQuery;
+                const { swCheckAgainTxTimeOut, swCheckAgainTxPendingTimeOut, swCheckAgainTxFailed } = validatedQuery;
                 //-------------------------
                 // este metodo debe iniciar un ciclo loop en el server, pero no quedarse esperando el resultado aqui
                 // ese ciclo va a actualizar el estado de la transaccion y voy a crear otro metodo para verificar el estado de cada transaccion
                 // solamente me va a devolver si el ciclo inicia correctamente
-                this._BackEndApplied.beginStatusUpdaterJob(swCheckAgainTxWithTimeOut);
+                this._BackEndApplied.beginStatusUpdaterJob(swCheckAgainTxTimeOut, swCheckAgainTxPendingTimeOut, swCheckAgainTxFailed);
                 //-------------------------
                 console_log(-1, this._Entity.className(), `beginStatusUpdaterJobApiHandler - GET - OK`);
                 //-------------------------
@@ -344,5 +360,61 @@ export class TransactionBackEndApiHandlers extends BaseBackEndApiHandlers {
         }
     }
 
+    public static async releaseUTxOsApiHandler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
+        if (req.method === 'POST') {
+            //-------------------------
+            console_log(1, this._Entity.className(), `releaseUTxOsApiHandler - POST - Init`);
+            console_log(0, this._Entity.className(), `query: ${showData(req.query)}`);
+            //-------------------------
+            try {
+                //-------------------------
+                const sanitizedQuery = sanitizeForDatabase(req.query);
+                //-------------------------
+                const schemaQuery = yup.object().shape({
+                    txHash: yup.string().required(),
+                });
+                //-------------------------
+                let validatedQuery;
+                try {
+                    validatedQuery = await schemaQuery.validate(sanitizedQuery);
+                } catch (error) {
+                    console_error(-1, this._Entity.className(), `releaseUTxOsApiHandler - Error: ${error}`);
+                    return res.status(400).json({ error });
+                }
+                //--------------------------------------
+                const { txHash } = validatedQuery;
+                //-------------------------
+                const sanitizedBody = sanitizeForDatabase(req.body);
+                //-------------------------
+                const schemaBody = yup.object().shape({
+                    swReleaseIsPreparing: yup.boolean(),
+                    swReleaseIsConsuming: yup.boolean(),
+                });
+                //-------------------------
+                let validatedBody;
+                try {
+                    validatedBody = await schemaBody.validate(sanitizedBody);
+                } catch (error) {
+                    console_error(-1, this._Entity.className(), `releaseUTxOsApiHandler - Error: ${error}`);
+                    return res.status(400).json({ error });
+                }
+                //--------------------------------------
+                const { swReleaseIsPreparing, swReleaseIsConsuming } = validatedBody;
+                //-------------------------
+                await this._BackEndApplied.releaseUTxOsByTxHash(txHash, swReleaseIsPreparing, swReleaseIsConsuming);
+                //-------------------------
+                console_log(-1, this._Entity.className(), `releaseUTxOsApiHandler - POST - OK`);
+                //-------------------------
+                return res.status(200).json({ result: true });
+            } catch (error) {
+                console_error(-1, this._Entity.className(), `releaseUTxOsApiHandler - Error: ${error}`);
+                return res.status(500).json({ error: `An error occurred while getting totalPoints: ${error}` });
+            }
+        } else {
+            console_error(-1, this._Entity.className(), `releaseUTxOsApiHandler - Error: Method not allowed`);
+            return res.status(405).json({ error: `Method not allowed` });
+        }
+    }
+    
     // #endregion api handlers
 }

@@ -1,4 +1,4 @@
-import { ConversionFunctions } from "../types.js";
+import { ConversionFunctions } from '../types.js';
 
 let globalState: any;
 
@@ -10,16 +10,14 @@ if (typeof window !== 'undefined') {
     globalState = global;
 }
 
-
 // registryManager.ts
 export class RegistryManager {
-
     private entitiesRegistry: Map<string, any> = new Map();
     private smartDBEntitiesRegistry: Map<string, any> = new Map();
     private backEndAppliedRegistry: Map<string, any> = new Map();
     private backEndApiHandlersRegistry: Map<string, any> = new Map();
-    private mongoAppliedRegistry: Map<string, any> = new Map();
-    private postgreSQLAppliedRegistry: Map<string, any> = new Map();
+    private mongoSchemasRegistry: Map<string, any> = new Map();
+    private postgreSQLModelsRegistry: Map<string, any> = new Map();
 
     private conversionFunctionsRegistry: Map<string, Map<string, ConversionFunctions<any>>> = new Map();
 
@@ -61,14 +59,14 @@ export class RegistryManager {
                 return this.backEndAppliedRegistry;
             case 'backEndApiHandlers':
                 return this.backEndApiHandlersRegistry;
-            case 'mongoApplied':
-                return this.mongoAppliedRegistry;
-            case 'postgreSQLApplied':
-                return this.postgreSQLAppliedRegistry;
+            case 'mongoSchemas':
+                return this.mongoSchemasRegistry;
+            case 'postgreSQLModels':
+                return this.postgreSQLModelsRegistry;
             case 'conversionFunctions':
                 return this.conversionFunctionsRegistry;
             default:
-                throw new Error('Unknown registry type');
+                throw `Unknown registry type: ${type}`;
         }
     }
 
@@ -88,12 +86,12 @@ export class RegistryManager {
         return RegistryManager.getRegistry(entity.className(), 'backEndApiHandlers');
     }
 
-    public static getFromMongoAppliedRegistry(entity: any): any {
-        return RegistryManager.getRegistry(entity.className(), 'mongoApplied');
+    public static getFromMongoSchemasRegistry(entity: any): any {
+        return RegistryManager.getRegistry(entity.className(), 'mongoSchemas');
     }
 
-    public static getFromPostgreSQLAppliedRegistry(entity: any): any {
-        return RegistryManager.getRegistry(entity.className(), 'postgreSQLApplied');
+    public static getFromPostgreSQLModelsRegistry(entity: any): any {
+        return RegistryManager.getRegistry(entity.className(), 'postgreSQLModels');
     }
 
     public static getFromConversionFunctionsRegistry(className: string): Map<string, ConversionFunctions<any>> {
@@ -116,11 +114,11 @@ export class RegistryManager {
         return new Map(RegistryManager.getInstance().getRegistryFromType('backEndApiHandlers'));
     }
 
-    public static getAllFromMongoAppliedRegistry(): Map<string, any> {
-        return new Map(RegistryManager.getInstance().getRegistryFromType('mongoApplied'));
+    public static getAllFromMongoSchemasRegistry(): Map<string, any> {
+        return new Map(RegistryManager.getInstance().getRegistryFromType('mongoSchemas'));
     }
 
-    public static getAllFromPosgreSQLAppliedRegistry(): Map<string, any> {
-        return new Map(RegistryManager.getInstance().getRegistryFromType('postgreSQLApplied'));
+    public static getAllFromPosgreSQLModelsRegistry(): Map<string, any> {
+        return new Map(RegistryManager.getInstance().getRegistryFromType('postgreSQLModels'));
     }
 }

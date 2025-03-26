@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Convertible, asEntity, formatHash, hexToStr, type CS, type TN } from '../Commons/index.js';
 import { BaseEntity } from './Base/Base.Entity.js';
-import { type SignedMessage } from 'lucid-cardano';
+import { type SignedMessage } from '@lucid-evolution/lucid';
 
 @asEntity()
 export class PriceEntity extends BaseEntity {
@@ -27,6 +27,12 @@ export class PriceEntity extends BaseEntity {
 
     @Convertible({})
     signature!: SignedMessage;
+
+    @Convertible({ isCreatedAt: true })
+    createdAt!: Date;
+
+    @Convertible({ isUpdatedAt: true })
+    updatedAt!: Date;
 
     // #endregion fields
 

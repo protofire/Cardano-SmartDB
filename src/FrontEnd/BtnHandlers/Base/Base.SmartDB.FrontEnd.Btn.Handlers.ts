@@ -1,6 +1,6 @@
 // es generica, todos los metodos llevan instancia o entidad como parametro
 
-import { Lucid } from 'lucid-cardano';
+import { Lucid, LucidEvolution } from '@lucid-evolution/lucid';
 import { explainErrorTx } from '../../../Commons/explainError.js';
 import { pushSucessNotification, pushWarningNotification } from '../../../Commons/pushNotification.js';
 import { WalletTxParams } from '../../../Commons/types.js';
@@ -11,8 +11,8 @@ import { AddressToFollowFrontEndApiCalls } from '../../ApiCalls/AddressToFollow.
 import { BaseSmartDBFrontEndApiCalls } from '../../ApiCalls/Base/Base.SmartDB.FrontEnd.Api.Calls.js';
 import { EmulatorEntity } from '../../../Entities/Emulator.Entity.js';
 import { AddressToFollowEntity } from '../../../Entities/AddressToFollow.Entity.js';
-import { formatAddress } from '../../../Commons/helpers.js';
 import { JobManagerFrontEnd } from '../../../lib/JobManager/JobManager.FrontEnd.js';
+import { formatAddress } from '../../../Commons/index.js';
 
 // todas las clases la pueden usar
 export class BaseSmartDBFrontEndBtnHandlers {
@@ -22,9 +22,9 @@ export class BaseSmartDBFrontEndBtnHandlers {
 
     public static async handleBtnCreateHook<T extends BaseSmartDBEntity>(instance: T): Promise<boolean> {
         try {
-            const addressesToFollow = await AddressToFollowFrontEndApiCalls.getByAddressApi(instance.getNet_Address());
+            const addressesToFollow = await AddressToFollowFrontEndApiCalls.getByAddressApi(instance.getNet_Address(), instance.getNET_id_CS());
             if (addressesToFollow && addressesToFollow.length > 0) {
-                throw 'Webhook already exists';
+                throw `Webhook already exists for this address: ${instance.getNet_Address()} and CS: ${instance.getNET_id_CS()}`;
             } else {
                 await BaseSmartDBFrontEndApiCalls.createHookApi(instance.getStatic(), instance.getNet_Address(), instance.getNET_id_CS());
                 pushSucessNotification(`${instance.className()}`, `Webhook created`, false);
@@ -39,7 +39,7 @@ export class BaseSmartDBFrontEndBtnHandlers {
 
     public static async handleBtnSync<T extends BaseSmartDBEntity>(instance: T, force: boolean = false): Promise<boolean> {
         try {
-            await BaseSmartDBFrontEndApiCalls.syncWithAddressApi<T>(instance.getStatic(), instance.getNet_Address(), force);
+            await BaseSmartDBFrontEndApiCalls.syncWithAddressApi<T>(instance.getStatic(), instance.getNet_Address(), instance.getNET_id_CS(), force);
             pushSucessNotification(`${instance.className()}`, `${instance.className()} syncronized`, false);
             return true;
         } catch (error) {
@@ -49,15 +49,16 @@ export class BaseSmartDBFrontEndBtnHandlers {
         }
     }
 
-    public static async handleBtnDoTransactionV1<T extends BaseSmartDBEntity>(
+    // NOTE: esta version es la primera que hice, funciona, pero en las otras cambie el orden de los parametros asi puedo hacer binds con sentido
+    public static async handleBtnDoTransaction_V1<T extends BaseSmartDBEntity>(
         Entity: typeof BaseSmartDBEntity,
         name: string,
         nameTx: string,
         setProcessingTxMessage: (value: string) => void,
         setProcessingTxHash: (value: string) => void,
         walletStore: IUseWalletStore,
-        txParams: Record<string, any>,
-        apiTxCall: (walletTxParams: WalletTxParams, txParams: any) => Promise<{ txHash: string; txCborHex: string }>
+        txParams: any,
+        apiTxCall: (walletTxParams: WalletTxParams, txParams: any) => Promise<any>
     ): Promise<boolean> {
         try {
             //--------------------------------------
@@ -65,11 +66,11 @@ export class BaseSmartDBFrontEndBtnHandlers {
             //--------------------------------------
             const { lucid, emulatorDB, walletTxParams } = await LucidToolsFrontEnd.prepareLucidFrontEndForTx(walletStore);
             //--------------------------------------
-            const { txHash, txCborHex } = await apiTxCall(walletTxParams, txParams);
+            const { txCborHex } = await apiTxCall(walletTxParams, txParams);
             //--------------------------------------
             setProcessingTxMessage('Transaction prepared, waiting for sign to submit...');
             //--------------------------------------
-            await LucidToolsFrontEnd.signAndSubmitTx(lucid, txHash, txCborHex, walletStore.info, emulatorDB);
+            const txHash = await LucidToolsFrontEnd.signAndSubmitTx(lucid, txCborHex, walletStore.info, emulatorDB, walletStore.swDoNotPromtForSigning);
             //--------------------------------------
             setProcessingTxMessage(`Transaction submitted, waiting for confirmation...`);
             setProcessingTxHash(txHash);
@@ -82,7 +83,9 @@ export class BaseSmartDBFrontEndBtnHandlers {
                 throw `Tx not confirmed`;
             }
             //--------------------------------------
-            setProcessingTxMessage(`Refreshing Wallet...`);
+            setProcessingTxMessage(`Syncronizing...`);
+            //--------------------------------------
+            setProcessingTxMessage(`Refreshing data...`);
             await walletStore.loadWalletData();
             //--------------------------------------
             setProcessingTxMessage(``);
@@ -96,39 +99,45 @@ export class BaseSmartDBFrontEndBtnHandlers {
         }
     }
 
-    public static async handleBtnDoTransactionV2<T extends BaseSmartDBEntity>(
+    public static async handleBtnDoTransaction_V2<T extends BaseSmartDBEntity>(
         Entity: typeof BaseSmartDBEntity,
-        name: string,
-        nameTx: string,
-        lucid: Lucid,
+        modalTitleTx: string,
+        messageActionTx: string,
+        lucid: LucidEvolution,
         emulatorDB: EmulatorEntity | undefined,
-        apiTxCall: () => Promise<{ txHash: string; txCborHex: string }>,
+        apiTxCall: () => Promise<any>,
         setProcessingTxMessage: (value: string) => void,
         setProcessingTxHash: (value: string) => void,
         walletStore: IUseWalletStore
     ): Promise<boolean> {
         try {
             //--------------------------------------
-            setProcessingTxMessage(name + '...');
+            setProcessingTxMessage(messageActionTx);
             //--------------------------------------
-            const { txHash, txCborHex } = await apiTxCall();
+            const { txCborHex } = await apiTxCall();
+            //--------------------------------------
+            let txComplete = lucid.fromTx(txCborHex);
+            let txHash = txComplete.toHash();
+            setProcessingTxHash(txHash);
             //--------------------------------------
             setProcessingTxMessage('Transaction prepared, waiting for sign to submit...');
             //--------------------------------------
-            await LucidToolsFrontEnd.signAndSubmitTx(lucid, txHash, txCborHex, walletStore.info, emulatorDB);
+            txHash = await LucidToolsFrontEnd.signAndSubmitTx(lucid, txCborHex, walletStore.info, emulatorDB, walletStore.swDoNotPromtForSigning);
             //--------------------------------------
             setProcessingTxMessage(`Transaction submitted, waiting for confirmation...`);
             setProcessingTxHash(txHash);
             //--------------------------------------
             if (await LucidToolsFrontEnd.awaitTx(lucid, txHash)) {
                 console.log(`${Entity.className()}] - handleBtnTx - waitForTxConfirmation - Tx confirmed - ${txHash}`);
-                pushSucessNotification(`${Entity.className()} ${nameTx}`, txHash, true);
+                pushSucessNotification(`${Entity.className()} ${modalTitleTx}`, txHash, true);
             } else {
                 console.log(`${Entity.className()}] - handleBtnTx - waitForTxConfirmation - Tx not confirmed - ${txHash}`);
                 throw `Tx not confirmed`;
             }
             //--------------------------------------
-            setProcessingTxMessage(`Refreshing Wallet...`);
+            setProcessingTxMessage(`Syncronizing...`);
+            //--------------------------------------
+            setProcessingTxMessage(`Refreshing data ...`);
             await walletStore.loadWalletData();
             //--------------------------------------
             setProcessingTxMessage(``);
@@ -136,10 +145,53 @@ export class BaseSmartDBFrontEndBtnHandlers {
         } catch (error) {
             const error_explained = explainErrorTx(error);
             console.log(`[${Entity.className()}] - handleBtnTx - Error: ${error_explained}`);
-            pushWarningNotification(`${Entity.className()} ${nameTx}`, error_explained);
+            pushWarningNotification(`${Entity.className()} ${modalTitleTx}`, error_explained);
             setProcessingTxMessage(error_explained);
             return false;
         }
+    }
+
+    // NOTE: esta version no maneja errores aca, si no que los delega a handleBtnDoTransactionExtended de useTransaction hook
+    public static async handleBtnDoTransaction_V2_NoErrorControl<T extends BaseSmartDBEntity>(
+        Entity: typeof BaseSmartDBEntity,
+        modalTitleTx: string,
+        messageActionTx: string,
+        lucid: LucidEvolution,
+        emulatorDB: EmulatorEntity | undefined,
+        apiTxCall: () => Promise<any>,
+        setProcessingTxMessage: (value: string) => void,
+        setProcessingTxHash: (value: string) => void,
+        walletStore: IUseWalletStore
+    ): Promise<void> {
+        //--------------------------------------
+        setProcessingTxMessage(messageActionTx);
+        //--------------------------------------
+        const { txCborHex } = await apiTxCall();
+        //--------------------------------------
+        let txComplete = lucid.fromTx(txCborHex);
+        let txHash = txComplete.toHash();
+        setProcessingTxHash(txHash);
+        //--------------------------------------
+        setProcessingTxMessage('Transaction prepared, waiting for sign to submit...');
+        //--------------------------------------
+        txHash = await LucidToolsFrontEnd.signAndSubmitTx(lucid, txCborHex, walletStore.info, emulatorDB, walletStore.swDoNotPromtForSigning);
+        //--------------------------------------
+        setProcessingTxMessage(`Transaction submitted, waiting for confirmation...`);
+        //--------------------------------------
+        if (await LucidToolsFrontEnd.awaitTx(lucid, txHash)) {
+            console.log(`${Entity.className()}] - handleBtnTx - waitForTxConfirmation - Tx confirmed - ${txHash}`);
+            pushSucessNotification(`${Entity.className()} ${modalTitleTx}`, txHash, true);
+        } else {
+            console.log(`${Entity.className()}] - handleBtnTx - waitForTxConfirmation - Tx not confirmed - ${txHash}`);
+            throw `Tx not confirmed`;
+        }
+        //--------------------------------------
+        setProcessingTxMessage(`Syncronizing...`);
+        //--------------------------------------
+        setProcessingTxMessage(`Refreshing data ...`);
+        await walletStore.loadWalletData();
+        //--------------------------------------
+        setProcessingTxMessage(``);
     }
 
     public static async handleBtnParseBlockchain(

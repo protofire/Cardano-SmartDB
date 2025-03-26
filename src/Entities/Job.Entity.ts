@@ -25,5 +25,11 @@ export class JobEntity extends BaseEntity {
     @Convertible()
     error!: string;
 
+    @Convertible({ isCreatedAt: true })
+    createdAt!: Date;
+
+    @Convertible({ isUpdatedAt: true })
+    updatedAt!: Date;
+
     // #endregion fields
 }

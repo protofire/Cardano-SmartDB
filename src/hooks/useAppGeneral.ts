@@ -55,7 +55,7 @@ export const useAppGeneral = () => {
             }
         } catch (error) {
             console.log(`[App] - initApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
     async function loadSiteSettings(): Promise<void> {
@@ -99,7 +99,7 @@ export const useAppGeneral = () => {
             //---------------
         } catch (error) {
             console.log(`[App] - loadSiteSettings - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -168,7 +168,7 @@ export const useAppGeneral = () => {
             //---------------
         } catch (error) {
             console.log(`[App] - loadEmulator - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
     //--------------------------------------
@@ -179,7 +179,7 @@ export const useAppGeneral = () => {
             walletStore.setLucidForUseAsUtils(lucid);
         } catch (error) {
             console.log(`[App] - initLucidForUseAsUtils - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
     //--------------------------------------
@@ -225,5 +225,7 @@ export const useAppGeneral = () => {
         //     }
         // }
     }, [appStore.swExistAnyWallet]);
+    //--------------------------------------
+    return { swInitApiCompleted: appStore.swInitApiCompleted };
     //--------------------------------------
 };

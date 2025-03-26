@@ -1,31 +1,284 @@
-import { EntityMetadata, SelectQueryBuilder } from 'typeorm';
-import { connectPostgres, databasePostgreSQL } from '../../Commons/BackEnd/dbPostgreSQL.js';
+import { EntityMetadata, QueryRunner, SelectQueryBuilder } from 'typeorm';
 import { console_error, console_log } from '../../Commons/BackEnd/globalLogs.js';
 import { OptionsGet } from '../../Commons/types.js';
-import { isEmptyObject, toJson } from '../../Commons/utils.js';
+import { calculateBackoffDelay, isEmptyObject, sleep, toJson } from '../../Commons/utils.js';
 import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
 import { getFilteredConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
+import { AsyncLocalStorage } from 'async_hooks';
+import { DB_LOCK_MAX_TIME_WAITING_TO_COMPLETE_MS, DB_LOCK_TIME_WAITING_TO_TRY_AGAIN_MS, DB_USE_TRANSACTIONS } from '../../Commons/Constants/constants.js';
+import { DataSource } from 'typeorm';
+import { RegistryManager } from '../../Commons/Decorators/registerManager.js';
+
+let databasePostgreSQL: DataSource | null = null; // Store the connection pool
+export const postgresSessionStorage = new AsyncLocalStorage<QueryRunner | undefined>();
 
 export class PostgreSQLDatabaseService {
-    public static async create<T extends BaseEntity>(instance: T): Promise<string> {
+    
+    public static async tryInitializeDataSource(dataSource: DataSource, retries: number = 5, sleep: number = 2000): Promise<DataSource | null> {
+        while (retries > 0) {
+            try {
+                const connectedDatasource = await dataSource.initialize();
+                return connectedDatasource; // Success
+            } catch (error) {
+                retries--;
+                console.error(`[DBPOSTGRESQL] Retrying database connection. Attempts left: ${retries}. Error:`, error);
+                if (retries === 0) throw error;
+                await new Promise((res) => setTimeout(res, sleep)); // Wait before retrying
+            }
+        }
+        return null;
+    }
+
+    public static async connectDB(): Promise<void> {
+        if (databasePostgreSQL !== null) {
+            return; // Already connected
+        }
+        try {
+            //--------------------
+            const registeredEntities = Array.from(RegistryManager.getAllFromPosgreSQLModelsRegistry().values());
+            //--------------------
+            // Define a new DataSource for connecting to the default database (postgres)
+            const DefaultDataSource = new DataSource({
+                type: 'postgres',
+                host: process.env.POSTGRES_HOST,
+                port: Number(process.env.POSTGRES_PORT),
+                username: process.env.POSTGRES_USER,
+                password: process.env.POSTGRES_PASS,
+                database: 'postgres', // default database
+                synchronize: false,
+                logging: false,
+                entities: [],
+                subscribers: [],
+                migrations: [],
+            });
+            //--------------------
+            const AppDataSource = new DataSource({
+                type: 'postgres',
+                host: process.env.POSTGRES_HOST,
+                port: Number(process.env.POSTGRES_PORT),
+                username: process.env.POSTGRES_USER,
+                password: process.env.POSTGRES_PASS,
+                database: process.env.POSTGRES_DB,
+                synchronize: true,
+                logging: ['error', 'schema', 'warn'], //true, //['error', 'schema', 'warn'],
+                entities: [...registeredEntities],
+                subscribers: [],
+                migrations: [],
+            });
+            //--------------------
+            // Connect to the default database and create the target database if it doesn't exist
+            await this.tryInitializeDataSource(DefaultDataSource);
+            const queryRunner = DefaultDataSource.createQueryRunner();
+            await queryRunner.connect();
+            const dbName = process.env.POSTGRES_DB;
+            //--------------------
+            const dbExists = await queryRunner.query(`SELECT 1 FROM pg_database WHERE datname = $1`, [dbName]);
+            //--------------------
+            if (dbExists.length === 0) {
+                await queryRunner.query(`CREATE DATABASE "${dbName}"`);
+                console.log(`[DBPOSTGRESQL] Database ${dbName} created successfully.`);
+            }
+            //--------------------
+            await queryRunner.release();
+            await DefaultDataSource.destroy();
+            //--------------------
+            // Now initialize the AppDataSource
+            databasePostgreSQL = await this.tryInitializeDataSource(AppDataSource);
+            if (databasePostgreSQL === null) {
+                throw 'Failed to initialize the AppDataSource';
+            }
+            //--------------------
+            // Simple query to test connection
+            await databasePostgreSQL.query('SELECT NOW()');
+            console.log('[DBPOSTGRESQL] Connected to postgreSQL database');
+        } catch (error) {
+            console.error('[DBPOSTGRESQL] Database connection error: ', error);
+            databasePostgreSQL = null; // Reset to null on failure
+            throw new Error(`Database connection error: ${error}`);
+        }
+    }
+
+    public static async disconnectDB(): Promise<void> {
+        if (databasePostgreSQL) {
+            await databasePostgreSQL.destroy();
+            databasePostgreSQL = null;
+            console.log('[DBPOSTGRESQL] Disconnected from database');
+        }
+    }
+
+    public static getTableName(baseName: string): string {
+        return baseName
+            .toLowerCase()
+            .split(' ')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join('');
+    }
+
+    public static async startRunner(name: string): Promise<QueryRunner> {
+        await this.connectDB();
+        const queryRunner = databasePostgreSQL!.createQueryRunner();
+        await queryRunner.connect();
+        console_log(0, 'PostgreSQL', `${name} - startRunner - Created new QueryRunner.`);
+        return queryRunner;
+    }
+
+    public static isRetryableErrorDBLock(error: any): boolean {
+        // PostgreSQL retryable errors (deadlocks, serialization failures)
+        const retryableCodes = ['40001', '40P01'];
+        return retryableCodes.includes(error.code);
+    }
+
+    private static getActiveRunner(methodName: string, providedRunner?: QueryRunner): QueryRunner | undefined {
+        const storedRunner = postgresSessionStorage.getStore();
+        const runner = providedRunner || storedRunner;
+        console_log(0, 'PostgreSQL', `${methodName} - runner: ${runner}`); // - details: ` + toJson(sessionDetails));
+        return runner;
+    }
+
+    public static async getCollections(providedRunner?: QueryRunner): Promise<Set<string>> {
+        //--------------------------
+        await this.connectDB();
+        //--------------------------
+        const queryRunner = this.getActiveRunner(`getCollections`, providedRunner);
+        const queryRunner_ = queryRunner ? queryRunner.manager : databasePostgreSQL!.manager;
+        //--------------------------
+        const tables = await queryRunner_.query(`
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+            `);
+        return new Set(tables.map((table: { table_name: string }) => table.table_name));
+    }
+
+    public static async withContextTransaction<T>(name: string, operation: () => Promise<T>, swCommitChilds: boolean = false): Promise<T> {
+        //----------------------------
+        if (!DB_USE_TRANSACTIONS) {
+            console_log(0, 'PostgreSQL', `${name} - withContextTransaction - Transactions disabled - Executing operation without transaction.`);
+            return await operation();
+        }
+        //----------------------------
+        const existingRunner = postgresSessionStorage.getStore();
+        let runner: QueryRunner | undefined = undefined;
+        let swTabs = 0;
+        //----------------------------
+        console_log(1, 'PostgreSQL', `${name} - withContextTransaction - Init`);
+        //----------------------------
+        try {
+            //----------------------------
+            if (existingRunner) {
+                runner = existingRunner;
+            }
+            //----------------------------
+            let result: T;
+            //----------------------------
+            if (existingRunner) {
+                console_log(1, 'PostgreSQL', `${name} - withContextTransaction - CHILD - Reusing existing QueryRunner - INIT`);
+                swTabs = 1;
+                result = await operation();
+                if (swCommitChilds) {
+                    console_log(0, 'PostgreSQL', `${name} - withContextTransaction - CHILD - Committing transaction...`);
+                    await runner!.commitTransaction();
+                    try {
+                        await runner!.rollbackTransaction();
+                    } catch (error: any) {
+                        console_log(0, 'PostgreSQL', `${name} - withContextTransaction - CHILD - CONTEXTERROR - Rollback error: ${toJson(error)}`);
+                    }
+                    await runner!.startTransaction();
+                }
+                console_log(-1, 'PostgreSQL', `${name} - withContextTransaction - CHILD - Executed operation - OK`);
+                swTabs = 0;
+            } else {
+                // Ejecutar la operación con una nueva transacción si no hay una activa.
+                const retryDelayMs = DB_LOCK_TIME_WAITING_TO_TRY_AGAIN_MS;
+                const maxWaitTimeMs = DB_LOCK_MAX_TIME_WAITING_TO_COMPLETE_MS;
+                let retries = 0;
+                const startTime = Date.now();
+                console_log(0, 'PostgreSQL', `${name} - withContextTransaction - PARENT - Creating new QueryRunner...`);
+                runner = await this.startRunner(name);
+                while (Date.now() - startTime < maxWaitTimeMs) {
+                    await runner.startTransaction();
+                    try {
+                        return await postgresSessionStorage.run(runner, async () => {
+                            console_log(1, 'PostgreSQL', `${name} - withContextTransaction - PARENT - Executing operation - INIT`);
+                            swTabs = 1;
+                            result = await operation();
+                            await runner!.commitTransaction();
+                            console_log(0, 'PostgreSQL', `${name} - withContextTransaction - PARENT - Committing transaction...`);
+                            await runner!.release();
+                            console_log(0, 'PostgreSQL', `${name} - withContextTransaction - PARENT - Released QueryRunner - OK`);
+                            console_log(-1, 'PostgreSQL', `${name} - withContextTransaction - PARENT - Executed operation - OK`);
+                            swTabs = 0;
+                            return result!;
+                        });
+                    } catch (error: any) {
+                        if (runner) {
+                            console_log(0, 'PostgreSQL', `${name} - withContextTransaction - PARENT - CONTEXTERROR - Rolling back transaction... - Error: ${toJson(error)}`);
+                            try {
+                                await runner.rollbackTransaction();
+                            } catch (rollbackError: any) {
+                                console_log(0, 'PostgreSQL', `${name} - withContextTransaction - PARENT - CONTEXTERROR - Rollback error: ${toJson(rollbackError)}`);
+                            }
+                        }
+                        const isRetryableError = this.isRetryableErrorDBLock(error);
+                        if (isRetryableError && Date.now() - startTime < maxWaitTimeMs) {
+                            retries++;
+                            const backoffDelay = calculateBackoffDelay(retryDelayMs, retries);
+                            console_log(
+                                0,
+                                'PostgreSQL',
+                                `${name} - withContextTransaction - PARENT - CONTEXTERROR - Retry ${retries} - retryDelayMs: ${retryDelayMs} - Waiting ${backoffDelay} ms - Error: ${
+                                    error.message || toJson(error)
+                                }`
+                            );
+                            await sleep(backoffDelay);
+                            continue;
+                        } else {
+                            console_error(
+                                0,
+                                'PostgreSQL',
+                                `${name} - withContextTransaction - PARENT - CONTEXTERROR - FINALERROR - Ending transaction - Error: ${error.message || toJson(error)}`
+                            );
+                            if (runner && !runner.isReleased) {
+                                await runner.release();
+                            }
+                            throw error;
+                        }
+                    }
+                }
+                console_error(0 - swTabs, 'PostgreSQL', `${name} - withContextTransaction - PARENT - CONTEXTERROR - FINALERROR - Transaction timeout - Ending session`);
+                if (runner && !runner.isReleased) {
+                    await runner.release();
+                }
+                throw `Executed operation timeout`;
+            }
+            return result!;
+        } catch (error: any) {
+            throw error;
+        } finally {
+            console_log(-1 - swTabs, 'PostgreSQL', `${name} - withContextTransaction - OK`);
+        }
+    }
+
+    public static async create<T extends BaseEntity>(instance: T, providedRunner?: QueryRunner): Promise<string> {
         try {
             //--------------------------
-            await connectPostgres();
+            await this.connectDB();
             //--------------------------
             // console_log((0, instance.className(), `create instance T : ${toJson(instance)}`);
             //--------------------------
-            const postgreSQLInterface = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
+            const postgreSQLInterface = await instance.getPostgreSQL().toDBInterface(instance);
             //--------------------------
             // console_log((0, instance.className(), `create postgreSQLInterface: ${toJson(postgreSQLInterface)}`);
             //--------------------------
             // Exclude createdAt and updatedAt fields
-            const excludedFields = getFilteredConversionFunctions(instance, (conversion) => conversion.isCreatedAt === true || conversion.isUpdatedAt === true);
+            const excludedFields = getFilteredConversionFunctions(instance.getStatic(), (conversion) => conversion.isCreatedAt === true || conversion.isUpdatedAt === true);
             // Remove excluded fields
             for (const [field] of excludedFields.entries()) {
                 delete postgreSQLInterface[field];
             }
             //--------------------------
-            const document = await databasePostgreSQL!.manager.save(postgreSQLInterface);
+            const queryRunner = this.getActiveRunner(`[${instance.className()}] - create`, providedRunner);
+            const document = await (queryRunner ? queryRunner.manager : databasePostgreSQL!.manager).save(postgreSQLInterface);
             //--------------------------
             // console_log((0, instance.className(), `create document: ${toJson(document)}`);
             //--------------------------
@@ -37,18 +290,22 @@ export class PostgreSQLDatabaseService {
             //--------------------------
         } catch (error) {
             console_error(0, `PostgreSQL`, `create - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
-    public static async update<T extends BaseEntity>(instance: T, updateSet: Record<string, any>, updateUnSet: Record<string, any>) {
+    public static async update<T extends BaseEntity>(instance: T, updateSet: Record<string, any>, updateUnSet: Record<string, any>, providedRunner?: QueryRunner) {
         try {
             //--------------------------
-            await connectPostgres();
+            await this.connectDB();
             //--------------------------
-            const postgreSQLEntity = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
-            const postgreSQLModel = await instance.getPostgreSQL().PostgreSQLModel();
-            const repository = databasePostgreSQL!.manager.getRepository(postgreSQLModel);
+            const postgreSQLEntity = await instance.getPostgreSQL().toDBInterface(instance);
+            const postgreSQLModel = await instance.getPostgreSQL().DBModel();
+            //--------------------------
+            const queryRunner = this.getActiveRunner(`[${instance.className()}] - update`, providedRunner);
+            //--------------------------
+            const repository = (queryRunner ? queryRunner.manager : databasePostgreSQL!.manager).getRepository(postgreSQLModel);
+            //--------------------------
             // const metadata = repository.metadata;
             //--------------------------
             // Aquí usamos el ID del objeto `instance` para identificar el registro a actualizar
@@ -59,15 +316,34 @@ export class PostgreSQLDatabaseService {
             //--------------------------
             // Construimos el objeto de actualización, estableciendo los campos de `updateUnSet` en `NULL`
             const updateObject: Record<string, any> = {};
-            Object.keys(updateSet).forEach((field: string) => {
-                updateObject[field] = updateSet[field];
-            });
-            Object.keys(updateUnSet).forEach((field: string) => {
-                updateObject[field] = null;
-            });
+
+            for (const field of Object.keys(updateSet)) {
+                if (field === 'smartUTxO_id') {
+                    //HACK: esto es para guardar la relacion correctamente.... pero solo funciona para smart utxos que es la que mas uso
+                    // Set the related entity for smartUTxO_id
+                    const SmartUTxOEntityPostgreSQL = (await import ('../../Entities/SmartUTxO.Entity.PostgreSQL.js')).SmartUTxOEntityPostgreSQL
+                    const relatedRepository = (queryRunner ? queryRunner.manager : databasePostgreSQL!.manager).getRepository(SmartUTxOEntityPostgreSQL);
+                    const relatedEntity = await relatedRepository.findOne(updateSet[field]);
+                    if (!relatedEntity && updateSet[field] !== null) {
+                        throw new Error(`Invalid smartUTxO_id: ${updateSet[field]}`);
+                    }
+                    updateObject['smartUTxO'] = relatedEntity || null;
+                } else {
+                    updateObject[field] = updateSet[field];
+                }
+            }
+            //--------------------------
+            for (const field of Object.keys(updateUnSet)) {
+                if (field === 'smartUTxO_id') {
+                    // Unset the smartUTxO relation
+                    updateObject['smartUTxO'] = null;
+                } else {
+                    updateObject[field] = null;
+                }
+            }
             //--------------------------
             // Exclude createdAt and updatedAt fields
-            const excludedFields = getFilteredConversionFunctions(instance, (conversion) => conversion.isCreatedAt === true || conversion.isUpdatedAt === true);
+            const excludedFields = getFilteredConversionFunctions(instance.getStatic(), (conversion) => conversion.isCreatedAt === true || conversion.isUpdatedAt === true);
             // Remove excluded fields
             for (const [field] of excludedFields.entries()) {
                 delete updateObject[field];
@@ -79,18 +355,21 @@ export class PostgreSQLDatabaseService {
             return result;
         } catch (error) {
             console_error(0, `PostgreSQL`, `update - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
-    public static async delete<T extends BaseEntity>(instance: T): Promise<string> {
+    public static async delete<T extends BaseEntity>(instance: T, providedRunner?: QueryRunner): Promise<string> {
         try {
             //--------------------------
-            await connectPostgres();
+            await this.connectDB();
             //--------------------------
-            const postgreSQLEntity = await instance.getPostgreSQL().toPostgreSQLInterface(instance);
-            const postgreSQLModel = await instance.getPostgreSQL().PostgreSQLModel();
-            const repository = databasePostgreSQL!.manager.getRepository(postgreSQLModel);
+            const postgreSQLEntity = await instance.getPostgreSQL().toDBInterface(instance);
+            const postgreSQLModel = await instance.getPostgreSQL().DBModel();
+            //--------------------------
+            const queryRunner = this.getActiveRunner(`[${instance.className()}] - delete`, providedRunner);
+            //--------------------------
+            const repository = (queryRunner ? queryRunner.manager : databasePostgreSQL!.manager).getRepository(postgreSQLModel);
             // const metadata = repository.metadata;
             //--------------------------
             const id = postgreSQLEntity._id;
@@ -105,39 +384,56 @@ export class PostgreSQLDatabaseService {
             //--------------------------
         } catch (error) {
             console_error(0, `PostgreSQL`, `delete - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
-    public static async deleteByParams<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter: Record<string, any>): Promise<number | undefined> {
+    public static async deleteByParams<T extends BaseEntity>(
+        Entity: typeof BaseEntity,
+        paramsFilter: Record<string, any>,
+        providedRunner?: QueryRunner
+    ): Promise<number | undefined> {
         try {
             //--------------------------
-            await connectPostgres();
+            await this.connectDB();
             //--------------------------
-            const postgreSQLModel = await Entity.getPostgreSQL().PostgreSQLModel();
-            const repository = databasePostgreSQL!.manager.getRepository(postgreSQLModel);
+            const postgreSQLModel = await Entity.getPostgreSQL().DBModel();
+            //--------------------------
+            const queryRunner = this.getActiveRunner(`[${Entity.className()}] - deleteByParams`, providedRunner);
+            //--------------------------
+            const repository = (queryRunner ? queryRunner.manager : databasePostgreSQL!.manager).getRepository(postgreSQLModel);
             const metadata = repository.metadata;
-            const queryBuilder = repository.createQueryBuilder('entity');
+            const queryBuilder = repository.createQueryBuilder();
             //--------------------------
-            // Eliminamos los registros que coincidan con los parámetros
-            this.applyFilters(queryBuilder, metadata, paramsFilter);
+            if (!isEmptyObject(paramsFilter)) {
+                // Eliminamos los registros que coincidan con los parámetros
+                // console_log(0, `PostgreSQL`, `deleteByParams - Applying filters: ${toJson(paramsFilter)}`);
+                this.applyFilters(queryBuilder, metadata, paramsFilter, false);
+            }
             //--------------------------
             const result = await queryBuilder.delete().execute();
             return result.affected === null ? undefined : result.affected;
             //--------------------------
         } catch (error) {
             console_error(0, `PostgreSQL`, `deleteByParams - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
-    public static async checkIfExists<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilterOrID: Record<string, any> | string): Promise<boolean> {
+    public static async checkIfExists<T extends BaseEntity>(
+        Entity: typeof BaseEntity,
+        paramsFilterOrID: Record<string, any> | string,
+        providedRunner?: QueryRunner
+    ): Promise<boolean> {
         try {
             //--------------------------
-            await connectPostgres();
+            await this.connectDB();
             //--------------------------
-            const postgreSQLModel = await Entity.getPostgreSQL().PostgreSQLModel();
-            const repository = databasePostgreSQL!.manager.getRepository(postgreSQLModel);
+            const postgreSQLModel = await Entity.getPostgreSQL().DBModel();
+            //--------------------------
+            const queryRunner = this.getActiveRunner(`[${Entity.className()}] - checkIfExists`, providedRunner);
+            //--------------------------
+            const repository = (queryRunner ? queryRunner.manager : databasePostgreSQL!.manager).getRepository(postgreSQLModel);
             const metadata = repository.metadata;
             const queryBuilder = repository.createQueryBuilder('entity');
             //--------------------------
@@ -153,7 +449,7 @@ export class PostgreSQLDatabaseService {
             return !!result;
         } catch (error) {
             console_error(0, `PostgreSQL`, `checkIfExists - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -161,15 +457,19 @@ export class PostgreSQLDatabaseService {
         Entity: typeof BaseEntity,
         paramsFilter: Record<string, any>,
         fieldsForSelect: Record<string, number>,
-        useOptionGet: OptionsGet
+        useOptionGet: OptionsGet,
+        providedRunner?: QueryRunner
     ) {
         try {
             //--------------------------
             // console_log((0, `PostgreSQL`, `getByParams - Connecting to PostgreSQL...`);
             //--------------------------
-            await connectPostgres();
-            const postgreSQLEntity = await Entity.getPostgreSQL().PostgreSQLModel();
-            const repository = databasePostgreSQL!.manager.getRepository(postgreSQLEntity);
+            await this.connectDB();
+            const postgreSQLEntity = await Entity.getPostgreSQL().DBModel();
+            //--------------------------
+            const queryRunner = this.getActiveRunner(`[${Entity.className()}] - getByParams`, providedRunner);
+            //--------------------------
+            const repository = (queryRunner ? queryRunner.manager : databasePostgreSQL!.manager).getRepository(postgreSQLEntity);
             const metadata = repository.metadata;
             let queryBuilder = repository.createQueryBuilder('entity');
             //--------------------------
@@ -237,13 +537,16 @@ export class PostgreSQLDatabaseService {
         }
     }
 
-    public static async getCount<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter: Record<string, any>): Promise<number> {
+    public static async getCount<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter: Record<string, any>, providedRunner?: QueryRunner): Promise<number> {
         try {
             //--------------------------
-            await connectPostgres();
+            await this.connectDB();
             //--------------------------
-            const postgreSQLEntity = await Entity.getPostgreSQL().PostgreSQLModel();
-            const repository = databasePostgreSQL!.manager.getRepository(postgreSQLEntity);
+            const postgreSQLEntity = await Entity.getPostgreSQL().DBModel();
+            //--------------------------
+            const queryRunner = this.getActiveRunner(`[${Entity.className()}] - getCount`, providedRunner);
+            //--------------------------
+            const repository = (queryRunner ? queryRunner.manager : databasePostgreSQL!.manager).getRepository(postgreSQLEntity);
             const metadata = repository.metadata;
             const queryBuilder = repository.createQueryBuilder('entity');
             //--------------------------
@@ -257,7 +560,7 @@ export class PostgreSQLDatabaseService {
             //--------------------------
         } catch (error) {
             console_error(0, `PostgreSQL`, `getCount - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -275,9 +578,11 @@ export class PostgreSQLDatabaseService {
             .join('.');
     }
 
-    private static applyFilters(queryBuilder: SelectQueryBuilder<any>, metadata: EntityMetadata, filters: Record<string, any>): SelectQueryBuilder<any> {
+    private static applyFilters(queryBuilder: SelectQueryBuilder<any>, metadata: EntityMetadata, filters: Record<string, any>, useAlias: boolean = true): SelectQueryBuilder<any> {
         //--------------------------
         // console_log(0, `PostgreSQL`, `applyFilters - Entering applyFilters with filters: ${toJson(filters, 2)}`);
+        //--------------------------
+        const alias = useAlias ? 'entity.' : ''; // Include or exclude alias dynamically
         //--------------------------
         // Function to check if the field is of type JSONB
         const isJsonbField = (field: string): boolean => {
@@ -286,7 +591,10 @@ export class PostgreSQLDatabaseService {
         };
         //--------------------------
         const applyFilter = (key: string, value: any, parentKey: string = '', index: number = 0): string => {
+            //--------------------------
             const fullKey = parentKey ? `${parentKey}.${key}` : key;
+            const columnName = `${alias}${fullKey}`; // Conditionally add alias
+            //--------------------------
             // console_log(0, `PostgreSQL`, `applyFilters - Processing filter: ${fullKey} = ${toJson(value)}`);
             const createParam = (paramKey: string, paramValue: any) => {
                 // Append index to make each parameter unique
@@ -329,32 +637,32 @@ export class PostgreSQLDatabaseService {
                 const conditions = Object.entries(value).map(([operator, operand], i) => {
                     switch (operator) {
                         case '$eq':
-                            return `${this.quoteColumnName(`entity.${fullKey}`)} = :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`${columnName}`)} = :${createParam(fullKey, operand)}`;
                         case '$ne':
-                            return `${this.quoteColumnName(`entity.${fullKey}`)} != :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`${columnName}`)} != :${createParam(fullKey, operand)}`;
                         case '$gt':
-                            return `${this.quoteColumnName(`entity.${fullKey}`)} > :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`${columnName}`)} > :${createParam(fullKey, operand)}`;
                         case '$gte':
-                            return `${this.quoteColumnName(`entity.${fullKey}`)} >= :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`${columnName}`)} >= :${createParam(fullKey, operand)}`;
                         case '$lt':
-                            return `${this.quoteColumnName(`entity.${fullKey}`)} < :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`${columnName}`)} < :${createParam(fullKey, operand)}`;
                         case '$lte':
-                            return `${this.quoteColumnName(`entity.${fullKey}`)} <= :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`${columnName}`)} <= :${createParam(fullKey, operand)}`;
                         case '$in':
                             // Use @> for JSONB, otherwise use IN
                             if (isJsonbField(fullKey)) {
-                                return `${this.quoteColumnName(`entity.${fullKey}`)} @> :${createParam(fullKey, toJson(operand))}::jsonb`;
+                                return `${this.quoteColumnName(`${columnName}`)} @> :${createParam(fullKey, toJson(operand))}::jsonb`;
                             }
-                            return `${this.quoteColumnName(`entity.${fullKey}`)} IN (:...${createParam(fullKey, operand)})`;
+                            return `${this.quoteColumnName(`${columnName}`)} IN (:...${createParam(fullKey, operand)})`;
                         case '$nin':
                             if (isJsonbField(fullKey)) {
-                                return `${this.quoteColumnName(`entity.${fullKey}`)} NOT @> :${createParam(fullKey, toJson(operand))}::jsonb`;
+                                return `${this.quoteColumnName(`${columnName}`)} NOT @> :${createParam(fullKey, toJson(operand))}::jsonb`;
                             }
-                            return `${this.quoteColumnName(`entity.${fullKey}`)} NOT IN (:...${createParam(fullKey, operand)})`;
+                            return `${this.quoteColumnName(`${columnName}`)} NOT IN (:...${createParam(fullKey, operand)})`;
                         case '$regex':
-                            return `${this.quoteColumnName(`entity.${fullKey}`)} ~ :${createParam(fullKey, operand)}`;
+                            return `${this.quoteColumnName(`${columnName}`)} ~ :${createParam(fullKey, operand)}`;
                         case '$exists':
-                            return operand ? `${this.quoteColumnName(`entity.${fullKey}`)} IS NOT NULL` : `${this.quoteColumnName(`entity.${fullKey}`)} IS NULL`;
+                            return operand ? `${this.quoteColumnName(`${columnName}`)} IS NOT NULL` : `${this.quoteColumnName(`${columnName}`)} IS NULL`;
                         default:
                             throw new Error(`Unsupported operator: ${operator}`);
                     }
@@ -363,9 +671,9 @@ export class PostgreSQLDatabaseService {
             } else if (typeof value === 'string' && value.startsWith('/') && value.endsWith('/')) {
                 // Handle regex filter
                 const regexPattern = value.slice(1, -1);
-                return `${this.quoteColumnName(`entity.${fullKey}`)} ~ :${createParam(fullKey, regexPattern)}`;
+                return `${this.quoteColumnName(`${columnName}`)} ~ :${createParam(fullKey, regexPattern)}`;
             } else {
-                return `${this.quoteColumnName(`entity.${fullKey}`)} = :${createParam(fullKey, value)}`;
+                return `${this.quoteColumnName(`${columnName}`)} = :${createParam(fullKey, value)}`;
             }
         };
         //--------------------------
@@ -380,5 +688,9 @@ export class PostgreSQLDatabaseService {
         // console_log(0, `PostgreSQL`, `applyFilters - Filter parameters: ${toJson(queryBuilder.getParameters())}`);
         //--------------------------
         return queryBuilder;
+    }
+
+    public static async aggregate<T extends BaseEntity>(Entity: typeof BaseEntity, pipeline: Record<string, any>[], session?: any) {
+        throw `PostgreSQL does not support aggregation pipelines like MongoDB.`;
     }
 }

@@ -1,7 +1,7 @@
-import { Lucid, SignedMessage } from 'lucid-cardano';
+import { Lucid, LucidEvolution, SignedMessage } from '@lucid-evolution/lucid';
 import fetchWrapper from '../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
 import { strToHex, toJson } from '../../Commons/index.js';
-import { yup }  from '../../Commons/yupLocale.js';
+import { yup } from '../../Commons/yupLocale.js';
 import { Credentials, CredentialsAuthenticated } from './types.js';
 
 export class AuthApi {
@@ -10,7 +10,7 @@ export class AuthApi {
 
     // #region api
 
-    public static async generateAuthTokensApi(lucid: Lucid, credentials: Credentials, createSignedSession: Boolean): Promise<string> {
+    public static async generateAuthTokensApi(lucid: LucidEvolution, credentials: Credentials, createSignedSession: Boolean): Promise<string> {
         try {
             //-------------------------
             console.log(`[Auth] - generateAuthToken - Init`);
@@ -21,7 +21,9 @@ export class AuthApi {
             //-------------------------
             const schemaBody = yup.object().shape({
                 address: yup.string().required().label('Address'),
-                walletNameOrSeedOrKey: yup.string().required().label('Wallet name or seed or key'),
+                walletName: yup.string().required().label('Wallet name'),
+                walletSeed: yup.string().label('Wallet seed'),
+                walletKey: yup.string().label('Wallet key'),
                 useBlockfrostToSubmit: yup.string().required().label('useBlockfrostToSubmit'),
                 isWalletFromSeed: yup.string().required().label('isWalletFromSeed'),
                 isWalletFromKey: yup.string().required().label('isWalletFromKey'),
@@ -42,12 +44,14 @@ export class AuthApi {
             //----------------------------
             let signedChallengue: SignedMessage | undefined = undefined;
             if (createSignedSession === true) {
-                signedChallengue = await lucid.wallet.signMessage(validatedCredentials.address, strToHex(challengue));
+                signedChallengue = await lucid.wallet().signMessage(validatedCredentials.address, strToHex(challengue));
             }
             //----------------------------
             const credentialAuthenticated: CredentialsAuthenticated = {
                 address: credentials.address,
-                walletNameOrSeedOrKey: credentials.walletNameOrSeedOrKey,
+                walletName: credentials.walletName,
+                walletSeed: credentials.walletSeed,
+                walletKey: credentials.walletKey,
                 useBlockfrostToSubmit: credentials.useBlockfrostToSubmit,
                 isWalletFromSeed: credentials.isWalletFromSeed,
                 isWalletFromKey: credentials.isWalletFromKey,
@@ -64,7 +68,7 @@ export class AuthApi {
             return token;
         } catch (error) {
             console.log(`[Auth] - generateAuthToken - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -95,7 +99,7 @@ export class AuthApi {
             //----------------------------
         } catch (error) {
             console.log(`[Auth] - getJWTTokenApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 

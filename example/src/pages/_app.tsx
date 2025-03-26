@@ -20,11 +20,12 @@ export default function MyApp({ Component, pageProps }: AppProps<{ session?: Ses
             </Head>
             <SessionProvider session={pageProps.session} refetchInterval={0}>
                 <StoreProvider store={globalStore}>
-                    <AppGeneral />
-                    <ReactNotifications />
-                    <Layout>
-                        <Component {...pageProps} />
-                    </Layout>
+                    <AppGeneral >
+                        <ReactNotifications />
+                        <Layout>
+                            <Component {...pageProps} />
+                        </Layout>
+                    </AppGeneral>
                 </StoreProvider>
             </SessionProvider>
         </>

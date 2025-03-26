@@ -16,7 +16,7 @@ export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
             }
             //------------------
             const body = toJson({ error });
-            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/update-cenceled-transaction/${txHash}`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/update-canceled-transaction/${txHash}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -36,7 +36,7 @@ export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
         } catch (error) {
             console.log(`[${this._Entity.className()}] - updateCanceledTransactionApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -68,14 +68,18 @@ export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
         } catch (error) {
             console.log(`[${this._Entity.className()}] - updateFailedTransactionApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
-    public static async beginStatusUpdaterJobApi(swCheckAgainTxWithTimeOut: boolean = false): Promise<boolean> {
+    public static async beginStatusUpdaterJobApi(
+        swCheckAgainTxTimeOut: boolean = false,
+        swCheckAgainTxPendingTimeOut: boolean = false,
+        swCheckAgainTxFailed: boolean = false
+    ): Promise<boolean> {
         try {
             //------------------
-            const queryString = createQueryURLString({ swCheckAgainTxWithTimeOut });
+            const queryString = createQueryURLString({ swCheckAgainTxTimeOut, swCheckAgainTxPendingTimeOut, swCheckAgainTxFailed });
             //------------------
             const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/begin-status-updater${queryString}`);
             //-------------------------
@@ -91,7 +95,7 @@ export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
         } catch (error) {
             console.log(`[${this._Entity.className()}] - beginStatusUpdaterJobApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -116,7 +120,7 @@ export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
         } catch (error) {
             console.log(`[${this._Entity.className()}] - transactionSubmitAndStatusUpdaterJobApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -141,7 +145,7 @@ export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
         } catch (error) {
             console.log(`[${this._Entity.className()}] - transactionStatusUpdaterApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -166,7 +170,39 @@ export class TransactionFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
         } catch (error) {
             console.log(`[${this._Entity.className()}] - getTransactionStatusApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
+        }
+    }
+
+    public static async releaseUTxOsApi(txHash: string, swReleaseIsPreparing: boolean = true, swReleaseIsConsuming: boolean = true): Promise<boolean> {
+        try {
+            //-------------------------
+            if (isNullOrBlank(txHash)) {
+                throw `txHash not defined`;
+            }
+            //-------------------------
+            const body = toJson({ swReleaseIsPreparing, swReleaseIsConsuming });
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/release-utxos/${txHash}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body,
+            });
+            //-------------------------
+            if (response.status === 200) {
+                const data = await response.json();
+                console.log(`[${this._Entity.className()}] - releaseUTxOsApi - result: ${data.result} - response OK`);
+                return data.result;
+            } else {
+                const errorData = await response.json();
+                //throw `Received status code ${response.status} with message: ${errorData.error.message ? errorData.error.message : errorData.error}`;
+                throw `${errorData.error.message ? errorData.error.message : errorData.error}`;
+            }
+            //-------------------------
+        } catch (error) {
+            console.log(`[${this._Entity.className()}] - releaseUTxOsApi - Error: ${error}`);
+            throw error;
         }
     }
 

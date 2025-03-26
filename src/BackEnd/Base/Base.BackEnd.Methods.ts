@@ -14,6 +14,7 @@ import {
 } from '../../Commons/types.js';
 import { isEmptyObject, isEqual, isFrontEndEnvironment, isNullOrBlank, isObject, isString, isSubclassOf, showData, toJson } from '../../Commons/utils.js';
 import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
+import { DatabaseService } from '../DatabaseService/Database.Service.js';
 import { MongoDatabaseService } from '../DatabaseService/Mongo.Database.Service.js';
 import { PostgreSQLDatabaseService } from '../DatabaseService/PostgreSQL.Database.Service.js';
 
@@ -35,7 +36,7 @@ export class BaseBackEndMethods {
     public static getBack(entity: any): any {
         const result = RegistryManager.getFromBackEndAppliedRegistry(entity);
         if (!result) {
-            throw `BackEnd Methods Applied for ${entity} not found in registry.`;
+            throw `BackEnd Methods Applied for ${entity.className()} not found in registry.`;
         } else {
             // console.error (`----- get BackEndApplied for ${entity.className()} found ----`)
         }
@@ -172,7 +173,7 @@ export class BaseBackEndMethods {
         if (value_object !== undefined) {
             // voy a revisar el objeto a ver si hay id en él o si puedo salvarlo
             if (value_object._DB_id) {
-                // TODO: no quiero hacer esto. supuestamente aqui chekeaba el id del child y si estaba ok updateaba el child... es mucha sobrecarga innecesaria
+                //TODO: no quiero hacer esto. supuestamente aqui chekeaba el id del child y si estaba ok updateaba el child... es mucha sobrecarga innecesaria
                 // const exists = await RelatedClassType.checkIfExists(value_object._DB_id);
                 // if (!exists) {
                 //     console_errorLv2(0, instance.className(), `${propertyKey}: ${conversions.propertyToFill} id ${value_object._DB_id} not found`);
@@ -267,7 +268,7 @@ export class BaseBackEndMethods {
             //-------------------------
         } catch (error) {
             console_errorLv2(-1, Entity.className(), `checkDuplicate - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -296,14 +297,13 @@ export class BaseBackEndMethods {
             //-------------------------
         } catch (error) {
             console_errorLv2(-1, Entity.className(), `checkRequired - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
     public static async create<T extends BaseEntity>(instance: T, optionsCreate?: OptionsCreateOrUpdate): Promise<T> {
         try {
             if (isFrontEndEnvironment()) {
-                //return await this.createApi<T>(optionsCreate);
                 throw `Can't run this method in the Browser`;
             }
             //-----------------------
@@ -320,8 +320,10 @@ export class BaseBackEndMethods {
             //----------------------------
             await this.getBack(instance.getStatic()).cascadeSaveChildRelations(instance, useOptionCreate);
             //--------------------------------------
-            if (process.env.USE_DATABASE === 'mongo') {
-                const _id = await MongoDatabaseService.create<T>(instance);
+            return await DatabaseService().withContextTransaction(`[${instance.className()}] - create`, async () => {
+                //--------------------------------------
+                const _id = await DatabaseService().create<T>(instance);
+                //--------------------------------------
                 if (_id) {
                     const instance_ = await this.getById<T>(instance.getStatic(), _id, optionsCreate, undefined);
                     if (instance_ === undefined) {
@@ -330,38 +332,24 @@ export class BaseBackEndMethods {
                     //-----------------------
                     // se hace despues por que necesita el id de este registro para actualizar en el padre
                     // se hace unicamente al crear el registro
-                    await this.getBack(instance.getStatic()).cascadeSaveParentRelations(instance_, useOptionCreate);
                     //-----------------------
-                    console_logLv2(-1, instance.className(), `create - Instance: ${instance_.show()} - OK`);
-                    return instance_;
-                } else {
-                    throw `unknown Mongo`;
-                }
-            } else if (process.env.USE_DATABASE === 'postgresql') {
-                const _id = await PostgreSQLDatabaseService.create<T>(instance);
-                // console_logLv2(0, instance.className(), `id postgres: ${_id}`);
-                if (_id) {
-                    const instance_ = await this.getById<T>(instance.getStatic(), _id, optionsCreate, undefined);
-                    if (instance_ === undefined) {
-                        throw `${instance.className()} - Not found after created - id: ${_id.toString()}`;
-                    }
-                    //-----------------------
-                    // se hace despues por que necesita el id de este registro para actualizar en el padre
-                    // se hace unicamente al crear el registro
                     await this.getBack(instance.getStatic()).cascadeSaveParentRelations(instance_, useOptionCreate);
                     //-----------------------
                     console_logLv2(-1, instance.className(), `create - Instance: ${instance_.show()} - OK`);
                     //-----------------------
                     return instance_;
                 } else {
-                    throw `unknown PostgreSQL`;
+                    throw `Entity not created`;
                 }
-            } else {
-                throw `Database not defined`;
-            }
+            });
         } catch (error) {
-            console_errorLv2(-1, instance.className(), `create - Error: ${error}`);
-            throw `${error}`;
+            const isRetryableErrorDBLock = DatabaseService().isRetryableErrorDBLock(error);
+            if (!isRetryableErrorDBLock) {
+                console_errorLv2(-1, instance.className(), `create - Error: ${error}`);
+            } else {
+                console_logLv2(-1, instance.className(), `create - Error: ${error}`);
+            }
+            throw error;
         }
     }
 
@@ -372,7 +360,6 @@ export class BaseBackEndMethods {
             }
             //-----------------------
             if (isFrontEndEnvironment()) {
-                //return await this.refreshApi<T>(optionsGet);
                 throw `Can't run this method in the Browser`;
             }
             //-----------------------
@@ -382,12 +369,13 @@ export class BaseBackEndMethods {
             if (instance_ === undefined) {
                 throw `id: ${instance._DB_id} - Instance not found`;
             }
+            //-----------------------
             Object.assign(instance, instance_);
             console_logLv2(-1, instance.className(), `refresh - Instance: ${instance.show()} - OK`);
             //-----------------------
         } catch (error) {
             console_errorLv2(-1, instance.className(), `refresh - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -432,33 +420,30 @@ export class BaseBackEndMethods {
                     `update - WARNING - not all fields exits on instance, possible overwrite with undefined. Use UpdateMeWithParams for specific fields`
                 );
             }
-            //-----------------------
-            if (process.env.USE_DATABASE === 'mongo') {
-                //-----------------------
-                const mongoInterface = (await instance.getMongo().toMongoInterface(instance)) as any;
-                //-----------------------
-                await this.updateMeWithParams<T>(instance, mongoInterface, false);
-                //-----------------------
-                console_logLv2(-1, instance.className(), `update - Instance: ${instance.show()} - OK`);
-                //----------------------------
-            } else if (process.env.USE_DATABASE === 'postgresql') {
-                //-----------------------
-                const postgreSQLInterface = (await instance.getPostgreSQL().toPostgreSQLInterface(instance)) as any;
-                //-----------------------
-                await this.updateMeWithParams<T>(instance, postgreSQLInterface, false);
-                //-----------------------
-                console_logLv2(-1, instance.className(), `update - Instance: ${instance.show()} - OK`);
-                //----------------------------
-            } else {
-                throw `Database not defined`;
-            }
+            //----------------------------
+            const interfaceDB = (await instance.getEntityDB().toDBInterface(instance)) as any;
+            //----------------------------
+            await this.updateMeWithParams<T>(instance, interfaceDB, useOptionUpdate, false);
+            //----------------------------
+            console_logLv2(-1, instance.className(), `update - Instance: ${instance.show()} - OK`);
+            //----------------------------
         } catch (error) {
-            console_errorLv2(-1, instance.className(), `update - Error: ${error}`);
-            throw `${error}`;
+            const isRetryableErrorDBLock = DatabaseService().isRetryableErrorDBLock(error);
+            if (!isRetryableErrorDBLock) {
+                console_errorLv2(-1, instance.className(), `update - Error: ${error}`);
+            } else {
+                console_logLv2(-1, instance.className(), `update - Error: ${error}`);
+            }
+            throw error;
         }
     }
 
-    public static async updateMeWithParams<T extends BaseEntity>(instance: T, updateFields: Record<string, any>, swRefreshInstance: boolean = true): Promise<void> {
+    public static async updateMeWithParams<T extends BaseEntity>(
+        instance: T,
+        updateFields: Record<string, any>,
+        optionsUpdate?: OptionsCreateOrUpdate,
+        swRefreshInstance: boolean = true
+    ): Promise<void> {
         try {
             if (isNullOrBlank(instance._DB_id)) {
                 throw `id not defined`;
@@ -469,9 +454,9 @@ export class BaseBackEndMethods {
                 throw `Can't run this method in the Browser`;
             }
             //-----------------------
-            console_logLv2(1, instance.className(), `updateMeWithParams - swRefreshInstance: ${swRefreshInstance} - Init`);
+            console_logLv2(1, instance.className(), `updateMeWithParams - Options: ${showData(optionsUpdate)} - Init`);
             //----------------------------
-            //----------------------------
+            console_logLv2(0, instance.className(), `updateMeWithParams - swRefreshInstance: ${swRefreshInstance}`);
             console_logLv2(0, instance.className(), `updateMeWithParams - id: ${instance._DB_id}`);
             console_logLv2(0, instance.className(), `updateMeWithParams - updateFields: ${showData(Object.keys(updateFields))} |`);
             //----------------------------
@@ -480,7 +465,7 @@ export class BaseBackEndMethods {
             //----------------------------
             for (let key in updateFields) {
                 if (key !== '_DB_id') {
-                    if (updateFields[key as keyof typeof updateFields] === undefined) {
+                    if (updateFields[key as keyof typeof updateFields] === undefined || updateFields[key as keyof typeof updateFields] === null) {
                         updateUnSet = { ...updateUnSet, [key]: '' };
                     } else {
                         updateSet = {
@@ -505,61 +490,74 @@ export class BaseBackEndMethods {
             //-------------------------
             await this.checkRequired(instance.getStatic(), mergedInstance);
             //----------------------------
-            if (process.env.USE_DATABASE === 'mongo') {
-                //----------------------------
-                const document = await MongoDatabaseService.update<T>(instance, updateSet, updateUnSet);
-                //----------------------------
-                if (document) {
+            return await DatabaseService().withContextTransaction(`[${instance.className()}] - update`, async () => {
+                //-----------------------
+                if (process.env.USE_DATABASE === 'mongo') {
                     //-----------------------
-                    // voy a actualizar los campos manualmente en la instancia, asi no tengo que hacer un refresh
-                    //-----------------------
-                    if (swRefreshInstance) {
+                    const document = await DatabaseService().update<T>(instance, updateSet, updateUnSet);
+                    //----------------------------
+                    if (document) {
                         //-----------------------
-                        const newInstance = (await instance.getMongo().fromMongoInterface(document)) as any;
+                        // voy a actualizar los campos manualmente en la instancia, asi no tengo que hacer un refresh
                         //-----------------------
-                        Object.entries(updateFields).forEach(([key, value]) => {
-                            if (key in instance) {
-                                instance[key as keyof typeof instance] = newInstance[key as keyof typeof newInstance];
-                            }
-                        });
-                        //-----------------------
+                        if (swRefreshInstance) {
+                            //-----------------------
+                            const newInstance = (await instance.getMongo().fromDBInterface(document)) as any;
+                            //-----------------------
+                            Object.entries(updateFields).forEach(([key, value]) => {
+                                if (key in instance) {
+                                    instance[key as keyof typeof instance] = newInstance[key as keyof typeof newInstance];
+                                }
+                            });
+                            //-----------------------
+                        }
+                        console_logLv2(-1, instance.className(), `updateMeWithParams - OK`);
+                    } else {
+                        throw `Entity not updated, maybe not found`;
                     }
-                    console_logLv2(-1, instance.className(), `updateMeWithParams - OK`);
-                } else {
-                    throw `Document not updated, maybe not found`;
-                }
-                //----------------------------
-            } else if (process.env.USE_DATABASE === 'postgresql') {
-                //----------------------------
-                const result = await PostgreSQLDatabaseService.update<T>(instance, updateSet, updateUnSet);
-                //----------------------------
-                if (result.affected == 1) {
-                    //-----------------------
-                    // voy a actualizar los campos manualmente en la instancia, asi no tengo que hacer un refresh
-                    //-----------------------
-                    if (swRefreshInstance) {
+                } else if (process.env.USE_DATABASE === 'postgresql') {
+                    //----------------------------
+                    const result = await DatabaseService().update<T>(instance, updateSet, updateUnSet);
+                    //----------------------------
+                    if (result.affected == 1) {
                         //-----------------------
-                        Object.entries(updateFields).forEach(([key, value]) => {
-                            if (key in instance) {
-                                instance[key as keyof typeof instance] = updateFields[key as keyof typeof updateFields];
-                            }
-                        });
+                        // voy a actualizar los campos manualmente en la instancia, asi no tengo que hacer un refresh
                         //-----------------------
+                        if (swRefreshInstance) {
+                            //-----------------------
+                            Object.entries(updateFields).forEach(([key, value]) => {
+                                if (key in instance) {
+                                    instance[key as keyof typeof instance] = updateFields[key as keyof typeof updateFields];
+                                }
+                            });
+                            //-----------------------
+                        }
+                        console_logLv2(-1, instance.className(), `updateMeWithParams - OK`);
+                    } else {
+                        throw `Entity not updated, maybe not found`;
                     }
-                    console_logLv2(-1, instance.className(), `updateMeWithParams - OK`);
                 } else {
-                    throw `Document not updated, maybe not found`;
+                    throw `Database not defined`;
                 }
-            } else {
-                throw `Database not defined`;
-            }
+            });
+            //----------------------------
         } catch (error) {
-            console_errorLv2(-1, instance.className(), `updateMeWithParams - Error: ${error}`);
-            throw `${error}`;
+            const isRetryableErrorDBLock = DatabaseService().isRetryableErrorDBLock(error);
+            if (!isRetryableErrorDBLock) {
+                console_errorLv2(-1, instance.className(), `updateMeWithParams - Error: ${error}`);
+            } else {
+                console_logLv2(-1, instance.className(), `updateMeWithParams - Error: ${error}`);
+            }
+            throw error;
         }
     }
 
-    public static async updateWithParams<T extends BaseEntity>(Entity: typeof BaseEntity, id: string, updateFields: Record<string, any>): Promise<T> {
+    public static async updateWithParams<T extends BaseEntity>(
+        Entity: typeof BaseEntity,
+        id: string,
+        updateFields: Record<string, any>,
+        optionsUpdate?: OptionsCreateOrUpdate
+    ): Promise<T> {
         //----------------------------
         try {
             if (isFrontEndEnvironment()) {
@@ -567,21 +565,29 @@ export class BaseBackEndMethods {
                 throw `Can't run this method in the Browser`;
             }
             //-----------------------
-            console_logLv2(1, Entity.className(), `updateWithParams - Init`);
+            console_logLv2(1, Entity.className(), `updateWithParams - Options: ${showData(optionsUpdate)} - Init`);
             //----------------------------
-            // TODO: podria cargar solo los campos que se van a actualizar. por ahora cargo todo
-            const instance = await this.getById<T>(Entity, id, { loadRelations: {} });
-            if (!instance) {
-                throw `${Entity.className()} - Not found for Update - id: ${id}`;
-            }
-            await this.updateMeWithParams<T>(instance, updateFields);
-            //-----------------------
-            console_logLv2(-1, instance.className(), `updateWithParams - OK`);
+            return await DatabaseService().withContextTransaction(`[${Entity.className()}] - updateWithParams`, async () => {
+                //TODO: podria cargar solo los campos que se van a actualizar. por ahora cargo todo
+                const instance = await this.getById<T>(Entity, id, { loadRelations: {} });
+                if (!instance) {
+                    throw `${Entity.className()} - Not found for Update - id: ${id}`;
+                }
+                await this.updateMeWithParams<T>(instance, updateFields, optionsUpdate);
+                //-----------------------
+                console_logLv2(-1, instance.className(), `updateWithParams - OK`);
+                //----------------------------
+                return instance;
+            });
             //----------------------------
-            return instance;
         } catch (error) {
-            console_errorLv2(-1, Entity.className(), `updateWithParams - Error: ${error}`);
-            throw `${error}`;
+            const isRetryableErrorDBLock = DatabaseService().isRetryableErrorDBLock(error);
+            if (!isRetryableErrorDBLock) {
+                console_errorLv2(-1, Entity.className(), `updateWithParams - Error: ${error}`);
+            } else {
+                console_logLv2(-1, Entity.className(), `updateWithParams - Error: ${error}`);
+            }
+            throw error;
         }
     }
 
@@ -601,19 +607,11 @@ export class BaseBackEndMethods {
                 throw `Can't run this method in the Browser`;
             }
             //----------------------------
-            if (process.env.USE_DATABASE === 'mongo') {
-                const swExists = await MongoDatabaseService.checkIfExists<T>(Entity, paramsFilterOrID);
-                return swExists;
-            } else if (process.env.USE_DATABASE === 'postgresql') {
-                const swExists = await PostgreSQLDatabaseService.checkIfExists<T>(Entity, paramsFilterOrID);
-                return swExists;
-            }
-            {
-                throw `Database not defined`;
-            }
+            const swExists = await DatabaseService().checkIfExists<T>(Entity, paramsFilterOrID);
+            return swExists;
         } catch (error) {
             console_errorLv2(0, Entity.className(), `checkIfExists - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -635,14 +633,7 @@ export class BaseBackEndMethods {
             //----------------------------
             console_logLv2(1, Entity.className(), `getById - id: ${id} - Options: ${showData(optionsGet, false)} - Init`);
             //----------------------------
-            const instance = await this.getOneByParams<T>(
-                Entity,
-                { _id: id },
-                {
-                    ...optionsGet,
-                },
-                restricFilter
-            );
+            const instance = await this.getOneByParams<T>(Entity, { _id: id }, { ...optionsGet }, restricFilter);
             //----------------------------
             // console_logLv2(0, Entity.className(), `getById - id: ${id} - ${instance?._DB_id}`);
             //----------------------------
@@ -660,7 +651,7 @@ export class BaseBackEndMethods {
             //----------------------------
         } catch (error) {
             console_errorLv2(-1, Entity.className(), `getById - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -698,7 +689,7 @@ export class BaseBackEndMethods {
             //----------------------------
         } catch (error) {
             console_errorLv2(-1, Entity.className(), `getOneByParams - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -817,7 +808,7 @@ export class BaseBackEndMethods {
                 console_logLv2(0, Entity.className(), `getByParams - restricFilter: ${showData(restricFilter)}`);
             }
             //----------------------------
-            let filters;
+            let filters: Record<string, any>;
             if (!isEmptyObject(paramsFilter) && !isEmptyObject(restricFilter)) {
                 filters = { $and: [paramsFilter, restricFilter] };
             } else {
@@ -828,10 +819,10 @@ export class BaseBackEndMethods {
                 useOptionGet.sort = Entity.defaultSortForSelect;
             }
             //----------------------------
-            if (process.env.USE_DATABASE === 'mongo') {
+            return await DatabaseService().withContextTransaction(`[${Entity.className()}] - getByParams`, async () => {
                 //----------------------------
                 // console_log (`pre getByParams ${Entity.className()}`)
-                const documents = await MongoDatabaseService.getByParams(Entity, filters, fieldsForSelect, useOptionGet);
+                const entities = await DatabaseService().getByParams(Entity, filters, fieldsForSelect, useOptionGet);
                 // console_log (`post getByParams ${Entity.className()}`)
                 //----------------------------
                 const instances: T[] = [];
@@ -839,7 +830,7 @@ export class BaseBackEndMethods {
                 console_logLv2(
                     0,
                     Entity.className(),
-                    `getByParams - Processing ${documents.length} document(s)... - show firts 5: ${documents
+                    `getByParams - Processing ${entities.length} document(s)... - show firts 5: ${entities
                         .slice(0, 5)
                         .map((item: any) => toJson({ _id: item._id, name: item.name ?? '' }))
                         .join(', ')}`
@@ -847,17 +838,19 @@ export class BaseBackEndMethods {
                 //----------------------------
                 let index = 0;
                 //----------------------------
-                for (let doc of documents) {
+                for (let entity of entities) {
                     //-----------------------
                     index++;
                     //-----------------------
-                    if (documents.length > 1 && documents.length < 10) {
-                        console_logLv2(1, Entity.className(), `getByParams - ${index}/${documents.length} - Processing document`);
+                    if (entities.length > 1 && entities.length < 10) {
+                        console_logLv2(1, Entity.className(), `getByParams - ${index}/${entities.length} - Processing entity`);
+                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${entities.length} - Entity fields: ${showData(Object.keys(entity), false)}`);
+                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${entities.length} - Entity fields len: ${Object.keys(entity).length}`);
                     }
                     //----------------------------
-                    if (doc._doc !== undefined) {
+                    if (entity._doc !== undefined) {
                         // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS _DOC`);
-                        doc = doc._doc;
+                        entity = entity._doc;
                     } else {
                         // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - DOCUMENT HAS NO _DOC`);
                     }
@@ -865,7 +858,7 @@ export class BaseBackEndMethods {
                     // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields: ${showData(Object.keys(doc), false)}`);
                     // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields len: ${Object.keys(doc).length}`);
                     //-----------------------
-                    const instance = (await Entity.getMongo().fromMongoInterface(doc)) as T;
+                    const instance = (await Entity.getEntityDB().fromDBInterface(entity)) as T;
                     //-----------------------
                     if (useOptionGet.lookUpFields !== undefined && useOptionGet.lookUpFields.length > 0) {
                         for (let lookUpField of useOptionGet.lookUpFields) {
@@ -874,8 +867,8 @@ export class BaseBackEndMethods {
                                     ? RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from)
                                     : RegistryManager.getFromEntitiesRegistry(lookUpField.from);
                             if (EntityClass !== undefined) {
-                                console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - LookUpField: ${lookUpField.from} - Loading...`);
-                                const instance_ = await EntityClass.getMongo().fromMongoInterface(doc[lookUpField.as]);
+                                console_logLv2(0, Entity.className(), `getByParams - ${index}/${entities.length} - LookUpField: ${lookUpField.from} - Loading...`);
+                                const instance_ = await EntityClass.getEntityDB().fromMongoInterface(entity[lookUpField.as]);
                                 if (instance_ !== undefined) {
                                     instance[lookUpField.as as keyof typeof instance] = instance_;
                                 }
@@ -890,7 +883,7 @@ export class BaseBackEndMethods {
                     if (useOptionGet.doCallbackAfterLoad === true) {
                         const cascadeUpdateCallBackAfterLoad: CascadeUpdate = await this.getBack(instance.getStatic()).callbackOnAfterLoad(instance, cascadeUpdate);
                         if (cascadeUpdateCallBackAfterLoad.swUpdate) {
-                            console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - updating because some callbackOnAfterLoad...`);
+                            console_logLv2(0, Entity.className(), `getByParams - ${index}/${entities.length} - updating because some callbackOnAfterLoad...`);
                             cascadeUpdate = cascadeUpdateCallBackAfterLoad;
                         }
                     }
@@ -898,7 +891,7 @@ export class BaseBackEndMethods {
                     if (useOptionGet.checkRelations === true) {
                         const cascadeUpdateCheckAllRelationsExists = await this.checkIfAllRelationsExists(instance);
                         if (cascadeUpdateCheckAllRelationsExists.swUpdate) {
-                            console_logLv2(0, Entity.className(), `getByParams -${index}/${documents.length} - updating because checkIfAllRelationsExists...`);
+                            console_logLv2(0, Entity.className(), `getByParams -${index}/${entities.length} - updating because checkIfAllRelationsExists...`);
                             cascadeUpdate = {
                                 swUpdate: true,
                                 updatedFields: {
@@ -911,21 +904,23 @@ export class BaseBackEndMethods {
                     //-----------------------
                     if (cascadeUpdate.swUpdate === true && cascadeUpdate.updatedFields !== undefined) {
                         //-----------------------
+                        const optionsCreateOrUpdate: OptionsCreateOrUpdate = { doCallbackAfterLoad: false, loadRelations: {}, saveRelations: {} };
+                        //-----------------------
                         const updatedFields = Object.entries(cascadeUpdate.updatedFields).reduce((acc, [key, value]) => {
                             acc[key] = value.to; // Assign the 'to' value to the field
                             return acc;
                         }, {} as Record<string, any>); // Add index signature to allow indexing with a string
                         //-----------------------
-                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - updating because cascadeUpdate...`);
+                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${entities.length} - updating because cascadeUpdate...`);
                         //-----------------------
-                        await this.updateMeWithParams<T>(instance, updatedFields, false);
+                        await this.updateMeWithParams<T>(instance, updatedFields, optionsCreateOrUpdate);
                         //-----------------------
                     }
                     //-----------------------
                     instances.push(instance);
                     //-----------------------
-                    if (documents.length > 1 && documents.length < 10) {
-                        console_logLv2(-1, instance.className(), `getByParams - ${index}/${documents.length} - Iterating document - OK`);
+                    if (entities.length > 1 && entities.length < 10) {
+                        console_logLv2(-1, instance.className(), `getByParams - ${index}/${entities.length} - Iterating document - OK`);
                     }
                     //----------------------------
                 }
@@ -940,119 +935,10 @@ export class BaseBackEndMethods {
                 );
                 //-----------------------
                 return instances as T[];
-            }
-            if (process.env.USE_DATABASE === 'postgresql') {
-                //----------------------------
-                // console_log (`pre getByParams ${Entity.className()}`)
-                const documents = await PostgreSQLDatabaseService.getByParams(Entity, filters, fieldsForSelect, useOptionGet);
-                // console_logLv2(0, Entity.className(),  `post getByParams ${toJson(documents)}`)
-                //----------------------------
-                const instances: T[] = [];
-                //----------------------------
-                console_logLv2(
-                    0,
-                    Entity.className(),
-                    `getByParams - Processing ${documents.length} document(s)... - show firts 5: ${documents
-                        .slice(0, 5)
-                        .map((item: any) => toJson({ _id: item._id, name: item.name ?? '' }))
-                        .join(', ')}`
-                );
-                //----------------------------
-                let index = 0;
-                //----------------------------
-                for (let doc of documents) {
-                    //-----------------------
-                    index++;
-                    //-----------------------
-                    if (documents.length > 1 && documents.length < 10) {
-                        console_logLv2(1, Entity.className(), `getByParams - ${index}/${documents.length} - Processing document`);
-                    }
-                    //----------------------------
-                    // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields: ${showData(Object.keys(doc), false)}`);
-                    // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - Document fields len: ${Object.keys(doc).length}`);
-                    //-----------------------
-                    const instance = (await Entity.getPostgreSQL().fromPostgreSQLInterface(doc)) as T;
-                    // console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - instance: ${showData(instance, false)}`);
-                    //-----------------------
-                    // if (useOptionGet.lookUpFields !== undefined && useOptionGet.lookUpFields.length > 0) {
-                    //     for (let lookUpField of useOptionGet.lookUpFields) {
-                    //         const EntityClass =
-                    //             RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from) !== undefined
-                    //                 ? RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from)
-                    //                 : RegistryManager.getFromEntitiesRegistry(lookUpField.from);
-                    //         if (EntityClass !== undefined) {
-                    //             console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - LookUpField: ${lookUpField.from} - Loading...`);
-                    //             const instance_ = await EntityClass.getPostgreSQL().fromPostgreSQLInterface(doc[lookUpField.as]);
-                    //             if (instance_ !== undefined) {
-                    //                 instance[lookUpField.as as keyof typeof instance] = instance_;
-                    //             }
-                    //         }
-                    //     }
-                    // }
-                    //-----------------------
-                    await this.getBack(instance.getStatic()).cascadeLoadRelations(instance, useOptionGet);
-                    //-----------------------
-                    let cascadeUpdate: CascadeUpdate = { swUpdate: false };
-                    //-----------------------
-                    if (useOptionGet.doCallbackAfterLoad === true) {
-                        const cascadeUpdateCallBackAfterLoad: CascadeUpdate = await this.getBack(instance.getStatic()).callbackOnAfterLoad(instance, cascadeUpdate);
-                        if (cascadeUpdateCallBackAfterLoad.swUpdate) {
-                            console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - updating because some callbackOnAfterLoad...`);
-                            cascadeUpdate = cascadeUpdateCallBackAfterLoad;
-                        }
-                    }
-                    //-----------------------
-                    if (useOptionGet.checkRelations === true) {
-                        const cascadeUpdateCheckAllRelationsExists = await this.checkIfAllRelationsExists(instance);
-                        if (cascadeUpdateCheckAllRelationsExists.swUpdate) {
-                            console_logLv2(0, Entity.className(), `getByParams -${index}/${documents.length} - updating because checkIfAllRelationsExists...`);
-                            cascadeUpdate = {
-                                swUpdate: true,
-                                updatedFields: {
-                                    ...cascadeUpdate.updatedFields,
-                                    ...cascadeUpdateCheckAllRelationsExists.updatedFields,
-                                },
-                            };
-                        }
-                    }
-                    //-----------------------
-                    if (cascadeUpdate.swUpdate === true && cascadeUpdate.updatedFields !== undefined) {
-                        //-----------------------
-                        const updatedFields = Object.entries(cascadeUpdate.updatedFields).reduce((acc, [key, value]) => {
-                            acc[key] = value.to; // Assign the 'to' value to the field
-                            return acc;
-                        }, {} as Record<string, any>); // Add index signature to allow indexing with a string
-                        //-----------------------
-                        console_logLv2(0, Entity.className(), `getByParams - ${index}/${documents.length} - updating because cascadeUpdate...`);
-                        //-----------------------
-                        await this.updateMeWithParams<T>(instance, updatedFields, false);
-                        //-----------------------
-                    }
-                    //-----------------------
-                    instances.push(instance);
-                    //-----------------------
-                    if (documents.length > 1 && documents.length < 10) {
-                        console_logLv2(-1, instance.className(), `getByParams - ${index}/${documents.length} - Iterating document - OK`);
-                    }
-                    //----------------------------
-                }
-                //-----------------------
-                console_logLv2(
-                    -1,
-                    Entity.className(),
-                    `getByParams - len: ${instances.length} - show firts 5: ${instances
-                        .slice(0, 5)
-                        .map((item: T) => item.show())
-                        .join(', ')} - OK`
-                );
-                //-----------------------
-                return instances as T[];
-            } else {
-                throw 'Database not defined';
-            }
+            });
         } catch (error) {
             console_errorLv2(-1, Entity.className(), `getByParams - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -1068,7 +954,7 @@ export class BaseBackEndMethods {
             return await this.getByParams<T>(Entity, undefined, optionsGet, restricFilter);
         } catch (error) {
             console_errorLv2(0, Entity.className(), `getAll - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -1080,65 +966,33 @@ export class BaseBackEndMethods {
             //----------------------------
             console_logLv2(1, Entity.className(), `getCount - Init`);
             //----------------------------
-            if (process.env.USE_DATABASE === 'mongo') {
-                //----------------------------
-                if (paramsFilter === undefined) {
-                    paramsFilter = {};
-                } else {
-                    console_logLv2(0, Entity.className(), `getCount - paramsFilter: ${showData(paramsFilter)}`);
-                }
-                //----------------------------
-                if (restricFilter === undefined) {
-                    restricFilter = {};
-                } else {
-                    console_logLv2(0, Entity.className(), `getCount - restricFilter: ${showData(restricFilter)}`);
-                }
-                //----------------------------
-                let filters;
-                if (!isEmptyObject(paramsFilter) && !isEmptyObject(restricFilter)) {
-                    filters = { $and: [paramsFilter, restricFilter] };
-                } else {
-                    filters = { ...paramsFilter, ...restricFilter };
-                }
-                //----------------------------
-                const count = await MongoDatabaseService.getCount(Entity, filters);
-                //-----------------------
-                console_logLv2(-1, Entity.className(), `getCount: ${count} - OK`);
-                //-----------------------
-                return count;
-            } else if (process.env.USE_DATABASE === 'postgresql') {
-                //----------------------------
-                if (paramsFilter === undefined) {
-                    paramsFilter = {};
-                } else {
-                    console_logLv2(0, Entity.className(), `getCount - paramsFilter: ${showData(paramsFilter)}`);
-                }
-                //----------------------------
-                if (restricFilter === undefined) {
-                    restricFilter = {};
-                } else {
-                    console_logLv2(0, Entity.className(), `getCount - restricFilter: ${showData(restricFilter)}`);
-                }
-                //----------------------------
-                let filters;
-                if (!isEmptyObject(paramsFilter) && !isEmptyObject(restricFilter)) {
-                    filters = { $and: [paramsFilter, restricFilter] };
-                } else {
-                    filters = { ...paramsFilter, ...restricFilter };
-                }
-                //----------------------------
-                const count = await PostgreSQLDatabaseService.getCount(Entity, filters);
-                //-----------------------
-                console_logLv2(-1, Entity.className(), `getCount: ${count} - OK`);
-                //-----------------------
-                return count;
+            if (paramsFilter === undefined) {
+                paramsFilter = {};
+            } else {
+                console_logLv2(0, Entity.className(), `getCount - paramsFilter: ${showData(paramsFilter)}`);
             }
-            {
-                throw 'Database not defined';
+            //----------------------------
+            if (restricFilter === undefined) {
+                restricFilter = {};
+            } else {
+                console_logLv2(0, Entity.className(), `getCount - restricFilter: ${showData(restricFilter)}`);
             }
+            //----------------------------
+            let filters;
+            if (!isEmptyObject(paramsFilter) && !isEmptyObject(restricFilter)) {
+                filters = { $and: [paramsFilter, restricFilter] };
+            } else {
+                filters = { ...paramsFilter, ...restricFilter };
+            }
+            //----------------------------
+            const count = await DatabaseService().getCount(Entity, filters);
+            //-----------------------
+            console_logLv2(-1, Entity.className(), `getCount: ${count} - OK`);
+            //-----------------------
+            return count;
         } catch (error) {
             console_errorLv2(-1, Entity.className(), `getCount - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -1150,35 +1004,30 @@ export class BaseBackEndMethods {
             //----------------------------
             console_logLv2(0, Entity.className(), `aggregate - Init`);
             //----------------------------
-            if (process.env.USE_DATABASE === 'mongo') {
-                //----------------------------
-                console_logLv2(0, Entity.className(), `aggregate - pipeline: ${showData(toJson(pipeline), false)} - OK`);
-                //----------------------------
-                const documents = await MongoDatabaseService.aggregate(Entity, pipeline);
-                // console_log (`post getByParams ${Entity.className()}`)
-                //----------------------------
-                const instances: any[] = [];
+            console_logLv2(0, Entity.className(), `aggregate - pipeline: ${showData(toJson(pipeline), false)} - OK`);
+            //----------------------------
+            const documents = await DatabaseService().aggregate(Entity, pipeline);
+            // console_log (`post getByParams ${Entity.className()}`)
+            //----------------------------
+            const instances: any[] = [];
+            //-----------------------
+            for (const doc of documents) {
                 //-----------------------
-                for (const doc of documents) {
-                    //-----------------------
-                    let instance = doc;
-                    //-----------------------
-                    if (isResultSameEntity) {
-                        instance = (await Entity.getMongo().fromMongoInterface(doc)) as any;
-                    }
-                    //-----------------------
-                    instances.push(instance);
-                    //-----------------------
+                let instance = doc;
+                //-----------------------
+                if (isResultSameEntity) {
+                    instance = (await Entity.getEntityDB().fromDBInterface(doc)) as any;
                 }
-                console_logLv2(0, Entity.className(), `aggregate len: ${instances.length} - OK`);
                 //-----------------------
-                return instances as any[];
-            } else {
-                throw 'Database not defined';
+                instances.push(instance);
+                //-----------------------
             }
+            console_logLv2(0, Entity.className(), `aggregate len: ${instances.length} - OK`);
+            //-----------------------
+            return instances as any[];
         } catch (error) {
             console_errorLv2(0, Entity.className(), `aggregate - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -1193,14 +1042,17 @@ export class BaseBackEndMethods {
             //----------------------------
             console_logLv2(0, Entity.className(), `deleteById - Options: ${showData(optionsDelete)} - Init`);
             //----------------------------
-            const instance = await this.getById<T>(Entity, id, { loadRelations: {} });
-            if (!instance) {
-                throw `id: ${id} - Instance not found`;
-            }
-            return await this.delete<T>(instance, optionsDelete);
+            return await DatabaseService().withContextTransaction(`[${Entity.className()}] - deleteById`, async () => {
+                const instance = await this.getById<T>(Entity, id, { loadRelations: {} });
+                if (!instance) {
+                    throw `id: ${id} - Instance not found`;
+                }
+                return await this.delete<T>(instance, optionsDelete);
+            });
+            //----------------------------
         } catch (error) {
             console_errorLv2(0, Entity.className(), `deleteById - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -1208,7 +1060,6 @@ export class BaseBackEndMethods {
         try {
             //----------------------------
             if (isFrontEndEnvironment()) {
-                //return await this.deleteByIdApi(id, optionsDelete);
                 throw `Can't run this method in the Browser`;
             }
             //----------------------------
@@ -1219,51 +1070,34 @@ export class BaseBackEndMethods {
                 useOptionDelete = optionsDelete;
             }
             //----------------------------
-            if (process.env.USE_DATABASE === 'mongo') {
-                //----------------------------
+            return await DatabaseService().withContextTransaction(`[${Entity.className()}] - deleteByParams`, async () => {
                 if (paramsFilter === undefined) {
                     paramsFilter = {};
                 } else {
                     console_logLv2(0, Entity.className(), `deleteByParams - paramsFilter: ${showData(paramsFilter)}`);
                 }
                 //----------------------------
-                const deletedCount = await MongoDatabaseService.deleteByParams<T>(Entity, paramsFilter);
+                const deletedCount = await DatabaseService().deleteByParams<T>(Entity, paramsFilter);
                 if (deletedCount === undefined) {
                     console_errorLv2(-1, Entity.className(), `deleteByParams - Error`);
                     return false;
                 }
                 //----------------------------
-                // TODO: ver useOptionDelete.deleteRelation y tambien agregar cascadeDelete en conversions
+                //TODO: ver useOptionDelete.deleteRelation y tambien agregar cascadeDelete en conversions
                 //----------------------------
                 console_logLv2(-1, Entity.className(), `deleteByParams - deletedCount: ${deletedCount} - OK`);
                 //----------------------------
                 return true;
-            } else if (process.env.USE_DATABASE === 'postgresql') {
-                //----------------------------
-                if (paramsFilter === undefined) {
-                    paramsFilter = {};
-                } else {
-                    console_logLv2(0, Entity.className(), `deleteByParams - paramsFilter: ${showData(paramsFilter)}`);
-                }
-                //----------------------------
-                const deletedCount = await PostgreSQLDatabaseService.deleteByParams<T>(Entity, paramsFilter);
-                if (deletedCount === undefined) {
-                    console_errorLv2(-1, Entity.className(), `deleteByParams - Error`);
-                    return false;
-                }
-                //----------------------------
-                // TODO: ver useOptionDelete.deleteRelation y tambien agregar cascadeDelete en conversions
-                //----------------------------
-                console_logLv2(-1, Entity.className(), `deleteByParams - deletedCount: ${deletedCount} - OK`);
-                //----------------------------
-                return true;
-            }
-            {
-                throw `Database not defined`;
-            }
+            });
+            //----------------------------
         } catch (error) {
-            console_errorLv2(0, Entity.className(), `deleteByParams - Error: ${error}`);
-            throw `${error}`;
+            const isRetryableErrorDBLock = DatabaseService().isRetryableErrorDBLock(error);
+            if (!isRetryableErrorDBLock) {
+                console_errorLv2(-1, Entity.className(), `deleteByParams - Error: ${error}`);
+            } else {
+                console_logLv2(-1, Entity.className(), `deleteByParams - Error: ${error}`);
+            }
+            throw error;
         }
     }
 
@@ -1286,14 +1120,15 @@ export class BaseBackEndMethods {
                 useOptionDelete = optionsDelete;
             }
             //----------------------------
-            if (process.env.USE_DATABASE === 'mongo') {
-                const document = await MongoDatabaseService.delete<T>(instance);
+            return await DatabaseService().withContextTransaction(`[${instance.className()}] - delete`, async () => {
+                //----------------------------
+                const document = await DatabaseService().delete<T>(instance);
                 if (!document) {
                     console_errorLv2(-1, instance.className(), `delete - id: ${instance._DB_id} - Error`);
                     return false;
                 }
                 //----------------------------
-                // TODO: ver useOptionDelete.deleteRelation y tambien agregar cascadeDelete en conversions
+                //TODO: ver useOptionDelete.deleteRelation y tambien agregar cascadeDelete en conversions
                 // a partir de eso revisar las relaciones y eliminar aquellas atomaticamente
                 //----------------------------
                 await this.getBack(instance.getStatic()).cascadeDeleteRelations(instance, useOptionDelete.deleteRelations);
@@ -1301,28 +1136,16 @@ export class BaseBackEndMethods {
                 console_logLv2(-1, instance.className(), `delete - OK`);
                 //----------------------------
                 return true;
-            } else if (process.env.USE_DATABASE === 'postgresql') {
-                const document = await PostgreSQLDatabaseService.delete<T>(instance);
-                if (!document) {
-                    console_errorLv2(-1, instance.className(), `delete - id: ${instance._DB_id} - Error`);
-                    return false;
-                }
-                //----------------------------
-                // TODO: ver useOptionDelete.deleteRelation y tambien agregar cascadeDelete en conversions
-                // a partir de eso revisar las relaciones y eliminar aquellas atomaticamente
-                //----------------------------
-                await this.getBack(instance.getStatic()).cascadeDeleteRelations(instance, useOptionDelete.deleteRelations);
-                //----------------------------
-                console_logLv2(-1, instance.className(), `delete - OK`);
-                //----------------------------
-                return true;
-            }
-            {
-                throw `Database not defined`;
-            }
+            });
+            //----------------------------
         } catch (error) {
-            console_errorLv2(-1, instance.className(), `delete - Error: ${error}`);
-            throw `${error}`;
+            const isRetryableErrorDBLock = DatabaseService().isRetryableErrorDBLock(error);
+            if (!isRetryableErrorDBLock) {
+                console_errorLv2(-1, instance.className(), `delete - Error: ${error}`);
+            } else {
+                console_logLv2(-1, instance.className(), `delete - Error: ${error}`);
+            }
+            throw error;
         }
     }
 
@@ -1381,7 +1204,7 @@ export class BaseBackEndMethods {
             //----------------------------
         } catch (error) {
             console_errorLv2(-1, instance.className(), `fillWithRelation - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -1491,7 +1314,7 @@ export class BaseBackEndMethods {
             }
         } catch (error) {
             console_errorLv2(-1, instance.className(), `loadRelationMany - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -1562,7 +1385,7 @@ export class BaseBackEndMethods {
             }
         } catch (error) {
             console_errorLv2(-1, instance.className(), `loadRelationOne - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 

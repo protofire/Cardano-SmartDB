@@ -1,21 +1,16 @@
 import 'reflect-metadata';
-// import { Types } from 'mongoose';
 import { Convertible, getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
 import { deserealizeBigInt } from '../../Commons/conversions.js';
 import { BaseConstructor } from './Base.Constructor.js';
 import { isEmptyObject, toJson, showData, RegistryManager, ConversionFunctions } from '../../Commons/index.js';
 // import { IBackendMethods } from '../../Commons/Interfaces.js';
 // import { BackEndMethodsRegistry } from '../../Commons/Decorator.BackEndRegistry.js';
+// import { Types } from 'mongoose';
 
-export interface IEntityMongo {
-    MongoModel(): any;
-    toMongoInterface<T extends BaseEntity>(instance: T, cascadeSave?: boolean): Promise<any>;
-    fromMongoInterface<T extends BaseEntity>(dataInterface: any): Promise<T>;
-}
-export interface IEntityPostgreSQL {
-    PostgreSQLModel(): any;
-    toPostgreSQLInterface<T extends BaseEntity>(instance: T, cascadeSave?: boolean): Promise<any>;
-    fromPostgreSQLInterface<T extends BaseEntity>(dataInterface: any): Promise<T>;
+export interface IEntityDB {
+    DBModel(): any;
+    toDBInterface<T extends BaseEntity>(instance: T, cascadeSave?: boolean): Promise<any>;
+    fromDBInterface<T extends BaseEntity>(dataInterface: any): Promise<T>;
 }
 
 // export interface IBackendMethods {
@@ -78,8 +73,22 @@ export class BaseEntity extends BaseConstructor {
 
     // #region internal class methods
 
-    public static getMongo(): IEntityMongo {
-        const result = RegistryManager.getFromMongoAppliedRegistry(this);
+    public static getEntityDB(): IEntityDB {
+        if (process.env.USE_DATABASE === 'mongo') {
+            return this.getMongo();
+        } else if (process.env.USE_DATABASE === 'postgresql') {
+            return this.getPostgreSQL();
+        } else {
+            throw `Database not defined`;
+        }
+    }
+
+    public getEntityDB(): IEntityDB {
+        return this.getStatic().getEntityDB();
+    }
+
+    public static getMongo(): IEntityDB {
+        const result = RegistryManager.getFromMongoSchemasRegistry(this);
         if (!result) {
             throw `Mongo Methods Applied for ${this} not found in registry.`;
         } else {
@@ -89,13 +98,12 @@ export class BaseEntity extends BaseConstructor {
         return result;
     }
 
-    public getMongo(): IEntityMongo {
+    public getMongo(): IEntityDB {
         return this.getStatic().getMongo();
     }
 
-    
-    public static getPostgreSQL(): IEntityPostgreSQL {
-        const result = RegistryManager.getFromPostgreSQLAppliedRegistry(this);
+    public static getPostgreSQL(): IEntityDB {
+        const result = RegistryManager.getFromPostgreSQLModelsRegistry(this);
         if (!result) {
             throw `PostgreSQL Methods Applied for ${this} not found in registry.`;
         } else {
@@ -105,9 +113,10 @@ export class BaseEntity extends BaseConstructor {
         return result;
     }
 
-    public getPostgreSQL(): IEntityPostgreSQL {
+    public getPostgreSQL(): IEntityDB {
         return this.getStatic().getPostgreSQL();
     }
+
     // #endregion internal class methods
 
     // #region db
@@ -173,7 +182,7 @@ export class BaseEntity extends BaseConstructor {
         return toJson(object);
     }
 
-    public static getFields<T extends BaseEntity>(useInterfaceNames:boolean = true): string[] {
+    public static getFields<T extends BaseEntity>(useInterfaceNames: boolean = true): string[] {
         const conversionFunctions = getCombinedConversionFunctions(this);
         const fields: string[] = [];
         if (conversionFunctions) {
@@ -198,7 +207,7 @@ export class BaseEntity extends BaseConstructor {
     }
 
     public fillMeFromObject<T extends BaseEntity>(object: any) {
-        console.log(`[${this.className()}] - fillMeFromObject - object: ${showData(object)}`);
+        // console.log(`[${this.className()}] - fillMeFromObject - object: ${showData(object)}`);
         Object.assign(this, object);
         return;
     }

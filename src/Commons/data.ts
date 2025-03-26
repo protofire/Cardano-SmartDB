@@ -1,7 +1,7 @@
 // #region Lucid Data & Cbor Hex serialize and deserialize
 
-import { Data, C, fromHex, Constr } from "lucid-cardano";
-import { showPtrInHex, showData } from "./utils.js";
+import { CML, Constr, Data } from '@lucid-evolution/lucid';
+import { showData } from './utils.js';
 
 export function objToCborHex(data: any, propertyKey?: string) {
     try {
@@ -10,9 +10,9 @@ export function objToCborHex(data: any, propertyKey?: string) {
         // lucid data to hex
         const dataHex = Data.to(lucidData);
         // hex to plutus data
-        const plutusData = C.PlutusData.from_bytes(fromHex(dataHex));
+        const plutusData = CML.PlutusData.from_cbor_hex(dataHex);
         // plutus data to hex
-        const cborHex = showPtrInHex(plutusData);
+        const cborHex = plutusData.to_canonical_cbor_hex();
         return cborHex;
     } catch (error) {
         console.log(`[Helpers] - objToCborHex - Data: ${showData(data)} - Error: ${error}`);
@@ -87,7 +87,7 @@ export const itemToLucidData = (itemValue: any, propertyKey?: string) => {
             });
             return list;
         } else if (itemValue instanceof Map) {
-            // TODO: falta convertir map, pero no uso map, asi que por ahora no lo hago
+            //TODO: falta convertir map, pero no uso map, asi que por ahora no lo hago
             return itemValue;
         } else if (typeof itemValue === 'object') {
             return objToLucidData(itemValue, propertyKey);

@@ -1,12 +1,12 @@
-import type { PaymentKeyHash, StakeKeyHash } from 'lucid-cardano';
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import type { PaymentKeyHash, StakeKeyHash } from '@lucid-evolution/lucid';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { PostgreSQLDatabaseService } from '../BackEnd/DatabaseService/PostgreSQL.Database.Service.js';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
-import { getPostgreSQLTableName } from '../Commons/utils.js';
 import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js';
 import { WalletEntity } from './Wallet.Entity.js';
 
 @PostgreSQLAppliedFor([WalletEntity])
-@Entity(getPostgreSQLTableName(WalletEntity.className()))
+@Entity({ name: PostgreSQLDatabaseService.getTableName(WalletEntity.className()) })
 export class WalletEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = WalletEntity;
 
@@ -14,15 +14,6 @@ export class WalletEntityPostgreSQL extends BaseEntityPostgreSQL {
 
     @PrimaryGeneratedColumn()
     _id!: number; // Asume que cada registro tiene un ID autogenerado
-
-    @Column({ type: 'timestamptz', nullable: true })
-    createdAt?: Date;
-
-    @Column({ type: 'varchar', nullable: true })
-    createdBy?: string;
-
-    @Column({ type: 'timestamptz', nullable: true })
-    lastConnection?: Date;
 
     @Column({ type: 'varchar', nullable: true })
     walletUsed?: string;
@@ -51,6 +42,18 @@ export class WalletEntityPostgreSQL extends BaseEntityPostgreSQL {
 
     @Column({ type: 'varchar', nullable: true })
     mainnet_address?: string;
+
+    @Column({ type: 'varchar', nullable: true })
+    createdBy?: string;
+
+    @Column({ type: 'timestamptz', nullable: true })
+    lastConnection?: Date;
+
+    @CreateDateColumn()
+    createdAt!: Date;
+
+    @UpdateDateColumn()
+    updatedAt!: Date;
 
     // #endregion fields
 

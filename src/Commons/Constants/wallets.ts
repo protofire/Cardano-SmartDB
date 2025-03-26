@@ -2,7 +2,7 @@
 //----------------------------------------------------------------------
 
 import { CardanoWallet } from "../types.js";
-import { WALLET_ETERNL_ICON, WALLET_FLINT_ICON, WALLET_NAMI_ICON, WALLET_NUFI_ICON, WALLET_TYPHON_ICON, WALLET_YOROI_ICON } from "./images.js";
+import { WALLET_ETERNL_ICON, WALLET_FLINT_ICON, WALLET_LACE_ICON, WALLET_NAMI_ICON, WALLET_NUFI_ICON, WALLET_TYPHON_ICON, WALLET_VESPR_ICON, WALLET_YOROI_ICON } from "./images.js";
 
 export const CARDANO_WALLETS: CardanoWallet[] = [
     {
@@ -10,6 +10,27 @@ export const CARDANO_WALLETS: CardanoWallet[] = [
         name: 'Eternl',
         icon: WALLET_ETERNL_ICON,
         link: 'https://chrome.google.com/webstore/detail/eternl/kmhcihpebfmpgmihbkipmjlmmioameka',
+        isInstalled: false,
+    },
+    {
+        wallet: 'lace',
+        name: 'Lace',
+        icon: WALLET_LACE_ICON,
+        link: 'https://chromewebstore.google.com/detail/lace/gafhhkghbfjjkeiendhlofajokpaflmk',
+        isInstalled: false,
+    },
+    {
+        wallet: 'yoroi',
+        name: 'Yoroi',
+        icon: WALLET_YOROI_ICON,
+        link: 'https://chrome.google.com/webstore/detail/yoroi/ffnbelfdoeiohenkjibnmadjiehjhajb',
+        isInstalled: false,
+    },
+    {
+        wallet: 'vespr',
+        name: 'VESPR',
+        icon: WALLET_VESPR_ICON,
+        link: 'https://chromewebstore.google.com/detail/vespr-wallet/bedogdpgdnifilpgeianmmdabklhfkcn',
         isInstalled: false,
     },
     {
@@ -24,13 +45,6 @@ export const CARDANO_WALLETS: CardanoWallet[] = [
         name: 'Flint',
         icon: WALLET_FLINT_ICON,
         link: 'https://chrome.google.com/webstore/detail/flint-wallet/hnhobjmcibchnmglfbldbfabcgaknlkj',
-        isInstalled: false,
-    },
-    {
-        wallet: 'yoroi',
-        name: 'Yoroi',
-        icon: WALLET_YOROI_ICON,
-        link: 'https://chrome.google.com/webstore/detail/yoroi/ffnbelfdoeiohenkjibnmadjiehjhajb',
         isInstalled: false,
     },
     {

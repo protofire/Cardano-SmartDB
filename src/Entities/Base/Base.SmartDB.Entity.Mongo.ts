@@ -1,24 +1,23 @@
-import 'reflect-metadata';
-import { PaymentKeyHash } from "lucid-cardano";
+import { PaymentKeyHash } from '@lucid-evolution/lucid';
 import { Schema, Types } from 'mongoose';
-import { MongoAppliedFor } from '../../Commons/Decorators/Decorator.MongoAppliedFor.js';
-import { BaseSmartDBEntity } from './Base.SmartDB.Entity.js';
+import 'reflect-metadata';
 import { BaseEntityMongo } from './Base.Entity.Mongo.js';
+import { BaseSmartDBEntity } from './Base.SmartDB.Entity.js';
 
 export interface IBaseSmartDBEntity {
     _creator: PaymentKeyHash;
     _NET_address: string;
     _NET_id_CS: string | undefined;
-    _NET_id_TN: string | undefined;
+    _NET_id_TN_Str: string | undefined;
     _isDeployed: boolean;
     smartUTxO_id: Types.ObjectId | undefined;
 }
-    
-@MongoAppliedFor([BaseSmartDBEntity])
-export class BaseSmartDBEntityMongo extends BaseEntityMongo  {
+
+// @MongoAppliedFor([BaseSmartDBEntity])
+export class BaseSmartDBEntityMongo extends BaseEntityMongo {
     protected static Entity = BaseSmartDBEntity;
     // protected static _mongoTableName: string;
-    
+
     // #region fields
 
     // #endregion fields
@@ -52,15 +51,14 @@ export class BaseSmartDBEntityMongo extends BaseEntityMongo  {
 
     // #region mongo db
 
-    public static smartDBSchema = { 
+    public static smartDBSchema = {
         _creator: { type: String, required: true },
         _NET_address: { type: String, required: true },
         _NET_id_CS: { type: String, required: true },
-        _NET_id_TN: { type: String, required: true },
+        _NET_id_TN_Str: { type: String, required: true },
         _isDeployed: { type: Boolean, required: true },
         smartUTxO_id: { type: Schema.Types.ObjectId, ref: 'smartutxo', required: false },
     };
 
     // #endregion mongo db
- 
- }
+}

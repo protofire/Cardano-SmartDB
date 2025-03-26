@@ -43,22 +43,27 @@ export class JobEntityMongo extends BaseEntityMongo {
 
     // #region mongo db
 
-    public static MongoModel() {
+    public static DBModel() {
         interface Interface {
             name: string;
             status: string;
             message: string;
             result: boolean;
             error: string;
+            createdAt: Date;
+            updatedAt: Date;
         }
 
-        const schema = new Schema<Interface>({
-            name: { type: String, required: false },
-            status: { type: String, required: false },
-            message: { type: String, required: false },
-            result: { type: Boolean, required: false },
-            error: { type: String, required: false },
-        });
+        const schema = new Schema<Interface>(
+            {
+                name: { type: String, required: true, unique: true },
+                status: { type: String, required: false },
+                message: { type: String, required: false },
+                result: { type: Boolean, required: false },
+                error: { type: String, required: false },
+            },
+            { timestamps: true }
+        );
 
         const ModelDB = models[this._mongoTableName] || model<Interface>(this._mongoTableName, schema);
         return ModelDB;

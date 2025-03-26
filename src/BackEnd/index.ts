@@ -5,6 +5,8 @@ export * from './Base/Base.SmartDB.BackEnd.Methods.js';
 export * from './Base/Base.SmartDB.BackEnd.Applied.js';
 export * from './Base/Base.SmartDB.BackEnd.Api.Handlers.js';
 export * from './DatabaseService/Mongo.Database.Service.js';
+export * from './DatabaseService/PostgreSQL.Database.Service.js';
+export * from './DatabaseService/Database.Service.js';
 export * from './AddressToFollow.BackEnd.Applied.js';
 export * from './AddressToFollow.BackEnd.Api.Handlers.js';
 export * from './Emulator.BackEnd.All.js';

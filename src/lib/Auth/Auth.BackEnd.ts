@@ -1,35 +1,25 @@
+import { getAddressDetails, SignedMessage, verifyData } from '@lucid-evolution/lucid';
 import Cors from 'cors';
 import { sign, verify } from 'jsonwebtoken';
-import { SignedMessage } from 'lucid-cardano';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { NextAuthOptions, User } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
-// import { v4 } from 'uuid';
 import { WalletBackEndApplied } from '../../BackEnd/Wallet.BackEnd.Applied.js';
 import { EndpointsManager } from '../../Commons/BackEnd/endPointsManager.js';
+import { getGlobalBlockchainTime } from '../../Commons/BackEnd/globalBlockchainTime.js';
 import { requestContext, requestId } from '../../Commons/BackEnd/globalContext.js';
 import { getGlobalEmulator } from '../../Commons/BackEnd/globalEmulator.js';
-import { console_error, console_log, flushLogs } from '../../Commons/BackEnd/globalLogs.js';
+import { console_error, console_log } from '../../Commons/BackEnd/globalLogs.js';
 import { getGlobalLucid, globalLucid } from '../../Commons/BackEnd/globalLucid.js';
 import { getGlobalSettings, globalSettings } from '../../Commons/BackEnd/globalSettings.js';
 import { initGlobals } from '../../Commons/BackEnd/initGlobals.js';
-import {
-    LucidLUCID_NETWORK_MAINNET_NAME,
-    VALID_SESSION_DURATION_MS,
-    VALID_SESSION_DURATION_SECONDS,
-    VALID_SESSION_DURATION_STR,
-    WALLET_CREATEDBY_LOGIN,
-} from '../../Commons/Constants/constants.js';
+import { isMainnet, VALID_SESSION_DURATION_MS, VALID_SESSION_DURATION_STR, WALLET_CREATEDBY_LOGIN } from '../../Commons/Constants/constants.js';
 import { addressToPaymentPubKeyHashAndStakePubKeyHash } from '../../Commons/helpers.js';
 import { isNullOrBlank, sanitizeForDatabase, showData, strToHex } from '../../Commons/utils.js';
-import { yup }  from '../../Commons/yupLocale.js';
+import { yup } from '../../Commons/yupLocale.js';
 import { WalletEntity } from '../../Entities/Wallet.Entity.js';
 import { generateChallengueToken, isValidChallengueToken, isValidCsrfToken, validateChallengueToken } from './Auth.utils.js';
 import { ChallengueJWTPayload, CredentialsAuthenticated, NextApiRequestAuthenticated, TokenJWTPayload } from './types.js';
-import { getGlobalBlockchainTime } from '../../Commons/BackEnd/globalBlockchainTime.js';
-import { getGlobalConfig } from '../../Commons/BackEnd/configManager.js';
-import { RegistryManager } from '../../Commons/Decorators/registerManager.js';
-
 
 /**
  * @swagger
@@ -110,7 +100,6 @@ import { RegistryManager } from '../../Commons/Decorators/registerManager.js';
  *         description: Sign out failed
  */
 
-
 /**
  * @swagger
  * tags:
@@ -173,9 +162,9 @@ import { RegistryManager } from '../../Commons/Decorators/registerManager.js';
  *               address:
  *                 type: string
  *                 description: Wallet address
- *               walletNameOrSeedOrKey:
+ *               walletName:
  *                 type: string
- *                 description: Wallet name or seed or key
+ *                 description: Wallet name used
  *               useBlockfrostToSubmit:
  *                 type: string
  *                 description: Whether to use Blockfrost to submit
@@ -234,12 +223,8 @@ import { RegistryManager } from '../../Commons/Decorators/registerManager.js';
  *                   description: Error message
  */
 
-
-
-
 // For more information on each option (and a full list of options) go to
 // https://next-auth.js.org/configuration/options
-
 
 // import CredentialsProvider from "next-auth/providers/credentials";
 // import Auth0Provider from "next-auth/providers/auth0"
@@ -267,7 +252,7 @@ export const credentialProviderConfig = {
         return new Promise((resolve, reject) => {
             requestContext.run(async () => {
                 //--------------------------------------
-                // TODO: esta es la unica api handler que no usa el helper initApiRequestWithContext para crear contexto
+                //TODO: esta es la unica api handler que no usa el helper initApiRequestWithContext para crear contexto
                 //--------------------------------------
                 requestId();
                 //--------------------------------------
@@ -299,7 +284,7 @@ export const credentialProviderConfig = {
                     let testnet_address,
                         mainnet_address = undefined;
                     //--------------------------------------
-                    if (process.env.NEXT_PUBLIC_CARDANO_NET === LucidLUCID_NETWORK_MAINNET_NAME) {
+                    if (isMainnet) {
                         mainnet_address = user.address;
                     } else {
                         testnet_address = user.address;
@@ -317,7 +302,6 @@ export const credentialProviderConfig = {
                     let queryCondition = { $or: queryConditions };
                     //--------------------
                     const wallet: WalletEntity | undefined = await WalletBackEndApplied.getOneByParams_(queryCondition);
-                    //--------------------
                     //-------------------------
                     const TimeBackEnd = (await import('../../lib/Time/Time.BackEnd.js')).TimeBackEnd;
                     //-------------------------
@@ -329,38 +313,40 @@ export const credentialProviderConfig = {
                         //--------------------
                         const count = await WalletBackEndApplied.getCount_();
                         //------
-                        if (count > 0 || true) {
-                            //-------------------------
-                            const createdAt = new Date(serverTime);
-                            const createdBy = WALLET_CREATEDBY_LOGIN;
-                            const lastConnection = createdAt;
-                            const walletUsed = user.walletNameOrSeedOrKey;
-                            //--------------------
-                            const stakePKH = user.stakePkh;
-                            //--------------------
-                            const wallet: WalletEntity = new WalletEntity({
-                                createdAt,
-                                createdBy,
-                                lastConnection,
-                                walletUsed,
-                                walletValidatedWithSignedToken: user.isWalletValidatedWithSignedToken,
-                                paymentPKH,
-                                stakePKH,
-                                name: user.name,
-                                email: user.email,
-                                isCoreTeam: false,
-                                testnet_address,
-                                mainnet_address,
-                            });
-                            //--------------------
-                            await WalletBackEndApplied.create(wallet);
-                        }
+                        // if (count > 0 || true) {
+                        //-------------------------
+                        const createdAt = new Date(serverTime);
+                        const createdBy = WALLET_CREATEDBY_LOGIN;
+                        const lastConnection = createdAt;
+                        const walletName = user.walletName;
+                        // const walletSeed = user.walletSeed;
+                        // const walletKey = user.walletKey;
+                        //--------------------
+                        const stakePKH = user.stakePkh;
+                        //--------------------
+                        const wallet: WalletEntity = new WalletEntity({
+                            createdAt,
+                            createdBy,
+                            lastConnection,
+                            walletName,
+                            walletValidatedWithSignedToken: user.isWalletValidatedWithSignedToken,
+                            paymentPKH,
+                            stakePKH,
+                            name: user.name,
+                            email: user.email,
+                            isCoreTeam: count === 0,
+                            testnet_address,
+                            mainnet_address,
+                        });
+                        //--------------------
+                        await WalletBackEndApplied.create(wallet);
+                        // }
                     } else {
                         //--------------------
                         console_log(0, `NextAuth`, `Authorize - Updating Wallet...`);
                         //--------------------
                         wallet.lastConnection = new Date(serverTime);
-                        wallet.walletUsed = user.walletNameOrSeedOrKey;
+                        wallet.walletUsed = user.walletName;
                         wallet.walletValidatedWithSignedToken = user.isWalletValidatedWithSignedToken;
                         //--------------------
                         await WalletBackEndApplied.update(wallet);
@@ -451,7 +437,7 @@ export const authOptionsBase: NextAuthOptions = {
         strategy: 'jwt',
 
         // Seconds - How long until an idle session expires and is no longer valid.
-        maxAge: VALID_SESSION_DURATION_SECONDS, // 30 days
+        maxAge: VALID_SESSION_DURATION_MS / 1000, // 30 days
 
         // Seconds - Throttle how frequently to write to database to extend a session.
         // Use it to limit write operations. Set to 0 to always update the database.
@@ -568,8 +554,8 @@ export class AuthBackEnd {
             console_log(-1, `Auth`, `addCorsHeaders - OK`);
             //---------------------
         } catch (error) {
-            console_error(-1, `Auth`, ` addCorsHeaders - Error: ${error}`);
-            throw `${error}`;
+            console_error(-1, `Auth`, `addCorsHeaders - Error: ${error}`);
+            throw error;
         }
     };
 
@@ -712,12 +698,9 @@ export class AuthBackEnd {
                 throw `Invalid address`;
             }
             //-------------------------
-            // TODO: algo así puede ser la lectura de la entidad establecida
+            //TODO: algo así puede ser la lectura de la entidad establecida
             // faltaria desde ya que si no se establece ninguna se use la default
             // const config = getGlobalConfig();
-            // const WalletEntityClass = config.getWalletEntityClass();
-            // const WalletBackEndApplied = RegistryManager.getFromBackEndAppliedRegistry(WalletEntityClass);
-            
             const WalletBackEndApplied = (await import('../../BackEnd/Wallet.BackEnd.Applied.js')).WalletBackEndApplied;
             //-------------------------
             const isCoreTeam = await WalletBackEndApplied.isCoreTeam(paymentPkh);
@@ -727,7 +710,9 @@ export class AuthBackEnd {
                 address: credentials?.address,
                 pkh: paymentPkh,
                 stakePkh: isNullOrBlank(stakePkh) ? undefined : stakePkh,
-                walletNameOrSeedOrKey: credentials.walletNameOrSeedOrKey,
+                walletName: credentials.walletName,
+                walletSeed: credentials.walletSeed,
+                walletKey: credentials.walletKey,
                 useBlockfrostToSubmit: credentials.useBlockfrostToSubmit === 'true' ? true : false,
                 isWalletFromSeed: credentials.isWalletFromSeed === 'true' ? true : false,
                 isWalletFromKey: credentials.isWalletFromKey === 'true' ? true : false,
@@ -740,8 +725,8 @@ export class AuthBackEnd {
             //-------------------------
             return user;
         } catch (error) {
-            console_error(-1, `Auth`, ` validateJWTTokenWithCredentials - Error: ${error}`);
-            throw `${error}`;
+            console_error(-1, `Auth`, `validateJWTTokenWithCredentials - Error: ${error}`);
+            throw error;
         }
     }
 
@@ -764,7 +749,6 @@ export class AuthBackEnd {
     // #endregion generic methods
     // #region api handlers
 
-
     public static async getJWTTokenWithCredentialsApiHandlerWithContext(req: NextApiRequest, res: NextApiResponse) {
         //--------------------------------------
         // await initGlobals(req, res);
@@ -781,7 +765,9 @@ export class AuthBackEnd {
                 //-------------------------
                 const schemaBody = yup.object().shape({
                     address: yup.string().required().label('Address'),
-                    walletNameOrSeedOrKey: yup.string().required().label('Wallet name Or Seed Or Key'),
+                    walletName: yup.string().required().label('Wallet name'),
+                    walletSeed: yup.string().label('Wallet seed'),
+                    walletKey: yup.string().label('Wallet key'),
                     useBlockfrostToSubmit: yup.string().required().label('useBlockfrostToSubmit'),
                     isWalletFromSeed: yup.string().required().label('isWalletFromSeed'),
                     isWalletFromKey: yup.string().required().label('isWalletFromKey'),
@@ -793,7 +779,7 @@ export class AuthBackEnd {
                 try {
                     validatedBody = await schemaBody.validate(sanitizedBody);
                 } catch (error) {
-                    console_error(-1, `Auth`, ` JWT Token - Error: ${error}`);
+                    console_error(-1, `Auth`, `JWT Token - Error: ${error}`);
                     return res.status(400).json({ error });
                 }
                 //-------------------------
@@ -844,7 +830,18 @@ export class AuthBackEnd {
                 }
                 //-------------------------
                 if (signedChallengue !== undefined) {
-                    const isValidSignature = lucid.verifyMessage(credentials.address, strToHex(credentials.challengue), signedChallengue);
+                    //--------------------------------------
+                    const {
+                        paymentCredential,
+                        stakeCredential,
+                        address: { bech32, hex },
+                    } = getAddressDetails(credentials.address);
+                    //--------------------------------------
+                    const keyHash = paymentCredential?.hash || stakeCredential?.hash;
+                    //--------------------------------------
+                    if (!keyHash) throw new Error('Not a valid address provided.');
+                    //--------------------------------------
+                    const isValidSignature = verifyData(hex, keyHash, strToHex(credentials.challengue), signedChallengue);
                     if (!isValidSignature) {
                         throw `Invalid signature`;
                     }
@@ -863,15 +860,14 @@ export class AuthBackEnd {
                 // Send token back to client
                 return res.status(200).json({ token });
             } catch (error) {
-                console_error(-1, `Auth`, ` JWT Token - Error: ${error}`);
+                console_error(-1, `Auth`, `JWT Token - Error: ${error}`);
                 return res.status(500).json({ error: `An error occurred while generating JWT Token: ${error}` });
             }
         } else {
-            console_error(-1, `Auth`, ` JWT Token - Error: Method not allowed`);
+            console_error(-1, `Auth`, `JWT Token - Error: Method not allowed`);
             return res.status(405).json({ error: `Method not allowed` });
         }
     }
-
 
     public static async getChallengueTokenApiHandlerWithContext(req: NextApiRequest, res: NextApiResponse) {
         //--------------------------------------
@@ -880,7 +876,6 @@ export class AuthBackEnd {
             console_log(0, `Auth`, `Challengue Token - query: ${showData(req.query)}`);
             try {
                 //-------------------------
-
                 const token = await generateChallengueToken();
                 //-------------------------
                 console_log(-1, `Auth`, `Challengue Token - GET - OK`);
@@ -888,11 +883,11 @@ export class AuthBackEnd {
                 // Send token back to client
                 return res.status(200).json({ token });
             } catch (error) {
-                console_error(-1, `Auth`, ` Challengue Token - Error: ${error}`);
+                console_error(-1, `Auth`, `Challengue Token - Error: ${error}`);
                 return res.status(500).json({ error: `An error occurred while generating Challengue Token: ${error}` });
             }
         } else {
-            console_error(-1, `Auth`, ` Challengue Token - Error: Method not allowed`);
+            console_error(-1, `Auth`, `Challengue Token - Error: Method not allowed`);
             return res.status(405).json({ error: `Method not allowed` });
         }
     }

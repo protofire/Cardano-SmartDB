@@ -1,5 +1,5 @@
 import fetchWrapper from '../../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
-import { OptionsGet, isEqual, isNullOrBlank, optionsGetDefault, toJson } from '../../../Commons/index.js';
+import { CS, OptionsGet, isEqual, isNullOrBlank, optionsGetDefault, toJson } from '../../../Commons/index.js';
 import { AddressToFollowEntity } from '../../../Entities/AddressToFollow.Entity.js';
 import { BaseSmartDBEntity } from '../../../Entities/Base/Base.SmartDB.Entity.js';
 import { AddressToFollowFrontEndApiCalls } from '../AddressToFollow.FrontEnd.Api.Calls.js';
@@ -19,11 +19,16 @@ export class BaseSmartDBFrontEndApiCalls extends BaseFrontEndApiCalls {
         return await this.getDeployedApi(this._Entity, optionsGet);
     }
 
-    public static async createHookApi_<T extends BaseSmartDBEntity>(address: string, currencySymbol: string, tokenName?: string): Promise<void> {
-        return await this.createHookApi(this._Entity, address, currencySymbol, tokenName);
+    public static async createHookApi_<T extends BaseSmartDBEntity>(address: string, CS: string, TN_Str?: string): Promise<void> {
+        return await this.createHookApi(this._Entity, address, CS, TN_Str);
     }
-    public static async syncWithAddressApi_<T extends BaseSmartDBEntity>(address: string, force: boolean = false): Promise<boolean> {
-        return await this.syncWithAddressApi(this._Entity, address, force);
+
+    public static async syncWithAddressApi_<T extends BaseSmartDBEntity>(address: string, CS: CS, force: boolean = false): Promise<boolean> {
+        return await this.syncWithAddressApi(this._Entity, address, CS, force);
+    }
+
+    public static async parseBlockchainAddressApi_<T extends BaseSmartDBEntity>(address: string, datumType: string, block?: number): Promise<string> {
+        return await this.parseBlockchainAddressApi(this._Entity, address, datumType, block);
     }
 
     // #endregion api applied to entity
@@ -58,21 +63,21 @@ export class BaseSmartDBFrontEndApiCalls extends BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${Entity.className()}] - getDeployedApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
-    public static async createHookApi<T extends BaseSmartDBEntity>(Entity: typeof BaseSmartDBEntity, address: string, currencySymbol: string, tokenName?: string): Promise<void> {
+    public static async createHookApi<T extends BaseSmartDBEntity>(Entity: typeof BaseSmartDBEntity, address: string, CS: string, TN_Str?: string): Promise<void> {
         try {
-            const addressesToFollow = await AddressToFollowFrontEndApiCalls.getByAddressApi(address);
+            const addressesToFollow = await AddressToFollowFrontEndApiCalls.getByAddressApi(address, CS);
             if (addressesToFollow && addressesToFollow.length > 0) {
                 // no quiero disparar error si ya existe
                 // throw "Webhook already exists"
             } else {
                 const addressToFollow = new AddressToFollowEntity({
                     address,
-                    currencySymbol,
-                    tokenName,
+                    CS,
+                    TN_Str,
                     txCount: -1,
                     apiRouteToCall: Entity.apiRoute() + '/sync',
                     datumType: Entity.className(),
@@ -81,17 +86,20 @@ export class BaseSmartDBFrontEndApiCalls extends BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${Entity.className()}] - createHookApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
-    public static async syncWithAddressApi<T extends BaseSmartDBEntity>(Entity: typeof BaseSmartDBEntity, address: string, force: boolean = false): Promise<boolean> {
+    public static async syncWithAddressApi<T extends BaseSmartDBEntity>(Entity: typeof BaseSmartDBEntity, address: string, CS: CS, force: boolean = false): Promise<boolean> {
         try {
             if (isNullOrBlank(address)) {
                 throw `address not defined`;
             }
+            if (isNullOrBlank(CS)) {
+                throw `CS not defined`;
+            }
             const body = toJson({ event: 'sync', force, tryCountAgain: false });
-            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/sync/${address}`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/sync/${address}/${CS}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -99,7 +107,7 @@ export class BaseSmartDBFrontEndApiCalls extends BaseFrontEndApiCalls {
                 body,
             });
             if (response.status === 200) {
-                console.log(`[${Entity.className()}] - syncWithAddressApi - address: ${address} - response OK`);
+                console.log(`[${Entity.className()}] - syncWithAddressApi - address: ${address} - CS: ${CS} - response OK`);
                 return true;
             } else {
                 const errorData = await response.json();
@@ -108,21 +116,26 @@ export class BaseSmartDBFrontEndApiCalls extends BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${Entity.className()}] - syncWithAddressApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
-
-    public static async parseBlockchainAddressApi<T extends BaseSmartDBEntity>(Entity: typeof BaseSmartDBEntity, address: string, datumType: string, fromBlock?: number, toBlock?: number,): Promise<string> {
+    public static async parseBlockchainAddressApi<T extends BaseSmartDBEntity>(
+        Entity: typeof BaseSmartDBEntity,
+        address: string,
+        datumType: string,
+        fromBlock?: number,
+        toBlock?: number
+    ): Promise<string> {
         try {
             //-------------------------
             if (isNullOrBlank(address)) {
                 throw `address not defined`;
             }
             //-------------------------
-            const body = toJson({address, datumType, fromBlock, toBlock});
+            const body = toJson({ address, datumType, fromBlock, toBlock });
             //-------------------------
-            const response = await fetch(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/parse-blockchain-address`, {
+            const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/parse-blockchain-address`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -142,7 +155,7 @@ export class BaseSmartDBFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
         } catch (error) {
             console.log(`[${Entity.className()}] - parseBlockchainAddressApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 

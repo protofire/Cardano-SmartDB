@@ -23,10 +23,10 @@ export class ProductNoOptEntity extends BaseEntity {
     @Convertible()
     category!: string;
 
-    @Convertible()
+   @Convertible({ isCreatedAt: true })
     createdAt!: Date;
 
-    @Convertible()
+    @Convertible({ isUpdatedAt: true })
     updatedAt!: Date;
 
     // #endregion fields

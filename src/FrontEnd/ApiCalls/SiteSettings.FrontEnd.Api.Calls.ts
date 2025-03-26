@@ -27,7 +27,7 @@ export class SiteSettingsFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
         } catch (error) {
             console.log(`[${this._Entity.className()}] - createInitSiteSettingsApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -49,7 +49,7 @@ export class SiteSettingsFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
         } catch (error) {
             console.log(`[${this._Entity.className()}] - refreshSiteSettingsApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 

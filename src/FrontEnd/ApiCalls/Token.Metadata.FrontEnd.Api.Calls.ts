@@ -1,4 +1,4 @@
-import { Assets } from 'lucid-cardano';
+import { Assets } from '@lucid-evolution/lucid';
 import { OptionsGet, Token_With_Metadata_And_Amount, TokensWithMetadataAndAmount, createQueryURLString, hexToStr, isEqual, isToken_CS_And_TN_Valid, optionsGetDefault, splitTokenLucidKey, toJson, type CS, type TN } from '../../Commons/index.js';
 import { TokenMetadataEntity } from '../../Entities/Token.Metadata.Entity.js';
 import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls.js';
@@ -11,30 +11,22 @@ export class TokenMetadataFrontEndApiCalls extends BaseFrontEndApiCalls {
         //-------------------------
         const tokensMetadata: TokenMetadataEntity[] = await this.get_Tokens_MetadataApi(
             Object.entries(assets).map(([key, value]) => {
-                let [CS, TN_Hex] = splitTokenLucidKey(key);
-                // Handle 'lovelace' as ADA token
-                if (CS === 'lovelace') {
-                    CS = ''; // Set CS to empty for ADA
-                    TN_Hex = ''; // Set TN_Hex to empty for ADA
-                }
+                const [CS, TN_Hex] = splitTokenLucidKey(key);
                 return { CS, TN_Hex };
             }),
             undefined,
+            true,
             TokenMetadataEntity.optionsGetForTokenStore
         );
         const assetsWithDetails: TokensWithMetadataAndAmount = [];
         for (const [key, value] of Object.entries(assets)) {
-            let  [CS, TN_Hex] = splitTokenLucidKey(key);
-            // Handle 'lovelace' as ADA token
-            if (key === 'lovelace') {
-                CS = ''; // Set CS to empty for ADA
-                TN_Hex = ''; // Set TN_Hex to empty for ADA
-            }   
+            const [CS, TN_Hex] = splitTokenLucidKey(key);
             const tokenMetadata: TokenMetadataEntity | undefined = tokensMetadata.find((token) => token.CS === CS && token.TN_Hex === TN_Hex);
             const assetDetails: Token_With_Metadata_And_Amount = {
                 CS: CS,
                 TN_Hex,
                 amount: value,
+                ticker: tokenMetadata?.ticker,
                 decimals: tokenMetadata?.decimals,
                 image: tokenMetadata?.image,
                 colorHex: tokenMetadata?.colorHex,
@@ -45,7 +37,13 @@ export class TokenMetadataFrontEndApiCalls extends BaseFrontEndApiCalls {
         return assetsWithDetails;
     }
 
-    public static async get_Token_MetadataApi(CS: CS, TN_Hex: TN, forceRefresh?: boolean, optionsGet?: OptionsGet): Promise<TokenMetadataEntity | undefined> {
+    public static async get_Token_MetadataApi(
+        CS: CS,
+        TN_Hex: TN,
+        forceRefresh: boolean = false,
+        swCreateMetadataWhenNotFound: boolean = true,
+        optionsGet?: OptionsGet
+    ): Promise<TokenMetadataEntity | undefined> {
         //-------------------------
         try {
             if (CS === undefined || TN_Hex === undefined) {
@@ -57,7 +55,7 @@ export class TokenMetadataFrontEndApiCalls extends BaseFrontEndApiCalls {
             //------------------
             console.log(`[${this._Entity.className()}] - get_Token_MetadataApi - Init - Token: CS: ${CS} - TN_Hex: ${hexToStr(TN_Hex)}`);
             //------------------
-            const queryString = createQueryURLString({ CS, TN_Hex, forceRefresh });
+            const queryString = createQueryURLString({ CS, TN_Hex, forceRefresh, swCreateMetadataWhenNotFound });
             //------------------
             let response;
             if (isEqual(optionsGet, optionsGetDefault)) {
@@ -89,11 +87,16 @@ export class TokenMetadataFrontEndApiCalls extends BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${this._Entity.className()}] - get_Token_MetadataApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
-    public static async get_Tokens_MetadataApi(tokens: { CS: CS; TN_Hex: TN }[], forceRefresh?: boolean, optionsGet?: OptionsGet): Promise<TokenMetadataEntity[]> {
+    public static async get_Tokens_MetadataApi(
+        tokens: { CS: CS; TN_Hex: TN }[],
+        forceRefresh: boolean = false,
+        swCreateMetadataWhenNotFound: boolean = true,
+        optionsGet?: OptionsGet
+    ): Promise<TokenMetadataEntity[]> {
         //-------------------------
         try {
             //----------------------------
@@ -104,12 +107,18 @@ export class TokenMetadataFrontEndApiCalls extends BaseFrontEndApiCalls {
                 throw `CS or TN_Hex not valid`;
             }
             //------------------
-            console.log(`[${this._Entity.className()}] - get_Tokens_MetadataApi - Init - Tokens: ${tokens?.map((t) => hexToStr(t.TN_Hex ?? '')).join(', ')}`);
+            console.log(`[${this._Entity.className()}] - get_Tokens_MetadataApi - Init - Tokens: ${tokens?.map((t) => hexToStr(t.TN_Hex)).join(', ')}`);
             //------------------
-            // remove duplicates in tokens list
+            // standarize ADA and remove duplicates in tokens list
+            // tokens = tokens.map((token) => {
+            //     if (isTokenADA(token.CS, token.TN_Hex)) {
+            //         return { ...token, CS: '', TN_Hex: '' };
+            //     }
+            //     return token;
+            // });
             tokens = tokens.filter((token, index) => tokens.findIndex((token_) => token_.CS === token.CS && token_.TN_Hex === token.TN_Hex) === index);
             //----------------------------
-            const body = toJson({ tokens, forceRefresh, optionsGet });
+            const body = toJson({ tokens, forceRefresh, swCreateMetadataWhenNotFound, optionsGet });
             //-------------------------
             const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${this._Entity.apiRoute()}/metadata-by-Tokens`, {
                 method: 'POST',
@@ -128,7 +137,7 @@ export class TokenMetadataFrontEndApiCalls extends BaseFrontEndApiCalls {
                 console.log(
                     `[${this._Entity.className()}] - get_Tokens_MetadataApi - Tokens: ${instances
                         ?.map((t) => {
-                            return `${hexToStr(t.TN_Hex ?? '')}: ${t.decimals}`;
+                            return `${hexToStr(t.TN_Hex)}: ${t.decimals}`;
                         })
                         .join(', ')}`
                 );
@@ -144,7 +153,7 @@ export class TokenMetadataFrontEndApiCalls extends BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${this._Entity.className()}] - get_Tokens_MetadataApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 

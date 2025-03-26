@@ -12,7 +12,7 @@ export class DummyEntity extends BaseSmartDBEntity {
 
     // #region fields
 
-    _NET_id_TN: string = 'DummyID';
+    _NET_id_TN_Str: string = 'DummyID';
 
     // #endregion fields
 

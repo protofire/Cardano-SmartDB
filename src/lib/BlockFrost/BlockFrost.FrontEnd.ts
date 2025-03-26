@@ -1,26 +1,24 @@
 import {
-    C,
-    applyDoubleCborEncoding,
-    fromHex,
-    toHex,
-    Credential,
-    UTxO,
-    Provider,
     Address,
-    Unit,
+    Blockfrost,
+    CML,
+    Credential,
+    Datum,
+    DatumHash,
+    Delegation,
     OutRef,
     RewardAddress,
-    Delegation,
-    DatumHash,
-    Datum,
-    TxHash,
     Transaction,
-    Blockfrost,
-} from 'lucid-cardano';
-import { fetchWrapper } from '../FetchWrapper/FetchWrapper.FrontEnd.js';
+    TxHash,
+    UTxO,
+    Unit,
+    applyDoubleCborEncoding,
+    fromHex,
+} from '@lucid-evolution/lucid';
 import { toJson } from '../../Commons/utils.js';
+import { fetchWrapper } from '../FetchWrapper/FetchWrapper.FrontEnd.js';
 
-const lucid = '0.10.7'; // Lucid version
+const lucid = '0.4.24'; // LucidEvolution version
 
 export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
     // public url: string;
@@ -42,6 +40,8 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
             maxValSize: parseInt(result.max_val_size),
             keyDeposit: BigInt(result.key_deposit),
             poolDeposit: BigInt(result.pool_deposit),
+            drepDeposit: BigInt(result.drep_deposit),
+            govActionDeposit: BigInt(result.gov_action_deposit),
             priceMem: parseFloat(result.price_mem),
             priceStep: parseFloat(result.price_step),
             maxTxExMem: BigInt(result.max_tx_ex_mem),
@@ -49,8 +49,8 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
             coinsPerUtxoByte: BigInt(result.coins_per_utxo_size),
             collateralPercentage: parseInt(result.collateral_percent),
             maxCollateralInputs: parseInt(result.max_collateral_inputs),
+            minFeeRefScriptCostPerByte: parseInt(result.min_fee_ref_script_cost_per_byte),
             costModels: result.cost_models,
-            minfeeRefscriptCostPerByte: parseInt(result.min_fee_ref_script_cost_per_byte),
         };
     }
     async getUtxos(addressOrCredential: string | Credential): Promise<UTxO[]> {
@@ -58,8 +58,8 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
             if (typeof addressOrCredential === 'string') return addressOrCredential;
             const credentialBech32 =
                 addressOrCredential.type === 'Key'
-                    ? C.Ed25519KeyHash.from_hex(addressOrCredential.hash).to_bech32('addr_vkh')
-                    : C.ScriptHash.from_hex(addressOrCredential.hash).to_bech32('addr_vkh'); // should be 'script' (CIP-0005)
+                    ? CML.Ed25519KeyHash.from_hex(addressOrCredential.hash).to_bech32('addr_vkh')
+                    : CML.ScriptHash.from_hex(addressOrCredential.hash).to_bech32('addr_vkh'); // should be 'script' (CIP-0005)
             return credentialBech32;
         })();
         let result: any[] = [];
@@ -86,8 +86,8 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
             if (typeof addressOrCredential === 'string') return addressOrCredential;
             const credentialBech32 =
                 addressOrCredential.type === 'Key'
-                    ? C.Ed25519KeyHash.from_hex(addressOrCredential.hash).to_bech32('addr_vkh')
-                    : C.ScriptHash.from_hex(addressOrCredential.hash).to_bech32('addr_vkh'); // should be 'script' (CIP-0005)
+                    ? CML.Ed25519KeyHash.from_hex(addressOrCredential.hash).to_bech32('addr_vkh')
+                    : CML.ScriptHash.from_hex(addressOrCredential.hash).to_bech32('addr_vkh'); // should be 'script' (CIP-0005)
             return credentialBech32;
         })();
         let result: any[] = [];
@@ -125,7 +125,7 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
         return utxos[0];
     }
     async getUtxosByOutRef(outRefs: OutRef[]): Promise<UTxO[]> {
-        // TODO: Make sure old already spent UTxOs are not retrievable.
+        //TODO: Make sure old already spent UTxOs are not retrievable.
         const queryHashes = [...new Set(outRefs.map((outRef) => outRef.txHash))];
         const utxos = await Promise.all(
             queryHashes.map(async (txHash) => {
@@ -214,7 +214,7 @@ export class BlockfrostCustomProviderFrontEnd extends Blockfrost {
                           const { type } = await fetchWrapper(`${this.url}/scripts/${r.reference_script_hash}`, {
                               headers: { project_id: this.projectId, lucid },
                           }).then((res) => res.json());
-                          // TODO: support native scripts
+                          //TODO: support native scripts
                           if (type === 'Native' || type === 'native') {
                               throw new Error('Native script ref not implemented!');
                           }
@@ -260,7 +260,7 @@ export class BlockFrostFrontEnd {
     //         }
     //     } catch (error) {
     //         console.log(`[BlockFrost] - getSlotApi - Error: ${error}`);
-    //         throw `${error}`;
+    //         throw error;
     //     }
     // }
 }

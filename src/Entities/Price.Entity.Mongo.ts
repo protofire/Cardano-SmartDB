@@ -2,7 +2,7 @@ import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
 import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
 import { PriceEntity } from './Price.Entity.js';
-import { SignedMessage } from "lucid-cardano";
+import { SignedMessage } from '@lucid-evolution/lucid';
 import { CS, TN } from '../Commons/index.js';
 import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
 
@@ -45,7 +45,7 @@ export class PriceEntityMongo extends BaseEntityMongo {
 
     // #region mongo db
 
-    public static MongoModel() {
+    public static DBModel() {
         interface Interface {
             CS: CS;
             TN_Hex: TN;
@@ -53,16 +53,21 @@ export class PriceEntityMongo extends BaseEntityMongo {
             date: Date;
             priceADAx1e6: string;
             signature: SignedMessage;
+            createdAt: Date;
+            updatedAt: Date;
         }
 
-        const schema = new Schema<Interface>({
-            CS: { type: String, required: false },
-            TN_Hex: { type: String, required: false },
-            TN_Str: { type: String, required: false },
-            date: { type: Date, required: false },
-            priceADAx1e6: { type: String, required: false },
-            signature: { type: Object, required: false },
-        });
+        const schema = new Schema<Interface>(
+            {
+                CS: { type: String, required: false },
+                TN_Hex: { type: String, required: false },
+                TN_Str: { type: String, required: false },
+                date: { type: Date, required: false },
+                priceADAx1e6: { type: String, required: false },
+                signature: { type: Object, required: false },
+            },
+            { timestamps: true }
+        );
 
         const ModelDB = models[this._mongoTableName] || model<Interface>(this._mongoTableName, schema);
         return ModelDB;

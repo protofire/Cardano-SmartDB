@@ -1,7 +1,7 @@
 import { DummyEntity, FreeEntity } from '@example/src/lib/SmartDB/Entities';
 import { UTxO } from 'lucid-cardano';
 import { useEffect, useState } from 'react';
-import { AddressToFollowFrontEndApiCalls, useAppStore } from 'smart-db';
+import { AddressToFollowEntity, AddressToFollowFrontEndApiCalls, useAppStore } from 'smart-db';
 
 export const useModalDatum = ({ uTxO }: { uTxO: UTxO }) => {
     //--------------------------------------
@@ -23,7 +23,7 @@ export const useModalDatum = ({ uTxO }: { uTxO: UTxO }) => {
         const fetchData = async () => {
             if (uTxO.datum !== undefined && uTxO.datum !== null) {
                 let datum = undefined;
-                const addressesToFollow = await AddressToFollowFrontEndApiCalls.getByAddressApi(uTxO.address);
+                const addressesToFollow: AddressToFollowEntity[] = await AddressToFollowFrontEndApiCalls.getByParamsApi_({ address: uTxO.address });
                 const possibleDatums: string[] = [];
                 addressesToFollow.forEach((addressToFollow) => possibleDatums.push(addressToFollow.datumType));
                 possibleDatums.forEach((datumType) => {

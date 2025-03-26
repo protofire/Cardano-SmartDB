@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Convertible, OptionsGet, asEntity, optionsGetMinimal, type CS, type Decimals, type TN } from '../Commons/index.js';
+import { Convertible, OptionsGet, asEntity, getFallbackImageLetters, optionsGetMinimal, type CS, type Decimals, type TN } from '../Commons/index.js';
 import { BaseEntity } from './Base/Base.Entity.js';
 
 @asEntity()
@@ -18,6 +18,9 @@ export class TokenMetadataEntity extends BaseEntity {
     @Convertible({})
     TN_Str!: TN;
 
+    @Convertible({})
+    ticker!: TN;
+
     @Convertible({ type: Number })
     decimals!: Decimals;
 
@@ -33,14 +36,29 @@ export class TokenMetadataEntity extends BaseEntity {
     @Convertible({})
     swMetadataGenerated!: boolean;
 
+    @Convertible({ isCreatedAt: true })
+    createdAt!: Date;
+
+    @Convertible({ isUpdatedAt: true })
+    updatedAt!: Date;
+
     // #endregion fields
 
     // #region db
+    
 
     public static optionsGetForTokenStore: OptionsGet = {
         ...optionsGetMinimal,
-        fieldsForSelect: { CS: true, TN_Hex: true, decimals: true, image: true, colorHex: true },
+        fieldsForSelect: { CS: true, TN_Hex: true, TN_Str: true, ticker: true, decimals: true, image: true, colorHex: true },
     };
 
     // #endregion db
+
+    // #region class methods
+
+    public getFallbackImageLetters = (): string => {
+        return getFallbackImageLetters(this);
+    };
+
+    // #endregion class methods
 }

@@ -1,4 +1,4 @@
-import { OptionsGet, isFrontEndEnvironment, isNullOrBlank } from '../Commons/index.js';
+import { CS, OptionsGet, isFrontEndEnvironment, isNullOrBlank } from '../Commons/index.js';
 import { BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndAppliedFor.js';
 import { console_log, tabs } from '../Commons/BackEnd/globalLogs.js';
 import { AddressToFollowEntity } from '../Entities/AddressToFollow.Entity.js';
@@ -14,9 +14,12 @@ export class AddressToFollowBackEndApplied extends BaseBackEndApplied {
 
     // #region class methods
 
-    public static async getByAddress<T extends AddressToFollowEntity>(address: string, optionsGet?: OptionsGet, restricFilter?: Record<string, any>): Promise<T[]> {
+    public static async getByAddress<T extends AddressToFollowEntity>(address: string, CS: CS,  optionsGet?: OptionsGet, restricFilter?: Record<string, any>): Promise<T[]> {
         if (isNullOrBlank(address)) {
-            throw `address not defined`;
+            throw `Address not defined`;
+        }
+        if (isNullOrBlank(CS)) {
+            throw `Currency Symbol not defined`;
         }
         if (isFrontEndEnvironment()) {
             //return await this.getByAddressApi(address, optionsGet);
@@ -25,7 +28,7 @@ export class AddressToFollowBackEndApplied extends BaseBackEndApplied {
         //----------------------------
         console_log(1, this._Entity.className(), `getByAddress - Init`);
         //----------------------------
-        const addressesToFollow: T[] = await this._BackEndMethods.getByParams<T>(this._Entity, { address }, optionsGet, restricFilter);
+        const addressesToFollow: T[] = await this._BackEndMethods.getByParams<T>(this._Entity, { address, CS }, optionsGet, restricFilter);
         //-------------------------
         console_log(-1, this._Entity.className(), `getByAddress - OK`);
         //-------------------------

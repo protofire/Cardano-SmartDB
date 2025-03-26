@@ -1,0 +1,68 @@
+@use '@/styles/tools/mixins' as mix;
+@use '@/styles/setting/typography' as font;
+@use '@/styles/setting/colors';
+@use '@/styles/shared.module.scss';
+
+.modal {
+    @include mix.modal();
+
+    .main {
+        @media (min-height: 768px) {
+            top: 100px;
+        }
+
+        .popUp {
+            .headerModal {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 24px;
+                width: 100%;
+                gap: 16px;
+                // Title Modal and Icon include in mixin
+            }
+
+            .txContainer {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+                gap: 24px;
+
+                .textPart {
+                    display: flex;
+                    gap: 16px;
+                    flex-direction: column;
+
+                    .text {
+                        font: font.$fb200-regular;
+                        text-align: center;
+                    }
+
+                    .txHash {
+                        display: flex;
+                        gap: 4px;
+                        align-items: center;
+                        justify-content: center;
+
+                        .linkHash {
+                            font: font.$fb200-regular;
+                            @include mix.underline();
+                        }
+                        .hash {
+                            font: font.$fb200-regular;
+                        }
+                    }
+                }
+
+                .btnGroup {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 6px;
+                    width: 100%;
+                }
+            }
+        }
+    }
+}

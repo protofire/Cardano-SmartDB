@@ -3,14 +3,6 @@
 import { PUBLIC_ENDPOINTS_FOR_LOCAL_REFERER, PUBLIC_ENDPOINTS_FROM_INTERNET } from '../Constants/endpoints.js';
 import { WalletEntity } from '../../Entities/Wallet.Entity.js';
 
-let globalState: any;
-
-if (typeof window !== 'undefined') {
-    globalState = window;
-} else {
-    globalState = global;
-}
-
 export class ConfigManager {
     private _walletEntityClass: any;
     private endPointsLocal: RegExp[] = PUBLIC_ENDPOINTS_FOR_LOCAL_REFERER;
@@ -82,9 +74,17 @@ interface GlobalConfig {
     config: ConfigManager;
 }
 
+let globalState: any;
+
+if (typeof window !== 'undefined') {
+    globalState = window;
+} else {
+    globalState = global;
+}
+
 if (!globalState.globalConfig) {
     globalState.globalConfig = {
-        config: new ConfigManager()
+        config: new ConfigManager(),
     } as GlobalConfig;
 }
 

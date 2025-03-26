@@ -2,7 +2,7 @@ import { FreeEntity } from '@example/src/lib/SmartDB/Entities';
 import { FreeApi } from '@example/src/lib/SmartDB/FrontEnd';
 import { Address, Lucid, MintingPolicy, SpendingValidator } from 'lucid-cardano';
 import { dirname } from 'path';
-import { CS, delay, LucidToolsFrontEnd } from 'smart-db';
+import { CS, sleep, LucidToolsFrontEnd } from 'smart-db';
 import { fileURLToPath } from 'url';
 import { createContractUTXOs, createWallets, deleteContractUTXOs, prepareWallets, runTestCase, TestCase } from './helpers';
 import { saveExcel, TestResult } from './results';
@@ -146,7 +146,7 @@ describe('Concurrency Tests', () => {
                             throw error; // Rethrow the error after all retries have failed
                         } else {
                             console.log(`[TEST] - Retrying in ${CONFIG.MAX_RETRIES_SETUP / 1000} seconds...`);
-                            await delay(CONFIG.RETRY_DELAY_SETUP);
+                            await sleep(CONFIG.RETRY_DELAY_SETUP);
                         }
                     }
                 }

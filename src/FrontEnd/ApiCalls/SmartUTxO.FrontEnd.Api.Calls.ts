@@ -1,5 +1,4 @@
-import { OptionsGet, OptionsGetOne, isEqual, isNullOrBlank, optionsGetDefault, optionsGetOneDefault, toJson } from '../../Commons/index.js';
-import { formatUTxO } from '../../Commons/helpers.js';
+import { OptionsGet, OptionsGetOne, formatUTxO, isEqual, isNullOrBlank, optionsGetDefault, optionsGetOneDefault, toJson } from '../../Commons/index.js';
 import { SmartUTxOEntity } from '../../Entities/SmartUTxO.Entity.js';
 import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls.js';
 import fetchWrapper from '../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
@@ -42,7 +41,7 @@ export class SmartUTxOFrontEndApiCalls extends BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${this._Entity.className()}] - getByAddressApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -80,7 +79,7 @@ export class SmartUTxOFrontEndApiCalls extends BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${this._Entity.className()}] - getByTxHashAndOutputIndexApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 

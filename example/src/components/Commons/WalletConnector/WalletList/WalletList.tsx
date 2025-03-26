@@ -8,13 +8,11 @@ interface Props {
     walletStore: IUseWalletStore;
     walletSelected: string | undefined;
     walletConnect: (wallet: CardanoWallet, createSignedSession: boolean, forceConnect?: boolean, closeModal?: boolean, tryAgain?: boolean) => Promise<void>;
-    walletFromSeedConnect: (walletSeed: string, createSignedSession: boolean, forceConnect?: boolean, closeModal?: boolean) => Promise<void>;
-    walletFromKeyConnect: (walletKey: string, createSignedSession: boolean, forceConnect?: boolean, closeModal?: boolean) => Promise<void>;
     walletInstall: (wallet: CardanoWallet) => Promise<void>;
     createSignedSession: boolean;
 }
 
-const WalletList: React.FC<Props> = ({ walletStore, walletSelected, walletConnect, walletFromSeedConnect, walletFromKeyConnect, walletInstall, createSignedSession }) => {
+const WalletList: React.FC<Props> = ({ walletStore, walletSelected, walletConnect, walletInstall, createSignedSession }) => {
     //--------------------------------------
     return (
         <>

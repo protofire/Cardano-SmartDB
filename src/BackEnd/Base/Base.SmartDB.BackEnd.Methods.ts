@@ -1,23 +1,29 @@
-import { Address, Lucid, UTxO } from 'lucid-cardano';
+import { Address, Lucid, LucidEvolution, UTxO } from '@lucid-evolution/lucid';
 import { isNFT_With_AC_Lucid_InValue, sumTokensAmt_From_CS } from '../../Commons/helpers.js';
 import {
     OptionsGet,
     OptionsGetOne,
+    RegistryManager,
+    TRANSACTION_STATUS_CONFIRMED,
+    TRANSACTION_STATUS_PARSE_ERROR,
+    TX_PROPAGATION_DELAY_MS,
     console_errorLv1,
     console_logLv1,
     isEmulator,
     isFrontEndEnvironment,
     isNullOrBlank,
     showData,
-    toJson
+    toJson,
 } from '../../Commons/index.BackEnd.js';
-import { delay } from '../../Commons/utils.js';
+import { sleep } from '../../Commons/utils.js';
 import { AddressToFollowEntity } from '../../Entities/AddressToFollow.Entity.js';
 import { BaseSmartDBEntity } from '../../Entities/Base/Base.SmartDB.Entity.js';
 import { EmulatorEntity } from '../../Entities/Emulator.Entity.js';
 import { SmartUTxOEntity } from '../../Entities/SmartUTxO.Entity.js';
 import { BlockFrostBackEnd } from '../../lib/BlockFrost/BlockFrost.BackEnd.js';
 import { BaseBackEndMethods } from './Base.BackEnd.Methods.js';
+import { TransactionEntity } from '../../Entities/Transaction.Entity.js';
+import { JobBackEndApplied } from '../Job.BackEnd.All.js';
 
 // BaseSmartDBBackEndMethods es generico
 // Todos los metodos reciven o instancia o entidad
@@ -50,7 +56,7 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             return instance;
         } catch (error) {
             console_errorLv1(0, Entity.className(), `getBySmartUTxO - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -66,13 +72,36 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             return await this.getByParams<T>(Entity, { _isDeployed: true }, optionsGet, restricFilter);
         } catch (error) {
             console_errorLv1(0, Entity.className(), `getDeployed - Error: ${error}`);
-            throw `${error}`;
+            throw error;
+        }
+    }
+
+    public static async createHook<T extends BaseSmartDBEntity>(Entity: typeof BaseSmartDBEntity, address: string, CS: string, TN_Str?: string): Promise<void> {
+        try {
+            const addressesToFollow = await this.getByParams<AddressToFollowEntity>(AddressToFollowEntity, { address, CS });
+            if (addressesToFollow && addressesToFollow.length > 0) {
+                // no quiero disparar error si ya existe
+                // throw "Webhook already exists"
+            } else {
+                const addressToFollow = new AddressToFollowEntity({
+                    address,
+                    CS,
+                    TN_Str,
+                    txCount: -1,
+                    apiRouteToCall: Entity.apiRoute() + '/sync',
+                    datumType: Entity.className(),
+                });
+                await this.create<AddressToFollowEntity>(addressToFollow);
+            }
+        } catch (error) {
+            console.log(`[${Entity.className()}] - createHook - Error: ${error}`);
+            throw error;
         }
     }
 
     public static async syncWithAddress<T extends BaseSmartDBEntity>(
         Entity: typeof BaseSmartDBEntity,
-        lucid: Lucid,
+        lucid: LucidEvolution,
         emulatorDB: EmulatorEntity | undefined,
         addressToFollow: AddressToFollowEntity,
         force: boolean | undefined,
@@ -83,8 +112,9 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
         }
         //----------------------------
         const address = addressToFollow.address;
+        const CS = addressToFollow.CS;
         //--------------------------------------
-        console_logLv1(1, Entity.className(), `syncWithAddress - address ${address} - Init`);
+        console_logLv1(1, Entity.className(), `syncWithAddress - address ${address} - CS ${CS} - Init`);
         //--------------------------------------
         const tx_count_DB = addressToFollow.txCount;
         //--------------------------------------
@@ -93,16 +123,19 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             tx_count_blockchain = await EmulatorEntity.getTxCountInEmulator(lucid, emulatorDB!, address);
         } else {
             try {
-                // la primera vez espera 5 segundos, la segunda 5, la tercera 10
-                const times = [5000, 5000, 10000];
+                //------------
+                // la primera vez espera un poco y luego un poco mas
+                const times = [TX_PROPAGATION_DELAY_MS, TX_PROPAGATION_DELAY_MS * 1.1, TX_PROPAGATION_DELAY_MS * 1.2];
+                //------------
                 for (let i = 0; i < 3; i++) {
                     tx_count_blockchain = await BlockFrostBackEnd.getTxCount_Api(address);
                     if (tx_count_blockchain === tx_count_DB && force !== true && tryCountAgain === true) {
                         // a veces el api de query tx dice que la transaccion existe, pero el api de tx count no lo refleja
                         // agrego esto por las dudas, para dar tiempo a blockfrost actualize sus registros
                         console_logLv1(0, Entity.className(), `syncWithAddress - waiting extra time (${i}/3) because counts (${tx_count_blockchain}) are still the same...`);
-                        // Wait for seconds
-                        await delay(times[i]);
+                        //-----
+                        await sleep(times[i]);
+                        //------
                     } else {
                         break; // Exit the loop if condition is not met
                     }
@@ -121,27 +154,32 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             console_logLv1(0, Entity.className(), `syncWithAddress - triggering a sync because tx counts are different or was forced...`);
             //--------------------------------------
             let realUTxOs: UTxO[] = [];
-            const smartUTxOs = await this.getByParams<SmartUTxOEntity>(SmartUTxOEntity, { address }, { loadRelations: {} });
             //--------------------------------------
-            const tryCheckAgain = true;
-            // la primera vez espera 5 segundos, la segunda 5, la tercera 10
-            const times = [5000, 5000, 10000];
+            let smartUTxOs = await this.getByParams<SmartUTxOEntity>(SmartUTxOEntity, { address }, { loadRelations: {} });
+            smartUTxOs = smartUTxOs.filter((utxo) => sumTokensAmt_From_CS(utxo.assets, addressToFollow.CS) > 0n && utxo.datum !== undefined);
+            //--------------------------------------
+            const tryCheckAgain = !isEmulator; // no lo hace en emulador
+            ///------------
+            // la primera vez espera un poco y luego un poco mas
+            const times = [TX_PROPAGATION_DELAY_MS, TX_PROPAGATION_DELAY_MS * 1.1, TX_PROPAGATION_DELAY_MS * 1.2];
+            //------------
             // NOTE: puede que la cantidad de tx count me diga que cambio, pero los utxos que vienen de lucid siguen siendo los mismos exactos a los que tengo... es un problema
             for (let i = 0; i < 3; i++) {
                 try {
                     realUTxOs = await lucid.utxosAt(address);
                 } catch (error) {
-                    throw `${error}`;
+                    throw error;
                 }
                 // filter real utxo with currency symbol and with datums
-                realUTxOs = realUTxOs.filter((utxo) => sumTokensAmt_From_CS(utxo.assets, addressToFollow.currencySymbol) > 0n && utxo.datum !== undefined);
+                realUTxOs = realUTxOs.filter((utxo) => sumTokensAmt_From_CS(utxo.assets, addressToFollow.CS) > 0n && utxo.datum !== undefined);
                 //--------------------------------------
                 console_logLv1(0, Entity.className(), `syncWithAddress - UTxOs Blockchain: ` + realUTxOs.length);
                 console_logLv1(0, Entity.className(), `syncWithAddress - UTxOs DB: ` + smartUTxOs.length);
                 if (tryCheckAgain && tx_count_blockchain !== tx_count_DB && this.isSameUTxOs(realUTxOs, smartUTxOs)) {
                     console_logLv1(0, Entity.className(), `syncWithAddress - waiting extra time (${i}/3) because utxos are still the same ones...`);
-                    // Wait for seconds
-                    await delay(times[i]);
+                    //-----
+                    await sleep(times[i]);
+                    //------
                 } else {
                     break; // Exit the loop if condition is not met
                 }
@@ -180,10 +218,113 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             addressToFollow.txCount = tx_count_blockchain;
             await this.update(addressToFollow);
             //--------------------------------------
-            console_logLv1(-1, Entity.className(), `syncWithAddress - address ${address} - OK`);
+            console_logLv1(-1, Entity.className(), `syncWithAddress - address ${address} - CS ${CS} - OK`);
             //--------------------------------------
         }
         return;
+    }
+
+    public static async parseBlockchainAddress<T extends BaseSmartDBEntity>(
+        Entity: typeof BaseSmartDBEntity,
+        jobId: string,
+        address: string,
+        datumType: string,
+        fromBlock?: number,
+        toBlock?: number,
+        message?: string
+    ): Promise<boolean> {
+        //----------------------------
+        if (isNullOrBlank(address)) {
+            throw `Address not defined`;
+        }
+        if (isNullOrBlank(datumType)) {
+            throw `datumType not defined`;
+        }
+        //----------------------------
+        if (isFrontEndEnvironment()) {
+            throw `Can't run this method in the Browser`;
+        }
+        //--------------------------------------
+        console_logLv1(1, Entity.className(), `parseBlockchainAddress - Init`);
+        //----------------------------
+        const AddressToFollowBackEndApplied = (await import('../AddressToFollow.BackEnd.Applied.js')).AddressToFollowBackEndApplied;
+        const addressesToFollow = await AddressToFollowBackEndApplied.getByParams_({ address, datumType });
+        if (addressesToFollow === undefined) {
+            throw `AddressToFollow not found - address: ${address} - datumType: ${datumType}`;
+        }
+        //----------------------------
+        const EntityClass = RegistryManager.getFromSmartDBEntitiesRegistry(datumType);
+        const backEnd = this.getBack(EntityClass);
+        console_logLv1(0, Entity.className(), `parseBlockchainAddress - backEnd: ${backEnd !== undefined}`);
+        console_logLv1(0, Entity.className(), `parseBlockchainAddress - backEnd.parseBlockchainTransaction: ${backEnd.parseBlockchainTransaction !== undefined}`);
+        //--------------------------------------
+        if (backEnd.parseBlockchainTransaction === undefined) {
+            throw `parseBlockchainTransaction for ${EntityClass} not defined`;
+        }
+        //--------------------------------------
+        const TransactionBackEndApplied = (await import('../Transaction.BackEnd.Applied.js')).TransactionBackEndApplied;
+        //--------------------------------------
+        const job = await JobBackEndApplied.getJob(jobId);
+        if (job === undefined) {
+            throw `Job not found - jobId: ${jobId}`;
+        }
+        //--------------------------------------
+        await JobBackEndApplied.updateJob(jobId, 'running', undefined, undefined, `${message}Fetching transactions from blockfrost...`);
+        //--------------------------------------
+        const transactionsBlockchain = await BlockFrostBackEnd.get_Transactions_Api(address, fromBlock, toBlock);
+        //--------------------------------------
+        await JobBackEndApplied.updateJob(
+            jobId,
+            'running',
+            undefined,
+            undefined,
+            `${message}Fetched ${transactionsBlockchain?.length ?? 0} transactions from blockfrost. Parsing...`
+        );
+        //--------------------------------------
+        let transactionsBlockchainToParse: Record<string, any>[] = [];
+        //--------------------------------------
+        let result = false;
+        //--------------------------------------
+        if (transactionsBlockchain === undefined) {
+            console_logLv1(0, Entity.className(), `parseBlockchainAddress - No transactions found`);
+            result = true;
+        } else {
+            //--------------------------------------
+            console_logLv1(0, Entity.className(), `parseBlockchainAddress - Transactions found: ${transactionsBlockchain.length}`);
+            //--------------------------------------
+            for (let transactionBlockchain of transactionsBlockchain) {
+                //--------------------------------------
+                //check if i dont have this transaction
+                const transaction = await TransactionBackEndApplied.getOneByParams_<TransactionEntity>({ hash: transactionBlockchain.tx_hash });
+                //--------------------------------------
+                if (transaction !== undefined) {
+                    if (transaction.status !== TRANSACTION_STATUS_CONFIRMED && transaction.status !== TRANSACTION_STATUS_PARSE_ERROR) {
+                        // Update transaction status to TRANSACTION_STATUS_CONFIRMED
+                        transaction.parse_info = `Transaction already exists and is now confirmed by parseBlockchainAddress`;
+                        transaction.status = TRANSACTION_STATUS_CONFIRMED;
+                        await TransactionBackEndApplied.update(transaction);
+                        console_logLv1(0, Entity.className(), `parseBlockchainAddress - Transaction already exists and is now confirmed - ${transactionBlockchain.tx_hash}`);
+                    } else if (transaction.status === TRANSACTION_STATUS_PARSE_ERROR) {
+                        // if the transaction is in error status, delete it and parse it again
+                        await TransactionBackEndApplied.deleteById_(transaction._DB_id);
+                        transactionsBlockchainToParse.push(transactionBlockchain);
+                    }
+                } else {
+                    transactionsBlockchainToParse.push(transactionBlockchain);
+                }
+            }
+            if (transactionsBlockchainToParse.length > 0) {
+                console_logLv1(0, Entity.className(), `parseBlockchainAddress - Transactions to parse: ${transactionsBlockchainToParse.length}`);
+                result = await backEnd.parseBlockchainTransactions(jobId, transactionsBlockchainToParse, message);
+            } else {
+                result = true;
+            }
+        }
+        //-------------------------
+        console_logLv1(-1, Entity.className(), `parseBlockchainAddress - OK - result: ${result}`);
+        //-------------------------
+        return result;
+        //--------------------------------------
     }
 
     // #endregion class methods
@@ -218,7 +359,7 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             //----------------------------
         } catch (error) {
             console_errorLv1(-1, instance.className(), `updateSyncSmartUTxO - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -241,8 +382,10 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
         let swDeleteSome = false;
         //--------------------------------------
         for (const smartUTxO of smartUTxOs) {
-            const found = realUTxOs.find((realUTxO) => realUTxO.txHash === smartUTxO.txHash && realUTxO.outputIndex === smartUTxO.outputIndex);
-            //TODO: hace falta agregar && smartUTxO.datum === realUTxO.datum a esa condición?
+            const found = realUTxOs.find(
+                (realUTxO) => realUTxO.txHash === smartUTxO.txHash && realUTxO.outputIndex === smartUTxO.outputIndex && smartUTxO.datum === realUTxO.datum
+            );
+            //TODO: && smartUTxO.datum === realUTxO.datum esto no lo uso en SmartDB, es necesario?
             if (!found) {
                 swDeleteSome = true;
                 //--------------------------------------
@@ -283,7 +426,7 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
         if (instance === undefined) {
             if (Entity.is_NET_id_Unique()) {
                 // como el id es unico, ademas de buscar la smart id, puedo buscar por cs y tn para ver si elimino o actualizo
-                instance = await this.getOneByParams<T>(Entity, { _NET_id_CS: smartUTxO._NET_id_CS, _NET_id_TN: smartUTxO._NET_id_TN });
+                instance = await this.getOneByParams<T>(Entity, { _NET_id_CS: smartUTxO._NET_id_CS, _NET_id_TN_Str: smartUTxO._NET_id_TN_Str });
             }
         }
         //--------------------------------------
@@ -404,7 +547,11 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             }
             datum = Entity.mkDatumFromDatumCborHex<T>(newSmartUTxO.datum);
         } catch (error) {
-            console_errorLv1(0, Entity.className(), `createOrUpdate_Instance_From_SmartUTxO - this UTxO DB has a datum of another format - error: ${error}`);
+            console_errorLv1(
+                0,
+                Entity.className(),
+                `createOrUpdate_Instance_From_SmartUTxO - this UTxO DB has a datum of another format - this sync process will not add it - try other syncs methods`
+            );
             return;
         }
         //--------------------------------------
@@ -416,16 +563,16 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             const instance = new Entity(datum);
             //--------------------------------------
             instance._NET_address = addressToFollow.address;
-            instance._NET_id_CS = addressToFollow.currencySymbol;
-            if (!isNullOrBlank(addressToFollow.tokenName)) {
-                instance._NET_id_TN = addressToFollow.tokenName;
+            instance._NET_id_CS = addressToFollow.CS;
+            if (!isNullOrBlank(addressToFollow.TN_Str)) {
+                instance._NET_id_TN_Str = addressToFollow.TN_Str;
             }
             instance._creator = 'internal';
             //--------------------------------------
             instance.smartUTxO = newSmartUTxO;
             //--------------------------------------
             newSmartUTxO._NET_id_CS = instance.getNET_id_CS();
-            newSmartUTxO._NET_id_TN = instance.getNET_id_TN();
+            newSmartUTxO._NET_id_TN_Str = instance.getNET_id_TN_Str();
             newSmartUTxO._is_NET_id_Unique = Entity.is_NET_id_Unique();
             newSmartUTxO.datumType = Entity.className();
             newSmartUTxO.datumObj = datum;
@@ -434,7 +581,7 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             // eso solo puedo saberlo si tiene id NFT unico
             // en el caso de que el id no sea unico habra una comprobacion al final que se realiza cuando se hace force sync
             if (Entity.is_NET_id_Unique()) {
-                const instanceOld = await this.getOneByParams<T>(Entity, { _NET_id_CS: instance.getNET_id_CS(), _NET_id_TN: instance.getNET_id_TN() });
+                const instanceOld = await this.getOneByParams<T>(Entity, { _NET_id_CS: instance.getNET_id_CS(), _NET_id_TN_Str: instance.getNET_id_TN_Str() });
                 if (instanceOld !== undefined) {
                     console_logLv1(0, Entity.className(), `createOrUpdate_Instance_From_SmartUTxO - instance: ${instanceOld.show()} already exists`);
                     console_logLv1(0, Entity.className(), `createOrUpdate_Instance_From_SmartUTxO - deleting it before creating it again`);
@@ -465,7 +612,7 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
                 instanceToLink.smartUTxO = newSmartUTxO;
                 //--------------------------------------
                 newSmartUTxO._NET_id_CS = instanceToLink.getNET_id_CS();
-                newSmartUTxO._NET_id_TN = instanceToLink.getNET_id_TN();
+                newSmartUTxO._NET_id_TN_Str = instanceToLink.getNET_id_TN_Str();
                 newSmartUTxO._is_NET_id_Unique = Entity.is_NET_id_Unique();
                 newSmartUTxO.datumType = Entity.className();
                 newSmartUTxO.datumObj = datum;
@@ -581,11 +728,17 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             //--------------------------------------
             if (smartUTxOs.length > instances.length) {
                 console_errorLv1(0, Entity.className(), `checkIfAllInstancesExits - UTxOs DB and Instances dont match, but i cant create not IsOnlyDatum instances again...`);
+            } else if (smartUTxOs.length < instances.length) {
+                console_logLv1(0, Entity.className(), `checkIfAllInstancesExits - UTxOs DB and Instances dont match, checking instances...`);
             }
+            //--------------------------------------
             for (const instance of instances) {
                 if (instance.smartUTxO_id === undefined) {
+                    // console_logLv1(0, Entity.className(), `checkIfAllInstancesExits - instance.smartUTxO_id === undefined...`);
                     const NET_ID_Lucid = instance.getNet_id_AC_Lucid();
+                    // console_logLv1(0, Entity.className(), `checkIfAllInstancesExits - NET_ID_Lucid: ${NET_ID_Lucid}`);
                     for (const smartUTxO of smartUTxOs) {
+                        // console_logLv1(0, Entity.className(), `checkIfAllInstancesExits - smartUTxO.assets: ${showData(smartUTxO.assets, false)}`);
                         if (isNFT_With_AC_Lucid_InValue(smartUTxO.assets, NET_ID_Lucid)) {
                             //--------------------------------------
                             swSomeMissedInstances = true;

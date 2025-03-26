@@ -1,12 +1,12 @@
-import type { PrivateKey } from 'lucid-cardano';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import type { PrivateKey } from '@lucid-evolution/lucid';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
 import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js';
 import { EmulatorEntity } from './Emulator.Entity.js';
-import { getPostgreSQLTableName } from '../Commons/utils.js';
+import { PostgreSQLDatabaseService } from '../BackEnd/DatabaseService/PostgreSQL.Database.Service.js';
 
 @PostgreSQLAppliedFor([EmulatorEntity])
-@Entity({ name: getPostgreSQLTableName(EmulatorEntity.className()) })
+@Entity({ name: PostgreSQLDatabaseService.getTableName(EmulatorEntity.className()) })
 export class EmulatorEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = EmulatorEntity;
 
@@ -49,15 +49,21 @@ export class EmulatorEntityPostgreSQL extends BaseEntityPostgreSQL {
     @Column({ type: 'boolean' })
     current!: boolean;
 
-    // TODO: Maybe a one to one relation its better
+    //TODO: Maybe a one to one relation its better
     @Column({ type: 'jsonb', nullable: true }) // `jsonb` para almacenar objetos en PostgreSQL
     emulator!: object;
 
-    @Column({ type: 'integer' })
+    @Column({ type: 'number' })
     zeroTime!: number;
 
     @Column({ type: 'varchar', array: true, nullable: true })
     privateKeys!: PrivateKey[]; // Suponiendo que el array de claves privadas se maneja como texto
+
+    @CreateDateColumn()
+    createdAt!: Date;
+
+    @UpdateDateColumn()
+    updatedAt!: Date;
 
     // #endregion postgreSQLDB
 }

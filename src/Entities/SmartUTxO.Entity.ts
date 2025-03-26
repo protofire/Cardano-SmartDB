@@ -1,6 +1,6 @@
-import { Datum, DatumHash, OutRef, Script, UTxO, type Address, type Assets, type TxHash } from "lucid-cardano";
+import { Datum, DatumHash, OutRef, Script, UTxO, type Address, type Assets, type TxHash } from '@lucid-evolution/lucid';
 import 'reflect-metadata';
-import { Convertible, TxOutRef, asEntity, toJson } from '../Commons/index.js';
+import { Convertible, TxOutRef, asEntity, formatDate, toJson } from '../Commons/index.js';
 import { deserealizeAssets } from '../Commons/conversions.js';
 import { BaseEntity } from './Base/Base.Entity.js';
 
@@ -54,7 +54,7 @@ export class SmartUTxOEntity extends BaseEntity {
     _NET_id_CS!: string;
 
     @Convertible()
-    _NET_id_TN!: string;
+    _NET_id_TN_Str!: string;
 
     @Convertible()
     _is_NET_id_Unique!: boolean;
@@ -62,10 +62,10 @@ export class SmartUTxOEntity extends BaseEntity {
     @Convertible()
     datumType!: string;
 
-    @Convertible()
+    @Convertible({ isCreatedAt: true })
     createdAt!: Date;
 
-    @Convertible()
+    @Convertible({ isUpdatedAt: true })
     updatedAt!: Date;
 
     // #endregion fields
@@ -110,15 +110,41 @@ export class SmartUTxOEntity extends BaseEntity {
         return outRef;
     }
 
+    public showStatus(): string {
+        if (this.isPreparingForConsuming) {
+            if (this.isConsuming) {
+                return `Reserved for Consuming: Preparing since ${formatDate(this.isPreparingForConsuming)}, In transaction since ${formatDate(this.isConsuming)}`;
+            }
+            return `Reserved for Consuming: Preparing since ${formatDate(this.isPreparingForConsuming)}`;
+        }
+
+        if (this.isConsuming) {
+            return `Reserved: In transaction since ${formatDate(this.isConsuming)}`;
+        }
+
+        if (this.isPreparingForReading) {
+            if (this.isReading) {
+                return `Reserved for Reading: Preparing since ${formatDate(this.isPreparingForReading)}, In reading since ${formatDate(this.isReading)}`;
+            }
+            return `Reserved for Reading: Preparing since ${formatDate(this.isPreparingForReading)}`;
+        }
+
+        if (this.isReading) {
+            return `Reserved: In reading since ${formatDate(this.isReading)}`;
+        }
+
+        return 'Available';
+    }
+
     // NOTE: estos metodos solo sirven para mostrar en frontend, por que los valores de estos campos no estan actualizados
     // se actualizan con el callbackonload, pero lo mas poreciso es buscar en transactions getReadingAndConsumingDates
-    public unsafeIsAvailableForReading<T extends SmartUTxOEntity>(): Boolean {
+    public isAvailableForReading<T extends SmartUTxOEntity>(): Boolean {
         // para que pueda ser usada como utxo de lectura, por referencia, debe estar no en uso para consumo
         // es indiferente si está en uso para lectura por otro proceso
         return this.isPreparingForConsuming === undefined && this.isConsuming === undefined;
     }
 
-    public unsafeIsAvailableForConsuming<T extends SmartUTxOEntity>(): Boolean {
+    public isAvailableForConsuming<T extends SmartUTxOEntity>(): Boolean {
         // para que pueda ser usada como utxo de consumo, debe estar no en uso para lectura ni consumo
         return this.isPreparingForReading === undefined && this.isReading === undefined && this.isPreparingForConsuming === undefined && this.isConsuming === undefined;
     }

@@ -29,6 +29,9 @@ export function useWalletStore(): IUseWalletStore {
         getCardanoWallets: actions.getCardanoWallets,
         isGettingWalletsDone: state.isGettingWalletsDone,
 
+        swDoNotPromtForSigning: state.swDoNotPromtForSigning,
+        setSwDoNotPromtForSigning: actions.setSwDoNotPromtForSigning,
+        
         swHideBalance: state.swHideBalance,
         setSwHideBalance: actions.setSwHideBalance,
 
@@ -79,12 +82,18 @@ export function useAppStore(): IUseAppStore {
     return {
         swInitApiCompleted: state.swInitApiCompleted,
         setSwInitApiCompleted: actions.setSwInitApiCompleted,
+        isNavigating: state.isNavigating,
+        setIsNavigating: actions.setIsNavigating,
+        navigationTimeoutId: state.navigationTimeoutId,
+        setNavigationTimeoutId: actions.setNavigationTimeoutId,
         swExistAnyWallet: state.swExistAnyWallet,
         checkIfExistAnyWallet: actions.checkIfExistAnyWallet,
         siteSettings: state.siteSettings,
         setSiteSettings: actions.setSiteSettings,
         isAppStoreLoading: state.isAppStoreLoading,
         isAppStoreLoaded: state.isAppStoreLoaded,
+        isProcessingTx: state.isProcessingTx,
+        setIsProcessingTx: actions.setIsProcessingTx,
     };
 }
 

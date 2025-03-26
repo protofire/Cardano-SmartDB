@@ -1,22 +1,22 @@
 import { NextApiResponse } from 'next';
 import { User } from 'next-auth';
+import { console_errorLv2, console_logLv2 } from '../../Commons/BackEnd/globalLogs.js';
 import {
     OptionsCreateOrUpdate,
     OptionsDelete,
     OptionsGet,
     OptionsGetOne,
     RegistryManager,
-    getCombinedConversionFunctions,
     sanitizeForDatabase,
     showData,
     yupValidateOptionsCreate,
     yupValidateOptionsDelete,
     yupValidateOptionsGet,
     yupValidateOptionsGetOne,
-    yupValidateOptionsUpdate,
+    yupValidateOptionsUpdate
 } from '../../Commons/index.js';
-import { console_errorLv2, console_logLv2 } from '../../Commons/BackEnd/globalLogs.js';
-import { yup }  from '../../Commons/yupLocale.js';
+import { isEmptyObject } from '../../Commons/utils.js';
+import { yup } from '../../Commons/yupLocale.js';
 import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
 import { NextApiRequestAuthenticated } from '../../lib/Auth/types.js';
 import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
@@ -36,7 +36,6 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  *   description: Operations related to normal entities (not linked to Blockchain Datums)
  */
 
-
 /**
  * @swagger
  * components:
@@ -45,18 +44,18 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  *       type: object
  *       description: |
  *         Advanced query object that supports complex filtering with logical operators.
- *         
+ *
  *         Simple queries:
  *         - Direct field matching: { field: "value" }
  *         - Multiple conditions: { field1: "value1", field2: "value2" }
- *         
+ *
  *         Advanced queries using operators:
  *         - Comparison: $eq, $ne, $gt, $lt, $gte, $lte
  *         - Array: $in, $nin
  *         - Logical: $and, $or, $not
  *         - Element: $exists
  *         - Regex: $regex
- *         
+ *
  *         Nested fields are supported using dot notation:
  *         - { "nested.field": "value" }
  *       example:
@@ -113,7 +112,6 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  *       500:
  *         description: Internal server error
  */
-
 
 /**
  * @swagger
@@ -326,7 +324,6 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  *         description: Internal server error
  */
 
-
 /**
  * @swagger
  * /api/{entity}/all:
@@ -355,7 +352,7 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  *         description: Unauthorized
  *       500:
  *         description: Internal server error
- *   
+ *
  *   post:
  *     summary: Get all entities with pagination, sorting and field selection
  *     tags: [Normal Entities]
@@ -430,7 +427,7 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  *               paramsFilter:
  *                 $ref: '#/components/schemas/QueryParameters'
  *                 description: Optional filtering parameters
-  *               fieldsForSelect:
+ *               fieldsForSelect:
  *                 type: Record<string, boolean>
  *                 description: Optional - Fields to include/exclude in the response. All values must be consistently either true (inclusion) or false (exclusion)
  *                 example: { "field1": true, "field2": true }
@@ -468,7 +465,7 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  * /api/{entity}/count:
  *   post:
  *     summary: Get the count of entities by parameters
- *     tags: 
+ *     tags:
  *       - Normal Entities
  *     parameters:
  *       - in: path
@@ -506,7 +503,6 @@ import { BaseBackEndApplied } from './Base.BackEnd.Applied.js';
  *       500:
  *         description: Internal server error
  */
-
 
 /**
  * @swagger
@@ -957,7 +953,7 @@ export class BaseBackEndApiHandlers {
                 const sanitizedQuery = sanitizeForDatabase(req.query);
                 //-------------------------
                 const schemaQuery = yup.object().shape({
-                    id:  yup.string().required().isValidID(),
+                    id: yup.string().required().isValidID(),
                 });
                 //-------------------------
                 let validatedQuery;
@@ -1312,10 +1308,16 @@ export class BaseBackEndApiHandlers {
                 const user = req.user;
                 let restricFilter = await this.restricFilter(user);
                 //-------------------------
-                const count = await this._BackEndApplied.getCount_<T>(paramsFilter, restricFilter);
+                let count;
+                //-------------------------
+                if (!isEmptyObject(paramsFilter)) {
+                    count = await this._BackEndApplied.getCount_<T>(paramsFilter, restricFilter);
+                } else {
+                    count = await this._BackEndApplied.getCount_<T>(undefined, restricFilter);
+                }
                 //-------------------------
                 console_logLv2(-1, this._Entity.className(), `getCountApiHandlers - POST - OK`);
-                return res.status(200).json({ count: count });
+                return res.status(200).json({ count });
             } catch (error) {
                 console_errorLv2(-1, this._Entity.className(), `getCountApiHandlers - Error: ${error}`);
                 return res.status(500).json({ error: `An error occurred while fetching the ${this._Entity.className()}: ${error}` });

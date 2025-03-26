@@ -1,4 +1,4 @@
-import { PaymentKeyHash } from "lucid-cardano";
+import { PaymentKeyHash } from '@lucid-evolution/lucid';
 import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls.js';
 import { isNullOrBlank } from '../../Commons/index.js';
 import { WalletEntity } from '../../Entities/Wallet.Entity.js';
@@ -30,7 +30,7 @@ export class WalletFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
         } catch (error) {
             console.log(`[${this._Entity.className()}] - isCoreTeamApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 

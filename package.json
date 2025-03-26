@@ -1,6 +1,6 @@
 {
     "name": "smart-db",
-    "version": "1.1.296",
+    "version": "1.2.0",
     "description": "Smart DB",
     "type": "module",
     "main": "index.js",
@@ -24,6 +24,7 @@
         "cleanAll": "npm run clean && rm -rf ./node_modules"
     },
     "dependencies": {
+        "@lucid-evolution/lucid": "^0.4.24",
         "axios": "^1.6.8",
         "bignumber.js": "^9.1.1",
         "cls-hooked": "^4.2.2",
@@ -33,7 +34,6 @@
         "easy-peasy": "^5.0.4",
         "he": "^1.2.0",
         "jsonwebtoken": "^9.0.2",
-        "lucid-cardano": "^0.10.10",
         "mongoose": "^8.3.2",
         "next-http-proxy-middleware": "^1.2.5",
         "nodemailer": "^6.9.1",

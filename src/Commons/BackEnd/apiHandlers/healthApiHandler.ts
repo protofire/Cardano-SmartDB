@@ -6,10 +6,6 @@ import { console_log } from '../globalLogs.js';
  * tags:
  *   name: Health
  *   description: Health check endpoints
- */
-
-/**
- * @swagger
  * /api/health:
  *   get:
  *     summary: Check the health of the application
@@ -43,13 +39,13 @@ import { console_log } from '../globalLogs.js';
  *                   example: An error occurred while checking the health
  */
 
-export  async function healthApiHandlerWithContext(req: NextApiRequest, res: NextApiResponse) {
-  // You can perform any checks here that you deem necessary to verify
-  // the health of your application, such as checking database connectivity
-  // or other critical services your application depends on.
-  //--------------------------------------
-  console_log(0, `APP`, `healthApiHandlerWithContext - Init`);
-  //--------------------------------------
-  // For a basic health check, simply return a 200 status code and a message.
-  res.status(200).json({ status: 'ok', time: new Date().toISOString() });
+export async function healthApiHandlerWithContext(req: NextApiRequest, res: NextApiResponse) {
+    // You can perform any checks here that you deem necessary to verify
+    // the health of your application, such as checking database connectivity
+    // or other critical services your application depends on.
+    //--------------------------------------
+    console_log(0, `APP`, `healthApiHandlerWithContext - Init`);
+    //--------------------------------------
+    // For a basic health check, simply return a 200 status code and a message.
+    res.status(200).json({ status: 'ok', time: new Date().toISOString() });
 }

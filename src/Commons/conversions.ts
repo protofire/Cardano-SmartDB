@@ -1,5 +1,5 @@
-import { Assets, Emulator } from "lucid-cardano";
-import { Token_With_Metadata_And_Amount, Token_With_Price_And_Date } from './types.js';
+import { Assets, Emulator } from '@lucid-evolution/lucid';
+import { Token_With_Metadata_And_Amount, Token_With_Price_And_Date, Token_With_Price_And_Date_And_Signature_And_Amount_And_Metadata } from './types.js';
 import { concatUint8Arrays, intToUint8Array, stringHexToUint8Array } from "./utils.js";
 
 //--------------------------------------------------------
@@ -13,7 +13,7 @@ import { concatUint8Arrays, intToUint8Array, stringHexToUint8Array } from "./uti
 // }
 
 export const deserealizeBigInt = (value: string | undefined): bigint | undefined => {
-    if (value !== undefined && value !== '') {
+    if (value !== undefined && value !== null && value !== '') {
         return BigInt(value);
     } else {
         return undefined;
@@ -42,16 +42,35 @@ export const deserealizeAssets = (value: any | undefined): Assets | undefined =>
 
 export const deserealizeTokenWithMetadataAndAmount = (value: any | undefined): Token_With_Metadata_And_Amount | undefined => {
     if (value === undefined) return undefined;
-    const assetDetails: Token_With_Metadata_And_Amount = {
+    const tokenMetadataAndAmount: Token_With_Metadata_And_Amount = {
         CS: (value as any).CS,
-        TN_Hex: (value as any).TN,
+        TN_Hex: (value as any).TN_Hex,
         amount: BigInt((value as any).amount),
+        ticker: (value as any).ticker,
         decimals: (value as any).decimals,
         image: (value as any).image,
         colorHex: (value as any).colorHex,
         metadata_raw: (value as any).metadata,
     };
-    return assetDetails;
+    return tokenMetadataAndAmount;
+};
+
+export const deserealizeTokenWithPriceAndMetadataAndAmount = (value: any | undefined): Token_With_Price_And_Date_And_Signature_And_Amount_And_Metadata | undefined => {
+    if (value === undefined) return undefined;
+    const tokenWithPriceMetadataAndAmount: Token_With_Price_And_Date_And_Signature_And_Amount_And_Metadata = {
+        CS: (value as any).CS,
+        TN_Hex: (value as any).TN_Hex,
+        priceADAx1e6: (value as any).priceADAx1e6 !== undefined ? BigInt((value as any).priceADAx1e6) : undefined,
+        date: (value as any).date !== undefined ? BigInt((value as any).date) : undefined,
+        signature: (value as any).signature,
+        amount: BigInt((value as any).amount),
+        ticker: (value as any).ticker,
+        decimals: (value as any).decimals,
+        image: (value as any).image,
+        colorHex: (value as any).colorHex,
+        metadata_raw: (value as any).metadata,
+    };
+    return tokenWithPriceMetadataAndAmount;
 };
 
 //--------------------------------------------------------

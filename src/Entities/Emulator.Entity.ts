@@ -1,4 +1,4 @@
-import { Address, Emulator, Lucid, PrivateKey } from 'lucid-cardano';
+import { Address, Emulator, Lucid, LucidEvolution, PrivateKey } from '@lucid-evolution/lucid';
 import 'reflect-metadata';
 import { asEntity, Convertible } from '../Commons/index.js';
 import { deserealizeEmulator } from '../Commons/conversions.js';
@@ -11,7 +11,7 @@ export class EmulatorEntity extends BaseEntity {
 
     // #region fields
 
-    @Convertible()
+    @Convertible({ isUnique: true })
     name!: string;
 
     @Convertible()
@@ -29,11 +29,17 @@ export class EmulatorEntity extends BaseEntity {
     @Convertible({ type: String })
     privateKeys!: PrivateKey[];
 
+    @Convertible({ isCreatedAt: true })
+    createdAt!: Date;
+
+    @Convertible({ isUpdatedAt: true })
+    updatedAt!: Date;
+
     // #endregion fields
 
     // #region class methods
 
-    public static async getTxCountInEmulator(lucid: Lucid, emulatorDB: EmulatorEntity, address: Address) {
+    public static async getTxCountInEmulator(lucid: LucidEvolution, emulatorDB: EmulatorEntity, address: Address) {
         const count = (emulatorDB.emulator as any).slot;
         return count;
     }

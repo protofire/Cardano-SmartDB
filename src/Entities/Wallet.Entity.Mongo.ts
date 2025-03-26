@@ -2,7 +2,7 @@ import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
 import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
 import { WalletEntity } from './Wallet.Entity.js';
-import { PaymentKeyHash, StakeKeyHash } from 'lucid-cardano';
+import { PaymentKeyHash, StakeKeyHash } from '@lucid-evolution/lucid';
 import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
 
 @MongoAppliedFor([WalletEntity])
@@ -44,11 +44,8 @@ export class WalletEntityMongo extends BaseEntityMongo {
 
     // #region mongo db
 
-    public static MongoModel() {
+    public static DBModel() {
         interface Interface {
-            createdAt: Date;
-            createdBy: string;
-            lastConnection: Date;
             walletUsed: string;
             walletValidatedWithSignedToken: boolean;
             paymentPKH: PaymentKeyHash;
@@ -58,22 +55,28 @@ export class WalletEntityMongo extends BaseEntityMongo {
             isCoreTeam: boolean;
             testnet_address: string;
             mainnet_address: string;
+            createdBy: string;
+            lastConnection: Date;
+            createdAt: Date;
+            updatedAt: Date;
         }
 
-        const schema = new Schema<Interface>({
-            createdAt: { type: Date, required: false },
-            createdBy: { type: String, required: false },
-            lastConnection: { type: Date, required: false },
-            walletUsed: { type: String, required: false },
-            walletValidatedWithSignedToken: { type: Boolean, required: false },
-            paymentPKH: { type: String, required: true },
-            stakePKH: { type: String, required: false },
-            name: { type: String, required: false },
-            email: { type: String, required: false },
-            isCoreTeam: { type: Boolean, required: false },
-            testnet_address: { type: String, required: false },
-            mainnet_address: { type: String, required: false },
-        });
+        const schema = new Schema<Interface>(
+            {
+                walletUsed: { type: String, required: false },
+                walletValidatedWithSignedToken: { type: Boolean, required: false },
+                paymentPKH: { type: String, required: true },
+                stakePKH: { type: String, required: false },
+                name: { type: String, required: false },
+                email: { type: String, required: false },
+                isCoreTeam: { type: Boolean, required: false },
+                testnet_address: { type: String, required: false },
+                mainnet_address: { type: String, required: false },
+                createdBy: { type: String, required: false },
+                lastConnection: { type: Date, required: false },
+            },
+            { timestamps: true }
+        );
 
         const ModelDB = models[this._mongoTableName] || model<Interface>(this._mongoTableName, schema);
         return ModelDB;

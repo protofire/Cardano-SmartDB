@@ -1,5 +1,15 @@
 import fetchWrapper from '../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
-import { Token_With_Price_And_Date_And_Signature, createQueryURLString, hexToStr, isTokenADA, isToken_CS_And_TN_Valid, showData, toJson, type CS, type TN } from '../../Commons/index.js';
+import {
+    Token_With_Price_And_Date_And_Signature,
+    createQueryURLString,
+    hexToStr,
+    isTokenADA,
+    isToken_CS_And_TN_Valid,
+    showData,
+    toJson,
+    type CS,
+    type TN,
+} from '../../Commons/index.js';
 import { PriceEntity } from '../../Entities/Price.Entity.js';
 import { BaseFrontEndApiCalls } from './Base/Base.FrontEnd.Api.Calls.js';
 
@@ -71,7 +81,7 @@ export class PriceFrontEndApiCalls extends BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${this._Entity.className()}] - get_Token_PriceADAx1e6_Api - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -90,9 +100,16 @@ export class PriceFrontEndApiCalls extends BaseFrontEndApiCalls {
                 throw `CS or TN_Hex not valid`;
             }
             //------------------
-            console.log(`[${this._Entity.className()}] - get_Tokens_PriceADAx1e6_Api - Init - Tokens: ${tokens?.map((t) => hexToStr(t.TN_Hex ?? '')).join(', ')}`);
+            console.log(`[${this._Entity.className()}] - get_Tokens_PriceADAx1e6_Api - Init - Tokens: ${tokens?.map((t) => hexToStr(t.TN_Hex)).join(', ')}`);
             //------------------
-            // remove duplicates in tokens list
+            // standarize ADA and remove duplicates in tokens list
+            // tokens = tokens.map((token) => {
+            //     if (isTokenADA(token.CS, token.TN_Hex)) {
+            //         return { ...token, CS: '', TN_Hex: '' };
+            //     }
+            //     return token;
+            // });
+            //------------------
             tokens = tokens.filter((token, index) => tokens.findIndex((token_) => token_.CS === token.CS && token_.TN_Hex === token.TN_Hex) === index);
             //----------------------------
             const body = toJson({ tokens, forceRefresh, validityMS, forceUseOracle });
@@ -120,7 +137,7 @@ export class PriceFrontEndApiCalls extends BaseFrontEndApiCalls {
                 console.log(
                     `[${this._Entity.className()}] - get_Tokens_PriceADAx1e6_Api - Tokens: ${tokensWithPrices
                         ?.map((t) => {
-                            return `${hexToStr(t.TN_Hex ?? '')}: ${t.priceADAx1e6 !== undefined ? BigInt(t.priceADAx1e6) : undefined}`;
+                            return `${hexToStr(t.TN_Hex)}: ${t.priceADAx1e6 !== undefined ? BigInt(t.priceADAx1e6) : undefined}`;
                         })
                         .join(', ')}`
                 );
@@ -137,7 +154,7 @@ export class PriceFrontEndApiCalls extends BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${this._Entity.className()}] - get_Tokens_PriceADAx1e6_Api - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -184,7 +201,7 @@ export class PriceFrontEndApiCalls extends BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${this._Entity.className()}] - set_Token_PriceADAx1e6_Api - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
     // #endregion api

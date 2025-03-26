@@ -1,9 +1,8 @@
+import { CML, Constr, Data, fromHex, type PaymentKeyHash } from '@lucid-evolution/lucid';
 import 'reflect-metadata';
-import { C, Constr, Data, fromHex, type PaymentKeyHash } from 'lucid-cardano';
-import { itemToLucidData } from '../../Commons/data.js';
-import { ConversionFunctions, Convertible, getCombinedConversionFunctions, isNullOrBlank, showPtrInHex, strToHex } from '../../Commons/index.js';
 import { deserealizeBigInt } from '../../Commons/conversions.js';
-import { AddressToFollowEntity } from '../AddressToFollow.Entity.js';
+import { itemToLucidData } from '../../Commons/data.js';
+import { ConversionFunctions, Convertible, getCombinedConversionFunctions, isNullOrBlank, strToHex } from '../../Commons/index.js';
 import { SmartUTxOEntity } from '../SmartUTxO.Entity.js';
 import { BaseEntity } from './Base.Entity.js';
 
@@ -17,7 +16,7 @@ import { BaseEntity } from './Base.Entity.js';
 //     _creator: PaymentKeyHash;
 //     _NET_address: string;
 //     _NET_id_CS: string | undefined;
-//     _NET_id_TN: string | undefined;
+//     _NET_id_TN_Str: string | undefined;
 //     _isDeployed: boolean;
 //     smartUTxO_id: Types.ObjectId | undefined;
 // }
@@ -32,7 +31,6 @@ export class BaseSmartDBEntity extends BaseEntity {
 
     protected static _className: string = 'BaseSmartDBEntity';
 
-
     // #region fields
 
     @Convertible()
@@ -45,6 +43,12 @@ export class BaseSmartDBEntity extends BaseEntity {
             } else {
                 return value;
             }
+        },
+        toPostgreSQLInterface: function (value: any) {
+            if ((this as any).getNet_Address) {
+                return (this as any).getNet_Address();
+            }
+            return value;
         },
         toPlainObject: function (value: any) {
             if ((this as any).getNet_Address) {
@@ -64,6 +68,12 @@ export class BaseSmartDBEntity extends BaseEntity {
                 return value;
             }
         },
+        toPostgreSQLInterface: function (value: any) {
+            if ((this as any).getNET_id_CS) {
+                return (this as any).getNET_id_CS();
+            }
+            return value;
+        },
         toPlainObject: function (value: any) {
             if ((this as any).getNET_id_CS) {
                 return (this as any).getNET_id_CS();
@@ -76,21 +86,27 @@ export class BaseSmartDBEntity extends BaseEntity {
 
     @Convertible({
         toMongoInterface: function (value: any) {
-            if ((this as any).getNET_id_TN) {
-                return (this as any).getNET_id_TN();
+            if ((this as any).getNET_id_TN_Str) {
+                return (this as any).getNET_id_TN_Str();
             } else {
                 return value;
             }
         },
+        toPostgreSQLInterface: function (value: any) {
+            if ((this as any).getNET_id_TN_Str) {
+                return (this as any).getNET_id_TN_Str();
+            }
+            return value;
+        },
         toPlainObject: function (value: any) {
-            if ((this as any).getNET_id_TN) {
-                return (this as any).getNET_id_TN();
+            if ((this as any).getNET_id_TN_Str) {
+                return (this as any).getNET_id_TN_Str();
             } else {
                 return value;
             }
         },
     })
-    _NET_id_TN!: string;
+    _NET_id_TN_Str!: string;
 
     @Convertible()
     _isDeployed: boolean = true;
@@ -112,7 +128,7 @@ export class BaseSmartDBEntity extends BaseEntity {
         _creator: true,
         _NET_address: true,
         _NET_id_CS: true,
-        _NET_id_TN: true,
+        _NET_id_TN_Str: true,
         _isDeployed: true,
         smartUTxO_id: true,
     };
@@ -133,6 +149,11 @@ export class BaseSmartDBEntity extends BaseEntity {
     // #endregion db
 
     // #region class methods
+
+    constructor(properties?: Partial<any>) {
+        super(properties); // Call parent constructor
+        this._isDeployed = properties?._isDeployed ?? this._isDeployed; // Use provided value or default
+    }
 
     public getStatic(): typeof BaseSmartDBEntity {
         return this.constructor as typeof BaseSmartDBEntity;
@@ -182,12 +203,12 @@ export class BaseSmartDBEntity extends BaseEntity {
         return this._NET_id_CS;
     }
 
-    public getNET_id_TN<T extends BaseSmartDBEntity>(): string {
-        return this._NET_id_TN;
+    public getNET_id_TN_Str<T extends BaseSmartDBEntity>(): string {
+        return this._NET_id_TN_Str;
     }
 
     public getNet_id_AC_Lucid<T extends BaseSmartDBEntity>(): string {
-        return this.getNET_id_CS() + strToHex(this.getNET_id_TN());
+        return this.getNET_id_CS() + strToHex(this.getNET_id_TN_Str());
     }
 
     public static countDatumFields<T extends BaseSmartDBEntity>(): number {
@@ -281,8 +302,8 @@ export class BaseSmartDBEntity extends BaseEntity {
         const conversionFunctions = getCombinedConversionFunctions(this);
         if (conversionFunctions) {
             const lucidDataForDatum: any = Data.from(cborHex);
+
             if (lucidDataForDatum.index === this.plutusDataIndex()) {
-                
                 let lucidDataForFields = [];
 
                 if (this.plutusDataIsSubType() === false) {
@@ -402,12 +423,15 @@ export class BaseSmartDBEntity extends BaseEntity {
         try {
             const data = this.datumToLucidData(datum);
             const dataHex = Data.to(data);
-            const plutusData = C.PlutusData.from_bytes(fromHex(dataHex));
-            const cborHex = showPtrInHex(plutusData);
+            const plutusData = CML.PlutusData.from_cbor_hex(dataHex);
+            // console.log (`[BaseSmartDBEntity] - datumToCborHex - plutusData2: ${plutusData2.to_canonical_cbor_hex()}`);
+            // const plutusData = CML.PlutusData.from_cbor_bytes(fromHex(dataHex));
+            // const cborHex = showPtrInHex(plutusData);
+            const cborHex = plutusData.to_canonical_cbor_hex();
             return cborHex;
         } catch (error) {
             console.log(`[${this.className()}] - toDatumCborHex - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 

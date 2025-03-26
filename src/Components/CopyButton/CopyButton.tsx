@@ -1,4 +1,6 @@
 // import styles from './CopyButton.module.css';
+// comment the import and set classname to avoid css module error
+
 import { useCopyButton } from './useCopyButton.js';
 import { COPY } from '../../Commons/Constants/images.js';
 import { isNullOrBlank } from '../../Commons/utils.js';

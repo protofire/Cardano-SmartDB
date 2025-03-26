@@ -1,0 +1,158 @@
+@use '@/styles/shared.module.scss';
+@use '@/styles/setting/typography' as font;
+@use '@/styles/tools/mixins' as mix;
+@use '@/styles/setting/colors' as colors;
+
+.modal {
+    @include mix.modal();
+
+    .main {
+        @media (min-height: 768px) {
+            top: 100px;
+        }
+
+        .popUp {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+
+            .headerModal {
+                margin-bottom: 0px;
+                width: 92%;
+                // Title Modal and Icon include in mixin
+            }
+
+            .txContainer {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+                gap: 16px;
+
+                .fundContainer {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    border: 1px solid colors.$c500;
+                    border-radius: 8px;
+                    padding: 12px;
+
+                    .tokensGroup {
+                        display: flex;
+
+                        .token {
+                            margin-left: -5px;
+
+                            &:first-child {
+                                margin-left: 0;
+                            }
+                        }
+                    }
+
+                    .fundName {
+                        font: font.$fb200-regular;
+                    }
+                }
+
+                .txContainerTokenAndInfoPart {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    width: 100%;
+                    gap: 16px;
+
+                    .tokensSection {
+                        display: flex;
+                        flex-direction: row;
+                        gap: 16px;
+                        width: 100%;
+
+                        .valueGroup {
+                            display: flex;
+                            background-color: colors.$purple-dark-2;
+                            flex-direction: column;
+                            border-radius: 16px;
+                            padding: 16px;
+                            width: 100%;
+                            gap: 16px;
+
+                            .valueTitle {
+                                font: font.$ft100-medium;
+                            }
+
+                            .tokensContainer {
+                                max-height: 116px;
+                                overflow-y: auto;
+
+                                display: flex;
+                                flex-direction: column;
+                                gap: 16px;
+
+                                &.needScroll {
+                                    padding-right: 8px;
+                                }
+                                .inputGroup {
+                                    height: 50px;
+                                    border: 1px solid colors.$c500;
+                                    border-radius: 16px;
+                                    width: 100%;
+                                    padding: 16px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: space-between;
+                                    gap: 10px;
+
+                                    .token {
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 10px;
+
+                                        .tokenName {
+                                            font: font.$fb300-medium;
+                                        }
+                                    }
+                                    .input {
+                                        text-align: right;
+                                        background: transparent;
+                                        width: 100%;
+                                        font: font.$fb500-medium;
+                                        color: colors.$white;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                .extraInfo {
+                    width: 100%;
+                }
+
+                .infoText {
+                    display: flex;
+                    gap: 6px;
+                    flex-direction: column;
+                    background-color: colors.$purple-dark-2;
+                    border-radius: 16px;
+                    padding: 12px;
+
+                    .textSmall {
+                        font: font.$fb50-regular;
+                    }
+                }
+
+                .textQuestion {
+                    font: font.$fb200-regular;
+                }
+            }
+
+            .btnGroup {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                width: 100%;
+            }
+        }
+    }
+}

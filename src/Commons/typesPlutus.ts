@@ -1,6 +1,10 @@
-import { Constr, TxHash } from 'lucid-cardano';
+import { Constr, TxHash } from '@lucid-evolution/lucid';
 import { BaseConstructor } from '../Entities/Base/Base.Constructor.js';
 import { itemToLucidData } from './data.js';
+import { CS, TN } from './types.js';
+
+//-------------------------------------------------------------
+
 //lo uso como class a diferencia del resto, por que a la hora de convertir el datum y el redeemer a plutusData, el campo de Hash aqui no se convierte igual que un string y si no tengo clase no podria diferenciarlo de una string en ese momento.
 export class TxOutRef {
     _plutusDataIndex = 0;
@@ -21,6 +25,56 @@ export class TxOutRef {
         return res;
     }
 }
+
+//-------------------------------------------------------------
+
+export class AssetClass {
+    _plutusDataIndex = 0;
+
+    CS: CS;
+    TN: TN;
+
+    constructor(CS: CS, TN: TN) {
+        this.CS = CS;
+        this.TN = TN;
+    }
+
+    public toPlutusData() {
+        let list: any[] = [this.CS, this.TN];
+        const res = new Constr(this._plutusDataIndex, list);
+        return res;
+    }
+
+    public static fromPlutusData<T>(lucidDataForDatum: any) {
+        const objectInstance: any = {};
+        if (lucidDataForDatum.index === 0) {
+            const lucidDataForConstr0 = lucidDataForDatum.fields;
+            if (lucidDataForConstr0.length === 2) {
+                objectInstance.CS = lucidDataForConstr0[0] as CS;
+                objectInstance.TN = lucidDataForConstr0[1] as TN;
+                return new this(objectInstance.CS, objectInstance.TN);
+            }
+        }
+        throw `MinMaxDef - Can't get from Datum`;
+    }
+
+    public static fromPlainObject(value: any): AssetClass {
+        const instance = new AssetClass(value.CS, value.TN);
+        return instance;
+    }
+
+    public to_AC_Lucid() {
+        let result = this.CS + this.TN;
+        return result;
+    }
+
+    public static from_AC_Lucid(token_AC_Lucid: string): AssetClass {
+        let result = new AssetClass(token_AC_Lucid.slice(0, 56), token_AC_Lucid.slice(56));
+        return result;
+    }
+}
+
+//-------------------------------------------------------------
 
 export class Maybe<T> {
     _plutusDataIndex = 0 | 1;
@@ -74,6 +128,7 @@ export class Maybe<T> {
         throw `Maybe - Can't get from Datum`;
     }
 
+    //  public static fromPlutusData_Number = (lucidDataForDatum: any) => {
     public static fromPlutusData_Number(lucidDataForDatum: any) {
         const maybeNumber = Maybe.fromPlutusData(lucidDataForDatum);
         if (maybeNumber.val !== undefined) {
@@ -100,6 +155,15 @@ export class MinMaxDef<T> extends BaseConstructor {
     //     };
     //     return serialized
     // }
+
+    public isValid(min?: T): boolean {
+        return (
+            (min === undefined || min === null || (min !== undefined && min !== null && this.mmdMin >= min)) &&
+            this.mmdMin <= this.mmdMax &&
+            this.mmdMin <= this.mmdDef &&
+            this.mmdDef <= this.mmdMax
+        );
+    }
 
     public static fromPlainObject_BigInt(value: any | undefined): any | undefined {
         if (value === undefined) return undefined;
@@ -135,6 +199,7 @@ export class MinMaxDef<T> extends BaseConstructor {
         throw `MinMaxDef - Can't get from Datum`;
     }
 
+    //public static fromPlutusData_Number = (lucidDataForDatum: any) => {
     public static fromPlutusData_Number (lucidDataForDatum: any)  {
         const mmd = MinMaxDef.fromPlutusData(lucidDataForDatum);
         mmd.mmdDef = Number(mmd.mmdDef);

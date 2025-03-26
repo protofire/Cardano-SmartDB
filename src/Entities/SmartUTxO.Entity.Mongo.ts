@@ -2,7 +2,7 @@ import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
 import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
 import { SmartUTxOEntity } from './SmartUTxO.Entity.js';
-import { Address, Datum, Script } from 'lucid-cardano';
+import { Address, Datum, Script } from '@lucid-evolution/lucid';
 import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
 import { SmartUTxOWithDetailsEntity } from './SmartUTxO.WithDetails.Entity.js';
 
@@ -45,7 +45,7 @@ export class SmartUTxOEntityMongo extends BaseEntityMongo {
 
     // #region mongo db
 
-    public static MongoModel() {
+    public static DBModel() {
         interface Interface {
             address: Address;
             txHash: string;
@@ -60,9 +60,11 @@ export class SmartUTxOEntityMongo extends BaseEntityMongo {
             datumObj: Object | undefined;
             scriptRef?: Script;
             _NET_id_CS: string;
-            _NET_id_TN: string;
+            _NET_id_TN_Str: string;
             _is_NET_id_Unique: boolean;
             datumType: string;
+            createdAt: Date;
+            updatedAt: Date;
         }
 
         //TODO poner required, controlar eso
@@ -81,7 +83,7 @@ export class SmartUTxOEntityMongo extends BaseEntityMongo {
                 datumObj: { type: Object },
                 scriptRef: { type: Object },
                 _NET_id_CS: { type: String, required: true },
-                _NET_id_TN: { type: String, required: true },
+                _NET_id_TN_Str: { type: String, required: true },
                 _is_NET_id_Unique: { type: Boolean, required: true },
                 datumType: { type: String, required: true, index: true },
             },
@@ -89,8 +91,8 @@ export class SmartUTxOEntityMongo extends BaseEntityMongo {
         );
 
         schema.index({ txHash: 1, outputIndex: 1 });
-        // schema.index({ isPreparingReading: 1, isReading: 1 });
-        // schema.index({ isPreparingConsuming: 1, isConsuming: 1 });
+        schema.index({ isPreparingConsuming: 1, isConsuming: 1 });
+        schema.index({ isPreparingReading: 1, isReading: 1 });
 
         const modelDB = models[this._mongoTableName] || model<Interface>(this._mongoTableName, schema);
         return modelDB;

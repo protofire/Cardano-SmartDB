@@ -2,17 +2,11 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { generateChallengueToken, generateCsrfToken } from '../../../lib/Auth/Auth.utils.js';
 import { console_error, console_log } from '../globalLogs.js';
 
-
 /**
  * @swagger
  * tags:
  *   name: Init
  *   description: Init endpoints
- */
-
-/**
- * @swagger
- * /api/init:
  *   post:
  *     summary: Initialize the application
  *     tags: [Init]
@@ -48,11 +42,11 @@ export async function initApiHandlerWithContext(req: NextApiRequest, res: NextAp
         res.setHeader('Set-Cookie', `x-csrf-token=${csrfToken}; Path=/; HttpOnly; SameSite=Strict`);
         //--------------------------------------
         const token = await generateChallengueToken();
-        //-------------------------
-        // TODO agregar todas las variables necesarias
         //--------------------------------------
-        if (process.env.NEXT_PUBLIC_CARDANO_NET === undefined) throw `env NEXT_PUBLIC_CARDANO_NET not set`;
-        //TODO agregar variables de entorno a controlar
+        // //TODO agregar todas las variables necesarias
+        // //--------------------------------------
+        // if (process.env.NEXT_PUBLIC_CARDANO_NET === undefined) throw `env NEXT_PUBLIC_CARDANO_NET not set`;
+
         // if (isEmulator) {
         // } else if (process.env.NEXT_PUBLIC_CARDANO_NET === 'Mainnet') {
         //     if (process.env.BLOCKFROST_KEY_MAINNET === undefined) throw `env BLOCKFROST_KEY_MAINNET not set`;
@@ -77,12 +71,15 @@ export async function initApiHandlerWithContext(req: NextApiRequest, res: NextAp
         // if (process.env.NEXTAUTH_SECRET === undefined) throw `env NEXTAUTH_SECRET not set`;
         // if (process.env.LOGIN_JWT_SECRET_KEY === undefined) throw `env LOGIN_JWT_SECRET_KEY not set`;
 
-        // // if (process.env.NEXT_PUBLIC_USE_BLOCKCHAIN_TIME === undefined) throw `env NEXT_PUBLIC_USE_BLOCKCHAIN_TIME not set`;
+        // if (process.env.ORACLE_WALLET_PRIVATEKEY_BENCH32 === undefined) throw `env ORACLE_WALLET_PRIVATEKEY_BENCH32 not set`;
+        // if (process.env.ORACLE_WALLET_PRIVATEKEY_CBORHEX === undefined) throw `env ORACLE_WALLET_PRIVATEKEY_CBORHEX not set`;
+        // if (process.env.NEXT_PUBLIC_ORACLE_WALLET_PUBLICKEY_CBORHEX === undefined) throw `env NEXT_PUBLIC_ORACLE_WALLET_PUBLICKEY_CBORHEX not set`;
+        // if (process.env.NEXT_PUBLIC_ORACLE_INTERNAL_WALLET_PUBLICKEY_CBORHEX === undefined) throw `env NEXT_PUBLIC_ORACLE_INTERNAL_WALLET_PUBLICKEY_CBORHEX not set`;
 
         // if (process.env.USE_DATABASE === undefined) throw `env USE_DATABASE not set`;
 
         // if (process.env.MONGO_URLDB === undefined) throw `env MONGO_URLDB not set`;
-        //--------------------------------------
+        // //--------------------------------------
         console_log(-1, `APP`, `initApiHandlerWithContext - Initialization complete`);
         //--------------------------------------
         res.status(200).json({ status: 'Initialization complete', token, csrfToken });

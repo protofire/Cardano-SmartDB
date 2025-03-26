@@ -1,16 +1,19 @@
-import { ExternalWallet, Lucid, PrivateKey, TxSigned, WalletApi } from 'lucid-cardano';
+import { ExternalWallet, Lucid, LucidEvolution, PrivateKey, ProtocolParameters, TxSigned, WalletApi } from '@lucid-evolution/lucid';
+import { protocolParametersForLucid } from '../../Commons/Constants/protocolParameters.js';
 import {
     ConnectedWalletInfo,
+    LUCID_NETWORK_CUSTOM_NAME,
     TRANSACTION_STATUS_CONFIRMED,
     TRANSACTION_STATUS_FAILED,
     TRANSACTION_STATUS_TIMEOUT,
-    TX_CHECK_INTERVAL,
+    TX_CHECK_INTERVAL_MS,
+    TX_PREPARING_TIME_MS,
+    TX_PROPAGATION_DELAY_MS,
     WalletTxParams,
-    createErrorObject,
-    delay,
-    isEmptyObject_usingJson,
+    checkIfUserCanceled,
+    getTxRedeemersDetailsAndResources,
     isEmulator,
-    isObject,
+    sleep,
     toJson,
 } from '../../Commons/index.js';
 import { EmulatorEntity } from '../../Entities/Emulator.Entity.js';
@@ -29,9 +32,15 @@ export class LucidToolsFrontEnd {
     public static initializeLucidWithBlockfrost = async () => {
         console.log(`[Lucid] - initializeLucidWithBlockfrost`);
         try {
-            const lucid = await Lucid.new(
+            //-----------------
+            const protocolParameters = protocolParametersForLucid[process.env.NEXT_PUBLIC_CARDANO_NET! as keyof typeof protocolParametersForLucid] as ProtocolParameters;
+            //-----------------
+            const lucid = await Lucid(
                 new BlockfrostCustomProviderFrontEnd(process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost', 'xxxx'),
-                process.env.NEXT_PUBLIC_CARDANO_NET! as any
+                process.env.NEXT_PUBLIC_CARDANO_NET! as any,
+                {
+                    presetProtocolParameters: protocolParameters,
+                }
             );
             return lucid;
         } catch (error) {
@@ -45,7 +54,7 @@ export class LucidToolsFrontEnd {
         try {
             const lucid = await this.initializeLucidWithBlockfrost();
             if (walletApi !== undefined) {
-                lucid.selectWallet(walletApi);
+                lucid.selectWallet.fromAPI(walletApi);
             }
             return lucid;
         } catch (error) {
@@ -64,7 +73,7 @@ export class LucidToolsFrontEnd {
         console.log(`[Lucid] - initializeLucidWithBlockfrostAndWalletFromSeed`);
         try {
             const lucid = await this.initializeLucidWithBlockfrost();
-            lucid.selectWalletFromSeed(walletSeed, options);
+            lucid.selectWallet.fromSeed(walletSeed, options);
             return lucid;
         } catch (error) {
             console.log(`[Lucid] - initializeLucidWithBlockfrostAndWalletFromSeed - Error: ${error}`);
@@ -76,7 +85,7 @@ export class LucidToolsFrontEnd {
         console.log('[Lucid] - initializeLucidWithBlockfrostAndWalletFromPrivateKey');
         try {
             const lucid = await this.initializeLucidWithBlockfrost();
-            lucid.selectWalletFromPrivateKey(walletPrivateKey);
+            lucid.selectWallet.fromPrivateKey(walletPrivateKey);
             return lucid;
         } catch (error) {
             console.log(`[Lucid] - initializeLucidWithBlockfrostAndWalletFromPrivateKey - Error: ${error}`);
@@ -88,7 +97,7 @@ export class LucidToolsFrontEnd {
         console.log('[Lucid] - initializeLucidWithBlockfrostAndExternalWallet');
         try {
             const lucid = await this.initializeLucidWithBlockfrost();
-            lucid.selectWalletFrom(wallet);
+            lucid.selectWallet.fromAddress(wallet.address, wallet.utxos ?? []);
             return lucid;
         } catch (error) {
             console.log(`[Lucid] - initializeLucidWithBlockfrostAndExternalWallet - Error: ${error}`);
@@ -105,10 +114,12 @@ export class LucidToolsFrontEnd {
             // lo que hago aqui es setear el emulador como si estuviera en el tiempo en el que fue creado
             // asi lucid inicializa con ese tiempo y slot zero en 0
             // luego pongo al emulador en el tiempo que correspondia
-
+            //-----------------
+            const protocolParameters = protocolParametersForLucid[process.env.NEXT_PUBLIC_CARDANO_NET! as keyof typeof protocolParametersForLucid] as ProtocolParameters;
+            //-----------------
             const emulatorTime = emulatorDB.emulator.time;
-            emulatorDB.emulator.time = emulatorDB.zeroTime;
-            const lucid = await Lucid.new(emulatorDB.emulator);
+            emulatorDB.emulator.time = Number(emulatorDB.zeroTime.toString());
+            const lucid = await Lucid(emulatorDB.emulator, LUCID_NETWORK_CUSTOM_NAME, { presetProtocolParameters: protocolParameters });
             emulatorDB.emulator.time = emulatorTime;
 
             return lucid;
@@ -129,7 +140,7 @@ export class LucidToolsFrontEnd {
         console.log(`[Lucid] - initializeLucidWithEmulatorAndWalletFromSeed`);
         try {
             const lucid = await this.initializeLucidWithEmulator(emulatorDB);
-            lucid.selectWalletFromSeed(walletSeed, options);
+            lucid.selectWallet.fromSeed(walletSeed, options);
             return lucid;
         } catch (error) {
             console.log(`[Lucid] - initializeLucidWithEmulatorAndWalletFromSeed - Error: ${error}`);
@@ -141,7 +152,7 @@ export class LucidToolsFrontEnd {
         console.log(`[Lucid] - initializeLucidWithEmulatorAndWalletFromPrivateKey`);
         try {
             const lucid = await this.initializeLucidWithEmulator(emulatorDB);
-            lucid.selectWalletFromPrivateKey(walletPrivateKey);
+            lucid.selectWallet.fromPrivateKey(walletPrivateKey);
             return lucid;
         } catch (error) {
             console.log(`[Lucid] - initializeLucidWithEmulatorAndWalletFromPrivateKey - Error: ${error}`);
@@ -153,7 +164,7 @@ export class LucidToolsFrontEnd {
         console.log(`[Lucid] - initializeLucidWithEmulatorAndExternalWallet`);
         try {
             const lucid = await this.initializeLucidWithEmulator(emulatorDB);
-            lucid.selectWalletFrom(wallet);
+            lucid.selectWallet.fromAddress(wallet.address, wallet.utxos ?? []);
             return lucid;
         } catch (error) {
             console.log(`[Lucid] - initializeLucidWithEmulatorAndExternalWallet - Error: ${error}`);
@@ -166,7 +177,7 @@ export class LucidToolsFrontEnd {
     // #region use lucid in front end
 
     public static async prepareLucidForUseAsUtils(emulatorDB?: EmulatorEntity) {
-        let lucid: Lucid;
+        let lucid: LucidEvolution;
         try {
             console.log(`[Lucid] - prepareLucidForUseAsUtils`);
             if (isEmulator) {
@@ -186,7 +197,7 @@ export class LucidToolsFrontEnd {
         }
     }
 
-    public static async prepareLucidFrontEndForTx(walletStore: IUseWalletStore): Promise<{ lucid: Lucid; emulatorDB?: EmulatorEntity; walletTxParams: WalletTxParams }> {
+    public static async prepareLucidFrontEndForTx(walletStore: IUseWalletStore): Promise<{ lucid: LucidEvolution; emulatorDB?: EmulatorEntity; walletTxParams: WalletTxParams }> {
         try {
             console.log(`[Lucid] - prepareLucidFrontEndForTx`);
             //--------------------------------------
@@ -212,9 +223,9 @@ export class LucidToolsFrontEnd {
                 throw `wallet not ready yet`;
             }
             //--------------------------------------
-            const address = await lucid.wallet.address();
-            const rewardAddress = await lucid.wallet.rewardAddress();
-            const utxos = await lucid.wallet.getUtxos();
+            const address = await lucid.wallet().address();
+            const rewardAddress = await lucid.wallet().rewardAddress();
+            const utxos = await lucid.wallet().getUtxos();
             const walletTxParams: WalletTxParams = {
                 pkh: walletStore.info.pkh,
                 stakePkh: walletStore.info?.stakePkh,
@@ -229,85 +240,113 @@ export class LucidToolsFrontEnd {
         }
     }
 
-    public static getTxMemAndStepsUse(txSize: number, txJson: string) {
-        const tx = JSON.parse(txJson);
-        const witness_set = tx.witness_set;
-        const redeemers = witness_set.redeemers;
-        const result = [];
-        var mem = 0;
-        var steps = 0;
-        if (redeemers?.length) {
-            for (var i = 0; i < redeemers.length; i += 1) {
-                result.push({ TAG: redeemers[i].tag, MEM: Number(redeemers[i].ex_units.mem) / 1_000_000, STEPS: Number(redeemers[i].ex_units.steps) / 1_000_000_000 });
-                mem += Number(redeemers[i].ex_units.mem);
-                steps += Number(redeemers[i].ex_units.steps);
-            }
-        }
-        //console.log ("getTxMemAndStepsUse - protocolParameters: " + toJson (protocolParameters))
-        result.push({ SIZE: txSize, MEM: mem / 1_000_000, STEPS: steps / 1_000_000_000 });
-        // result.push({ "MAX SIZE": maxTxSize, "MAX MEM": maxTxExMem / 100_0000, "MAX STEPS": maxTxExSteps / 100_0000_000 })
-
-        return result;
-    }
-
-    public static async signAndSubmitTx(lucid: Lucid, txHash: string, txCborHex: string, walletInfo?: ConnectedWalletInfo, emulatorDB?: EmulatorEntity) {
+    public static async signAndSubmitTx(
+        lucid: LucidEvolution,
+        txCborHex: string,
+        walletInfo?: ConnectedWalletInfo,
+        emulatorDB?: EmulatorEntity,
+        swDoNotPromtForSigning: boolean = false
+    ) {
         try {
             console.log(`[Lucid] - signAndSubmitTx`);
             //--------------------------------------
-            let txComplete = lucid.fromTx(txCborHex);
+            const txComplete = lucid.fromTx(txCborHex);
             //--------------------------------------
             const txCompleteHash = txComplete.toHash();
             //--------------------------------------
-            // const transaction = await TransactionFrontEndApiCalls.getOneByParamsApi<TransactionEntity>(TransactionEntity, { hash: txHash });
+            const transaction = await TransactionFrontEndApiCalls.getOneByParamsApi<TransactionEntity>(TransactionEntity, { hash: txCompleteHash });
             //--------------------------------------
-            console.log(`[Lucid] - Tx Resources:`);
-            const txSize = txComplete.txComplete.to_bytes().length;
-            console.info(toJson(this.getTxMemAndStepsUse(txSize, txComplete.txComplete.to_json())));
-            //--------------------------------------
-            let txCompleteSigned: TxSigned;
-            //--------------------------------------
-            if (isEmulator) {
-                if (confirm('Sign and Submit Tx') === false) {
-                    throw 'User canceled';
+            try {
+                //--------------------------------------
+                // Set timeout to release UTXOs if the signing takes too long
+                let timeoutId = setTimeout(async () => {
+                    if (transaction) {
+                        // alert(`Signing timeout reached! Releasing locked UTXOs for txHash: ${txHash}`);
+                        console.warn(`[Lucid] - Signing timeout reached! Releasing locked isPreparing UTXOs for txHash: ${txCompleteHash}`);
+                        await TransactionFrontEndApiCalls.releaseUTxOsApi(txCompleteHash, true, false);
+                    }
+                }, TX_PREPARING_TIME_MS);
+                //--------------------------------------
+                console.log(`[Lucid] - Tx Resources:`);
+                console.warn(toJson(getTxRedeemersDetailsAndResources(txComplete)));
+                //--------------------------------------
+                let txCompleteSigned: TxSigned;
+                try {
+                    if (swDoNotPromtForSigning === false && (isEmulator || walletInfo?.isWalletFromSeed === true || walletInfo?.isWalletFromKey === true)) {
+                        if (confirm('Sign and Submit Tx') === false) {
+                            throw 'User canceled';
+                        }
+                    }
+                    txCompleteSigned = await txComplete.sign.withWallet().complete();
+                } catch (error) {
+                    throw error;
                 }
+                //--------------------------------------
+                // Signing completed successfully, clear the timeout
+                clearTimeout(timeoutId);
+                //--------------------------------------
+                // NOTE: es importante usar el provider general de lucid y no el de la wallet, sobre todo en emulator, por que la wallet tiene un provider adentro que no se actualiza una vez que se crea la wallet en lucid
+                // de esta forma el provider de lucid esta actualizado y bien podria conectar wallet nuevamente o no usar ningun metodo de wallet, usar siempre desde lucid
+                // por ejemplo el getUTXO de la wallet no sirve, hay que llamar al utxosAt de lucid.
+                const txCompleteSignedHash = await lucid.config().provider!.submitTx(txCompleteSigned.toCBOR());
+                //--------------------------------------
+                if (isEmulator) {
+                    if (walletInfo?.walletKey !== undefined) {
+                        let walletKey = walletInfo.walletKey;
+                        lucid.selectWallet.fromPrivateKey(walletKey);
+                    }
+                }
+                //--------------------------------------
+                if (txCompleteHash !== txCompleteSignedHash) alert('txCompleteHash !== txCompleteSignedHash');
+                //--------------------------------------
+                if (isEmulator && emulatorDB !== undefined) {
+                    // si es emulador tengo que usar awaitTx de lucid para que se agregue la tx al ledger del emulador de lucid
+                    await lucid.awaitTx(txCompleteSignedHash);
+                    // y guardarlo para que lo pueda leer en el backend
+                    await LucidToolsFrontEnd.syncEmulatorAfterTx(lucid, emulatorDB);
+                }
+                //--------------------------------------
+                if (transaction !== undefined) {
+                    //--------------------------------------
+                    // setea la tx en submitted e inicia el job en el server para actualizar el status revisando la blockchain
+                    // el seteo se hace al llamar al begin status updater, en el back end
+                    //--------------------------------------
+                    await TransactionFrontEndApiCalls.submitAndBeginStatusUpdaterJobApi(transaction.hash);
+                }
+                //--------------------------------------
+                return txCompleteSignedHash;
+                //--------------------------------------
+            } catch (error: any) {
+                if (transaction !== undefined) {
+                    if (checkIfUserCanceled(error)) {
+                        console.log(`[Lucid] - signAndSubmitTx - User canceled`);
+                        await TransactionFrontEndApiCalls.updateCanceledTransactionApi(transaction.hash, { error, walletInfo });
+                    } else {
+                        console.log(`[Lucid] - signAndSubmitTx - Error: ${error}`);
+                        await TransactionFrontEndApiCalls.updateFailedTransactionApi(transaction.hash, { error, walletInfo });
+                    }
+                }
+                throw error;
             }
-            //--------------------------------------
-            txCompleteSigned = await txComplete.sign().complete();
-            //--------------------------------------
-            const txCompleteSignedHash = await txCompleteSigned.submit();
-            //--------------------------------------
-            if (txCompleteHash !== txCompleteSignedHash) alert('txCompleteHash !== txCompleteSignedHash');
-            //--------------------------------------
-            if (isEmulator && emulatorDB !== undefined) {
-                // si es emulador tengo que usar awaitTx de lucid para que se agregue la tx al ledger del emulador de lucid
-                await lucid.awaitTx(txHash);
-                // y guardarlo para que lo pueda leer en el backend
-                await LucidToolsFrontEnd.syncEmulatorAfterTx(lucid, emulatorDB);
-            }
-            //--------------------------------------
-            // setea la tx en submitted e inicia el job en el server para actualizar el status revisando la blockchain
-            // el seteo se hace al llamar al begin status updater, en el back end
-            //--------------------------------------
-            await TransactionFrontEndApiCalls.submitAndBeginStatusUpdaterJobApi(txCompleteSignedHash);
-            //--------------------------------------
-            return txCompleteSignedHash;
-            //--------------------------------------
         } catch (error) {
-            //--------------------------------------
             console.log(`[Lucid] - signAndSubmitTx - Error: ${error}`);
-            //--------------------------------------
-            const errorObj = createErrorObject(error);
-            //--------------------------------------
-            await TransactionFrontEndApiCalls.updateFailedTransactionApi(txHash, { error: errorObj, walletInfo });
-            //--------------------------------------
             throw error;
         }
     }
 
-    public static async awaitTxSimple(lucid: Lucid, txHash: string) {
+    public static async awaitTxSimple(lucid: LucidEvolution, txHash: string) {
         try {
+            //------------------------
+            if (!isEmulator) {
+                await sleep(TX_CHECK_INTERVAL_MS);
+            }
+            //------------------------
             const result = await lucid.awaitTx(txHash);
-            await delay(TX_CHECK_INTERVAL);
+            //------------------------
+            if (!isEmulator) {
+                await sleep(TX_PROPAGATION_DELAY_MS);
+            }
+            //------------------------
             return result;
         } catch (error) {
             console.log(`[Lucid] - awaitTx - Error: ${error}`);
@@ -315,14 +354,20 @@ export class LucidToolsFrontEnd {
         }
     }
 
-    public static async awaitTx(lucid: Lucid, txHash: string) {
+    public static async awaitTx(lucid: LucidEvolution, txHash: string) {
         try {
-            await delay(1000);
             // Initialize result
             let result = null;
+            //------------------------
+            if (!isEmulator) {
+                await sleep(TX_CHECK_INTERVAL_MS);
+            }
+            //------------------------
             // Start checking
             while (true) {
+                //------------------------
                 // Call your API to check if the transaction is confirmed
+                //------------------------
                 const txStatus = await TransactionFrontEndApiCalls.getTransactionStatusApi(txHash);
                 if (txStatus === TRANSACTION_STATUS_CONFIRMED) {
                     result = true;
@@ -336,9 +381,15 @@ export class LucidToolsFrontEnd {
                     console.log(`[Lucid] - awaitTx - Error: ${error}`);
                     throw error;
                 }
-                // Sleep for TX_CHECK_INTERVAL seconds before the next iteration
-                await delay(TX_CHECK_INTERVAL);
+                //------------------------
+                // Sleep before the next iteration
+                await sleep(TX_CHECK_INTERVAL_MS);
             }
+            //------------------------
+            if (!isEmulator) {
+                await sleep(TX_PROPAGATION_DELAY_MS);
+            }
+            //------------------------
             return result;
         } catch (error) {
             console.log(`[Lucid] - awaitTx - Error: ${error}`);
@@ -346,10 +397,10 @@ export class LucidToolsFrontEnd {
         }
     }
 
-    public static async syncEmulatorAfterTx(lucid: Lucid, emulatorDB: EmulatorEntity) {
+    public static async syncEmulatorAfterTx(lucid: LucidEvolution, emulatorDB: EmulatorEntity) {
         // cuando se hace la
         console.log(`[Lucid] - syncEmulatorAfterTx - Saving emulator ledger...`);
-        emulatorDB.emulator = lucid.provider as any;
+        emulatorDB.emulator = lucid.config().provider as any;
         await BaseSmartDBFrontEndApiCalls.updateApi(emulatorDB);
     }
 

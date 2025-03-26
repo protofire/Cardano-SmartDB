@@ -43,14 +43,14 @@ export class SiteSettingsEntityMongo extends BaseEntityMongo {
 
     // #region mongo db
 
-    public static MongoModel() {
+    public static DBModel() {
         interface Interface {
             name: string;
             siteSecret: string;
             corsAllowedOrigin: string;
             debug: boolean;
             welcomeMessage: string;
-            welcomeMessageIndex: string;
+            welcomeMessageIndex: number;
             // use_blockchain_time: boolean;
             // cardano_network: string;
             blockfrost_url_api_mainnet: string;
@@ -59,31 +59,35 @@ export class SiteSettingsEntityMongo extends BaseEntityMongo {
             blockfrost_url_explorer_preview: string;
             blockfrost_url_api_preprod: string;
             blockfrost_url_explorer_preprod: string;
-            oracle_wallet_publickey: string;
-            // oracle_internal_wallet_privatekey_cborhex: string;
+            taptools_url_explorer_mainnet: string;
+            oracle_wallet_publickey_cborhex: string;
             oracle_internal_wallet_publickey_cborhex: string;
+            createdAt: Date;
+            updatedAt: Date;
         }
 
-
-        const schema = new Schema<Interface>({
-            name: { type: String, required: true, unique: true },
-            siteSecret: { type: String, required: false },
-            corsAllowedOrigin: { type: String, required: false },
-            debug: { type: Boolean, required: false },
-            welcomeMessage: { type: String, required: false },
-            welcomeMessageIndex: { type: String, required: false },
-            // use_blockchain_time: { type: Boolean, required: false },
-            // cardano_network: { type: String, required: false },
-            blockfrost_url_api_mainnet: { type: String, required: false },
-            blockfrost_url_explorer_mainnet: { type: String, required: false },
-            blockfrost_url_api_preview: { type: String, required: false },
-            blockfrost_url_explorer_preview: { type: String, required: false },
-            blockfrost_url_api_preprod: { type: String, required: false },
-            blockfrost_url_explorer_preprod: { type: String, required: false },
-            oracle_wallet_publickey: { type: String, required: false },
-            // oracle_internal_wallet_privatekey_cborhex: { type: String, required: false },
-            oracle_internal_wallet_publickey_cborhex: { type: String, required: false },
-        });
+        const schema = new Schema<Interface>(
+            {
+                name: { type: String, required: true, unique: true },
+                siteSecret: { type: String, required: false },
+                corsAllowedOrigin: { type: String, required: false },
+                debug: { type: Boolean, required: false },
+                welcomeMessage: { type: String, required: false },
+                welcomeMessageIndex: { type: Number, required: false },
+                // use_blockchain_time: { type: Boolean, required: false },
+                // cardano_network: { type: String, required: false },
+                blockfrost_url_api_mainnet: { type: String, required: false },
+                blockfrost_url_explorer_mainnet: { type: String, required: false },
+                blockfrost_url_api_preview: { type: String, required: false },
+                blockfrost_url_explorer_preview: { type: String, required: false },
+                blockfrost_url_api_preprod: { type: String, required: false },
+                blockfrost_url_explorer_preprod: { type: String, required: false },
+                taptools_url_explorer_mainnet: { type: String, required: false },
+                oracle_wallet_publickey_cborhex: { type: String, required: false },
+                oracle_internal_wallet_publickey_cborhex: { type: String, required: false },
+            },
+            { timestamps: true }
+        );
 
         const modelDB = models[this._mongoTableName] || model<Interface>(this._mongoTableName, schema);
         return modelDB;

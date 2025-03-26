@@ -1,6 +1,6 @@
-import React from 'react';
 import pkg from 'react-notifications-component';
 const { Store } = pkg;
+
 //---------------------------------------------------------------
 
 const messageComponent = (message: string) => <div dangerouslySetInnerHTML={{ __html: message }} />;

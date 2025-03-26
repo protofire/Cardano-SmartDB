@@ -1,13 +1,13 @@
-import type { SignedMessage } from 'lucid-cardano';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import type { SignedMessage } from '@lucid-evolution/lucid';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { PostgreSQLDatabaseService } from '../BackEnd/DatabaseService/PostgreSQL.Database.Service.js';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
 import type { CS, TN } from '../Commons/index.js';
-import { getPostgreSQLTableName } from '../Commons/utils.js';
 import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js';
 import { PriceEntity } from './Price.Entity.js';
 
 @PostgreSQLAppliedFor([PriceEntity])
-@Entity({ name: getPostgreSQLTableName(PriceEntity.className()) })
+@Entity({ name: PostgreSQLDatabaseService.getTableName(PriceEntity.className()) })
 export class PriceEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = PriceEntity;
 
@@ -73,6 +73,12 @@ export class PriceEntityPostgreSQL extends BaseEntityPostgreSQL {
 
     @Column({ type: 'jsonb', nullable: true })
     signature!: SignedMessage; // Signature of the price data
+
+    @CreateDateColumn()
+    createdAt!: Date;
+
+    @UpdateDateColumn()
+    updatedAt!: Date;
 
     // #endregion fields
 }

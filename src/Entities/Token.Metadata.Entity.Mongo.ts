@@ -44,28 +44,35 @@ export class TokenMetadataEntityMongo extends BaseEntityMongo {
 
     // #region mongo db
 
-    public static MongoModel() {
+    public static DBModel() {
         interface Interface {
             CS: CS;
             TN_Hex: TN;
             TN_Str: TN;
+            ticker: TN;
             decimals: number;
             image: string;
             colorHex: string;
             metadata_raw: any;
             swMetadataGenerated: boolean;
+            createdAt: Date;
+            updatedAt: Date;
         }
 
-        const schema = new Schema<Interface>({
-            CS: { type: String, required: false },
-            TN_Hex: { type: String, required: false },
-            TN_Str: { type: String, required: false },
-            decimals:{ type: Number, required: false },
-            image: { type: String, required: false },
-            colorHex:{ type: String, required: false },
-            metadata_raw: { type: Object, required: false },
-            swMetadataGenerated: { type: Boolean, required: false },
-        });
+        const schema = new Schema<Interface>(
+            {
+                CS: { type: String, required: false },
+                TN_Hex: { type: String, required: false },
+                TN_Str: { type: String, required: false },
+                ticker: { type: String, required: false },
+                decimals: { type: Number, required: false },
+                image: { type: String, required: false },
+                colorHex: { type: String, required: false },
+                metadata_raw: { type: Object, required: false },
+                swMetadataGenerated: { type: Boolean, required: false },
+            },
+            { timestamps: true }
+        );
 
         const modelDB = models[this._mongoTableName] || model<Interface>(this._mongoTableName, schema);
         return modelDB;

@@ -1,7 +1,7 @@
 import { NextApiResponse } from 'next';
-import { BackEndApiHandlersFor, OptionsGet, OptionsGetOne, sanitizeForDatabase, showData, yupValidateOptionsGet, yupValidateOptionsGetOne } from '../Commons/index.js';
 import { console_error, console_log } from '../Commons/BackEnd/globalLogs.js';
-import { yup }  from '../Commons/yupLocale.js';
+import { BackEndApiHandlersFor, OptionsGet, OptionsGetOne, sanitizeForDatabase, showData, yupValidateOptionsGet, yupValidateOptionsGetOne } from '../Commons/index.js';
+import { yup } from '../Commons/yupLocale.js';
 import { SmartUTxOEntity } from '../Entities/SmartUTxO.Entity.js';
 import { NextApiRequestAuthenticated } from '../lib/Auth/types.js';
 import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
@@ -81,7 +81,7 @@ export class SmartUTxOBackEndApiHandlers extends BaseBackEndApiHandlers {
                 return res.status(500).json({ error: `An error occurred while fetching the ${this._Entity.className()}: ${error}` });
             }
         } else if (req.method === 'POST') {
-            console_log(1, this._Entity.className(), `syncWithAddressApiHandlers - POST - Init`);
+            console_log(1, this._Entity.className(), `getByAddressApiHandler - POST - Init`);
             console_log(0, this._Entity.className(), `query: ${showData(req.query)}`);
             console_log(0, this._Entity.className(), `body: ${showData(req.body)}`);
             try {
@@ -96,7 +96,7 @@ export class SmartUTxOBackEndApiHandlers extends BaseBackEndApiHandlers {
                 try {
                     validatedQuery = await schemaQuery.validate(sanitizedQuery);
                 } catch (error) {
-                    console_error(-1, this._Entity.className(), `syncWithAddressApiHandlers - Error: ${error}`);
+                    console_error(-1, this._Entity.className(), `getByAddressApiHandler - Error: ${error}`);
                     return res.status(400).json({ error });
                 }
                 //--------------------------------------
@@ -110,7 +110,7 @@ export class SmartUTxOBackEndApiHandlers extends BaseBackEndApiHandlers {
                 try {
                     validatedBody = await schemaBody.validate(sanitizedBody);
                 } catch (error) {
-                    console_error(-1, this._Entity.className(), `syncWithAddressApiHandlers - Error: ${error}`);
+                    console_error(-1, this._Entity.className(), `getByAddressApiHandler - Error: ${error}`);
                     return res.status(400).json({ error });
                 }
                 //-------------------------
@@ -121,15 +121,15 @@ export class SmartUTxOBackEndApiHandlers extends BaseBackEndApiHandlers {
                 //-------------------------
                 const smartUTxOs = await this._BackEndApplied.getByAddress<T>(address, optionsGet, restricFilter);
                 //-------------------------
-                console_log(-1, this._Entity.className(), `syncWithAddressApiHandlers - POST - OK`);
+                console_log(-1, this._Entity.className(), `getByAddressApiHandler - POST - OK`);
                 //-------------------------
                 return res.status(200).json(smartUTxOs.map((smartUTxO) => smartUTxO.toPlainObject()));
             } catch (error) {
-                console_error(-1, this._Entity.className(), `syncWithAddressApiHandlers - Error: ${error}`);
+                console_error(-1, this._Entity.className(), `getByAddressApiHandler - Error: ${error}`);
                 return res.status(500).json({ error: `An error occurred while synchronizing the ${this._Entity.className()}: ${error}` });
             }
         } else {
-            console_error(-1, this._Entity.className(), `syncWithAddressApiHandlers - Error: Method not allowed`);
+            console_error(-1, this._Entity.className(), `getByAddressApiHandler - Error: Method not allowed`);
             return res.status(405).json({ error: `Method not allowed` });
         }
     }

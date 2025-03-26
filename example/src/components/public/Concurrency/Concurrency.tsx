@@ -223,12 +223,13 @@ export default function Concurrency() {
         //----------------------------
         if (lucid === undefined) return;
         if (validatorAddress === undefined) return;
+        if (datumID_CS === undefined) return;
         //----------------------------
         setIsLoadingSync(true);
         //----------------------------
         try {
             //----------------------------
-            await FreeApi.syncWithAddressApi(FreeEntity, validatorAddress, true);
+            await FreeApi.syncWithAddressApi(FreeEntity, validatorAddress, datumID_CS, true);
             //----------------------------
             await refreshList();
             //----------------------------

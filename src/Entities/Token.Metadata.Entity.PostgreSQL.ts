@@ -1,12 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { PostgreSQLDatabaseService } from '../BackEnd/DatabaseService/PostgreSQL.Database.Service.js';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
 import type { CS, TN } from '../Commons/index.js';
-import { getPostgreSQLTableName } from '../Commons/utils.js';
 import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js';
 import { TokenMetadataEntity } from './Token.Metadata.Entity.js';
 
 @PostgreSQLAppliedFor([TokenMetadataEntity])
-@Entity(getPostgreSQLTableName(TokenMetadataEntity.className()))
+@Entity({ name: PostgreSQLDatabaseService.getTableName(TokenMetadataEntity.className()) })
 export class TokenMetadataEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = TokenMetadataEntity;
 
@@ -52,6 +52,9 @@ export class TokenMetadataEntityPostgreSQL extends BaseEntityPostgreSQL {
     @Column({ type: 'varchar', nullable: true })
     TN_Str!: TN;
 
+    @Column({ type: 'varchar', nullable: true })
+    ticker!: TN;
+
     @Column({ type: 'int', nullable: true })
     decimals!: number;
 
@@ -66,6 +69,12 @@ export class TokenMetadataEntityPostgreSQL extends BaseEntityPostgreSQL {
 
     @Column({ type: 'boolean', nullable: true })
     swMetadataGenerated!: boolean;
+
+    @CreateDateColumn()
+    createdAt!: Date;
+
+    @UpdateDateColumn()
+    updatedAt!: Date;
 
     // #endregion fields
 }

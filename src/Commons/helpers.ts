@@ -1,8 +1,14 @@
-import { Assets, C, Lucid, OutRef, PaymentKeyHash, Script, SignedMessage, UTxO, fromHex, toHex } from 'lucid-cardano';
-import { ADA_TX_FEE_MARGIN, ADA_UI, LUCID_NETWORK_MAINNET_INT, LUCID_NETWORK_TESTNET_INT, LucidLUCID_NETWORK_MAINNET_NAME, TOKEN_ICON_ADA, TOKEN_ICON_GENERIC } from './Constants/constants.js';
-import { TxOutRef } from './classes.js';
+import { Assets, CML, LucidEvolution, OutRef, PaymentKeyHash, Script, SignedMessage, UTxO, fromHex, getAddressDetails, toHex, verifyData } from '@lucid-evolution/lucid';
+import {
+    ADA_TX_FEE_MARGIN,
+    LUCID_NETWORK_MAINNET_NAME,
+    TOKEN_ADA_TICKER,
+    getLUCID_NETWORK_ID
+} from './Constants/constants.js';
 import { AC, CS, PaymentAndStakePubKeyHash, StakeCredentialPubKeyHash, Token_With_Metadata_And_Amount } from './types.js';
-import { hexToStr, isNullOrBlank, searchValueInArray, strToHex } from './utils.js';
+import { TxOutRef } from './typesPlutus.js';
+import { bytesUint8ArraToStringHex, hexToStr, isNullOrBlank, isValidHex, searchValueInArray, strToHex } from './utils.js';
+import { slotsPerEpochForLucid } from './Constants/protocolParameters.js';
 
 //---------------------------------------------------------------
 
@@ -21,46 +27,12 @@ export function isToken_CS_And_TN_Valid(CS: string | undefined, TN_Hex: string |
         if (!/^[\da-fA-F]{56}$/.test(CS)) {
             return false;
         }
-        if (!/^[\da-fA-F]+$/.test(TN_Hex)) {
+        if (!isValidHex(TN_Hex)) {
             return false;
         }
     }
 
     return true;
-}
-
-export function formatHash(txHash: string) {
-    return isNullOrBlank(txHash) ? '' : txHash.slice(0, 4) + '...' + txHash.slice(txHash.length - 4);
-}
-
-export function formatCurrencySymbol(CS: string) {
-    if (CS === '' || CS === 'lovelace') return 'ADA';
-    return CS.slice(0, 4) + '...' + CS.slice(CS.length - 4);
-}
-
-export function formatTokenName(TN_Str: string) {
-    if (TN_Str === '') return ADA_UI;
-    if (TN_Str.length > 30) {
-        return TN_Str.slice(0, 30) + '...';
-    }
-    return TN_Str;
-}
-
-export function formatTokenNameHexToStr(TN_Hex: string) {
-    const TN_Str = hexToStr(TN_Hex);
-    return formatTokenName(TN_Str);
-}
-
-export function formatAddress(address: string, isSmall: boolean = true) {
-    if (isSmall) {
-        return isNullOrBlank(address) ? '' : address.length < 5 + 3 + 4 ? address : address.slice(0, 5) + '...' + address.slice(address.length - 4);
-    } else {
-        return isNullOrBlank(address) ? '' : address.length < 20 + 3 + 10 ? address : address.slice(0, 20) + '...' + address.slice(address.length - 10);
-    }
-}
-
-export function formatUTxO(txHash: string, outputIndex: number) {
-    return `${formatHash(txHash)}#${outputIndex}`;
 }
 
 //---------------------------------------------------------------
@@ -71,12 +43,25 @@ export function getOutRef(txOut: UTxO): OutRef {
 
 //---------------------------------------------------------------
 
-export function createToken_With_Amount(CS: string, TN_Hex: string, amount: bigint): Token_With_Metadata_And_Amount {
-    return { CS, TN_Hex, amount };
+export function getFallbackImageLetters(token: { CS: string; TN_Hex: string; ticker?: string }) {
+    if (!isNullOrBlank(token.ticker)) {
+        return token.ticker!.substring(0, 2).toUpperCase();
+    } else if (!isNullOrBlank(token.TN_Hex)) {
+        return hexToStr(token.TN_Hex)!.substring(0, 2).toUpperCase();
+    } else if (!isNullOrBlank(token.CS)) {
+        return token.CS!.substring(0, 2).toUpperCase();
+    }
+    return '';
+}
+
+//---------------------------------------------------------------
+
+export function createToken_With_Amount(CS: string, TN_Hex: string, ticker: string | undefined, amount: bigint): Token_With_Metadata_And_Amount {
+    return { CS, TN_Hex, ticker: ticker === undefined ? hexToStr(TN_Hex) : ticker, amount };
 }
 
 export function createToken_ADA_With_Amount(amount: bigint): Token_With_Metadata_And_Amount {
-    return { CS: '', TN_Hex: '', amount };
+    return { CS: '', TN_Hex: '', ticker: TOKEN_ADA_TICKER, amount };
 }
 
 //---------------------------------------------------------------
@@ -119,26 +104,23 @@ export function splitTokenLucidKey(key: string): [string, string] {
 //---------------------------------------------------------------
 
 export function isValidUrl(url?: string): boolean {
-    url = url?? '';
+    url = url ?? '';
     // Regular expression to check if the URL is absolute and starts with http://, https://, or ipfs://
     const absoluteUrlPattern = /^(https?:\/\/|ipfs:\/\/).+/;
     // Check if the URL is an absolute URL, starts with a leading slash, or is an IPFS URL
-    const res =  absoluteUrlPattern.test(url) || url.startsWith('/')  || url.startsWith('data:image') || url === 'ADA' || url === '' || url === undefined;
+    const res = absoluteUrlPattern.test(url) || url.startsWith('/') || url.startsWith('data:image');
     return res;
 }
 
 export function getUrlForImage(url?: string): string {
-    if (url === 'ADA') {
-        return TOKEN_ICON_ADA.toString(); // Return ADA icon URL if url is 'ADA'
-    } else if (!url || url === '') {
-        return TOKEN_ICON_GENERIC.toString(); // Return generic icon URL if url is empty or undefined
-    } else if (isValidUrl(url)) {
-        return url.startsWith('ipfs://') ? `https://ipfs.io/ipfs/${url.slice(7)}` : url;
+    if (isValidUrl(url)) {
+        return url!.startsWith('ipfs://') ? `https://ipfs.io/ipfs/${url!.slice(7)}` : url!;
     } else {
         return '';
     }
 }
 
+//---------------------------------------------------------------
 
 export function isValidHexColor(color: string): boolean {
     // Regular expression to validate hex color (3 or 6 digits, with or without '#')
@@ -159,7 +141,7 @@ export function getScriptFromJson(jsonString: string): Script {
 
 //--------------------------------------
 
-// #region address to ... conversions
+// #region address and keys conversions
 
 export const addressesToPkhs = (addresses: string): string => {
     const addresses_Array = addresses !== undefined && addresses !== '' ? addresses.split(',').map((admin) => admin.trim()) : [];
@@ -207,201 +189,57 @@ export const addressToPaymentPubKeyHashAndStakePubKeyHash = (bech32Addr: string)
     }
 };
 
-function addressFromHexOrBech32(address: any) {
+export function addressFromHexOrBech32(address: any) {
     try {
-        return C.Address.from_bytes(fromHex(address));
+        return CML.Address.from_raw_bytes(fromHex(address));
     } catch (_e) {
         try {
-            return C.Address.from_bech32(address);
+            return CML.Address.from_bech32(address);
         } catch (_e) {
             throw `Could not deserialize address.`;
         }
     }
 }
 
-export function getAddressFromKeyCborHex(publicKeyCborHex: string) {
-    const publicKeyBytes = new Uint8Array(Buffer.from(publicKeyCborHex, 'hex'));
-    const publicKey = C.PublicKey.from_bytes(publicKeyBytes);
+// existen las constantes para usar LUCID_NETWORK_MAINNET_ID = 1
+// existen las constantes para usar LUCID_NETWORK_TESTNET_ID = 0
+
+export function getAddressFromKeyCborHex(publicKeyCborHex: string, network_id?: number) {
+    const publicKeyBytes = Buffer.from(publicKeyCborHex, 'hex');
+    // const publicKey = CML.PublicKey.from_raw_bytes(publicKeyBytes); TODO: verificar este cambio
+    const publicKey = CML.PublicKey.from_bytes(new Uint8Array(publicKeyBytes));
     const publicKeyHash = publicKey.hash();
-    const address = Ed25519KeyHashToAddress(LUCID_NETWORK_MAINNET_INT, publicKeyHash);
+    network_id = network_id !== undefined ? network_id : getLUCID_NETWORK_ID();
+    const address = Ed25519KeyHashToAddress(network_id, publicKeyHash);
     return address;
 }
 
-/** Address can be in Bech32 or Hex. */
-export function getAddressDetails(address: any) {
-    // Base Address
+// existen las constantes para usar LUCID_NETWORK_MAINNET_ID = 1
+// existen las constantes para usar LUCID_NETWORK_TESTNET_ID = 0
+
+export function getAddressFromPrivateKeyBench32(privateKeyBench32: string, network_id?: number): string {
     try {
-        const parsedAddress = C.BaseAddress.from_address(addressFromHexOrBech32(address));
-
-        if (parsedAddress === undefined) {
-            throw `Could not deserialize address.`;
-        }
-
-        const paymentCredential =
-            parsedAddress.payment_cred().kind() === 0
-                ? {
-                      type: 'Key',
-                      hash: toHex(parsedAddress.payment_cred().to_keyhash()!.to_bytes()),
-                  }
-                : {
-                      type: 'Script',
-                      hash: toHex(parsedAddress.payment_cred().to_scripthash()!.to_bytes()),
-                  };
-        const stakeCredential =
-            parsedAddress.stake_cred().kind() === 0
-                ? {
-                      type: 'Key',
-                      hash: toHex(parsedAddress.stake_cred().to_keyhash()!.to_bytes()),
-                  }
-                : {
-                      type: 'Script',
-                      hash: toHex(parsedAddress.stake_cred().to_scripthash()!.to_bytes()),
-                  };
-        return {
-            type: 'Base',
-            networkId: parsedAddress.to_address().network_id(),
-            address: {
-                bech32: parsedAddress.to_address().to_bech32(undefined),
-                hex: toHex(parsedAddress.to_address().to_bytes()),
-            },
-            paymentCredential,
-            stakeCredential,
-        };
-    } catch (_e) {
-        /* pass */
+        const priv = CML.PrivateKey.from_bech32(privateKeyBench32);
+        const pubKeyHash = priv.to_public().hash();
+        network_id = network_id !== undefined ? network_id : getLUCID_NETWORK_ID();
+        const address = CML.EnterpriseAddress.new(network_id, CML.Credential.new_pub_key(pubKeyHash)).to_address().to_bech32(undefined);
+        return address;
+    } catch (error) {
+        console.log(`[Helpers] - getAddressFromPrivateKeyBench32 - Error: ${error}`);
+        throw error;
     }
-    // Enterprise Address
-    try {
-        const parsedAddress = C.EnterpriseAddress.from_address(addressFromHexOrBech32(address));
-
-        if (parsedAddress === undefined) {
-            throw `Could not deserialize address.`;
-        }
-
-        const paymentCredential =
-            parsedAddress.payment_cred().kind() === 0
-                ? {
-                      type: 'Key',
-                      hash: toHex(parsedAddress.payment_cred().to_keyhash()!.to_bytes()),
-                  }
-                : {
-                      type: 'Script',
-                      hash: toHex(parsedAddress.payment_cred().to_scripthash()!.to_bytes()),
-                  };
-        return {
-            type: 'Enterprise',
-            networkId: parsedAddress.to_address().network_id(),
-            address: {
-                bech32: parsedAddress.to_address().to_bech32(undefined),
-                hex: toHex(parsedAddress.to_address().to_bytes()),
-            },
-            paymentCredential,
-        };
-    } catch (_e) {
-        /* pass */
-    }
-    // Pointer Address
-    try {
-        const parsedAddress = C.PointerAddress.from_address(addressFromHexOrBech32(address));
-
-        if (parsedAddress === undefined) {
-            throw `Could not deserialize address.`;
-        }
-
-        const paymentCredential =
-            parsedAddress.payment_cred().kind() === 0
-                ? {
-                      type: 'Key',
-                      hash: toHex(parsedAddress.payment_cred().to_keyhash()!.to_bytes()),
-                  }
-                : {
-                      type: 'Script',
-                      hash: toHex(parsedAddress.payment_cred().to_scripthash()!.to_bytes()),
-                  };
-        return {
-            type: 'Pointer',
-            networkId: parsedAddress.to_address().network_id(),
-            address: {
-                bech32: parsedAddress.to_address().to_bech32(undefined),
-                hex: toHex(parsedAddress.to_address().to_bytes()),
-            },
-            paymentCredential,
-        };
-    } catch (_e) {
-        /* pass */
-    }
-    // Reward Address
-    try {
-        const parsedAddress = C.RewardAddress.from_address(addressFromHexOrBech32(address));
-
-        if (parsedAddress === undefined) {
-            throw `Could not deserialize address.`;
-        }
-
-        const stakeCredential =
-            parsedAddress.payment_cred().kind() === 0
-                ? {
-                      type: 'Key',
-                      hash: toHex(parsedAddress.payment_cred().to_keyhash()!.to_bytes()),
-                  }
-                : {
-                      type: 'Script',
-                      hash: toHex(parsedAddress.payment_cred().to_scripthash()!.to_bytes()),
-                  };
-        return {
-            type: 'Reward',
-            networkId: parsedAddress.to_address().network_id(),
-            address: {
-                bech32: parsedAddress.to_address().to_bech32(undefined),
-                hex: toHex(parsedAddress.to_address().to_bytes()),
-            },
-            stakeCredential,
-        };
-    } catch (_e) {
-        /* pass */
-    }
-    // Limited support for Byron addresses
-    try {
-        const parsedAddress = ((address) => {
-            try {
-                return C.ByronAddress.from_bytes(fromHex(address));
-            } catch (_e) {
-                try {
-                    return C.ByronAddress.from_base58(address);
-                } catch (_e) {
-                    throw `Could not deserialize address.`;
-                }
-            }
-        })(address);
-        return {
-            type: 'Byron',
-            networkId: parsedAddress.network_id(),
-            address: {
-                bech32: '',
-                hex: toHex(parsedAddress.to_address().to_bytes()),
-            },
-        };
-    } catch (_e) {
-        /* pass */
-    }
-    throw `No address type matched for: ` + address;
 }
 
-// #endregion address to ... conversions
+// existen las constantes para usar LUCID_NETWORK_MAINNET_ID = 1
+// existen las constantes para usar LUCID_NETWORK_TESTNET_ID = 0
 
-// #region address from PubHeyHash conversions
-
-// network: mainnet = 1    Tesnet = 0
-// existen las constantes para usar Lucid_Network_Mainnet_Int = 1
-// existen las constantes para usar Lucid_Network_Testnet_Int = 0
-
-export function Ed25519KeyHashToAddress(network: number, keyHash: C.Ed25519KeyHash, stakeKeyHash?: C.Ed25519KeyHash) {
+export function Ed25519KeyHashToAddress(network_id: number, keyHash: CML.Ed25519KeyHash, stakeKeyHash?: CML.Ed25519KeyHash) {
     let address;
 
     if (stakeKeyHash !== undefined) {
-        address = C.BaseAddress.new(network, C.StakeCredential.from_keyhash(keyHash), C.StakeCredential.from_keyhash(stakeKeyHash));
+        address = CML.BaseAddress.new(network_id, CML.Credential.new_pub_key(keyHash), CML.Credential.new_pub_key(stakeKeyHash));
     } else {
-        address = C.EnterpriseAddress.new(network, C.StakeCredential.from_keyhash(keyHash));
+        address = CML.EnterpriseAddress.new(network_id, CML.Credential.new_pub_key(keyHash));
     }
 
     const bech32 = address.to_address().to_bech32(undefined);
@@ -409,8 +247,9 @@ export function Ed25519KeyHashToAddress(network: number, keyHash: C.Ed25519KeyHa
     return bech32;
 }
 
-export function Bip32PublicKeyToAddress(bip32: C.Bip32PublicKey, network: number) {
-    let rootPk: C.Bip32PublicKey = bip32;
+
+export function Bip32PublicKeyToAddress(bip32: CML.Bip32PublicKey, network_id: number) {
+    let rootPk: CML.Bip32PublicKey = bip32;
     // generate an address pk
     const addressPk = rootPk!
         .derive(1852 + 0x80000000) // Cardano uses 1852 for Shelley purpose paths
@@ -425,13 +264,13 @@ export function Bip32PublicKeyToAddress(bip32: C.Bip32PublicKey, network: number
         .hash();
 
     // get bech32 for address
-    const bech32 = Ed25519KeyHashToAddress(network, keyHash);
+    const bech32 = Ed25519KeyHashToAddress(network_id, keyHash);
 
     return bech32;
 }
 
-function Bip32PrivateKeyToAddress(bip32: C.Bip32PrivateKey, network: number) {
-    let rootPk: C.Bip32PrivateKey = bip32;
+export function Bip32PrivateKeyToAddress(bip32: CML.Bip32PrivateKey, network_id: number) {
+    let rootPk: CML.Bip32PrivateKey = bip32;
     // generate an address pk
     const addressPk = rootPk!
         .derive(1852 + 0x80000000) // Cardano uses 1852 for Shelley purpose paths
@@ -447,20 +286,18 @@ function Bip32PrivateKeyToAddress(bip32: C.Bip32PrivateKey, network: number) {
         .hash();
 
     // get bech32 for address
-    const bech32 = Ed25519KeyHashToAddress(network, keyHash);
+    const bech32 = Ed25519KeyHashToAddress(network_id, keyHash);
 
     return bech32;
 }
 
-export const pubKeyHashesToAddresses = (pkhs: string): string => {
+export const pubKeyHashesToAddresses = (pkhs: string, network_id?: number): string => {
     const pkhs_Array = pkhs !== undefined && pkhs !== '' ? pkhs.split(',').map((admin) => admin.trim()) : [];
     const addresses_Array = pkhs_Array.map((pkh) => {
         if (pkh === '' || pkh === undefined) return undefined;
         try {
-            const address = pubKeyHashToAddress(
-                process.env.NEXT_PUBLIC_CARDANO_NET === LucidLUCID_NETWORK_MAINNET_NAME ? LUCID_NETWORK_MAINNET_INT : LUCID_NETWORK_TESTNET_INT,
-                pkh
-            );
+            network_id = network_id !== undefined ? network_id : getLUCID_NETWORK_ID();
+            const address = pubKeyHashToAddress(network_id, pkh);
             return address;
         } catch (error) {
             console.log(`[Helpers] - Can't convert Payment Pub Key Hash: ${pkh} to Address - Error: ${error}`);
@@ -470,41 +307,20 @@ export const pubKeyHashesToAddresses = (pkhs: string): string => {
     return addresses_Array.join(',');
 };
 
-export function pubKeyHashToAddress(network: number, pkh: PaymentKeyHash, stakePkh?: PaymentKeyHash) {
+export function pubKeyHashToAddress(network_id: number, pkh: PaymentKeyHash, stakePkh?: PaymentKeyHash) {
     console.log('pubKeyHashToAddress - pkh: ' + pkh);
-    const keyHash = C.Ed25519KeyHash.from_bytes(fromHex(pkh));
+    const keyHash = CML.Ed25519KeyHash.from_raw_bytes(fromHex(pkh));
     let stakeKeyHash;
     if (stakePkh !== undefined && stakePkh !== '') {
-        stakeKeyHash = C.Ed25519KeyHash.from_bytes(fromHex(stakePkh));
+        stakeKeyHash = CML.Ed25519KeyHash.from_raw_bytes(fromHex(stakePkh));
     } else {
         stakeKeyHash = undefined;
     }
-    const bech32 = Ed25519KeyHashToAddress(network, keyHash, stakeKeyHash);
+    const bech32 = Ed25519KeyHashToAddress(network_id, keyHash, stakeKeyHash);
     return bech32;
 }
 
-// #endregion address from PubHeyHash conversions
-
-// #region address from PrivateKey conversions
-
-export async function getAddressFromPrivateKey(privateKey: string): Promise<string> {
-    try {
-        const priv = C.PrivateKey.from_bech32(privateKey);
-        const pubKeyHash = priv.to_public().hash();
-        const address = await C.EnterpriseAddress.new(
-            process.env.NEXT_PUBLIC_CARDANO_NET === LucidLUCID_NETWORK_MAINNET_NAME ? LUCID_NETWORK_MAINNET_INT : LUCID_NETWORK_TESTNET_INT,
-            C.StakeCredential.from_keyhash(pubKeyHash)
-        )
-            .to_address()
-            .to_bech32(undefined);
-        return address;
-    } catch (error) {
-        console.log(`[Helpers] - getAddressFromPrivateKey - Error: ${error}`);
-        throw error;
-    }
-}
-
-// #endregion address from PrivateKey conversions
+// #endregion address and keys conversions
 
 // #region assets operations
 
@@ -590,6 +406,15 @@ export function subsAssetsList(initial: Assets, assetsList: Assets[]): Assets {
 }
 
 // #endregion assets operations
+
+//---------------------------------------------------------------
+
+export function fixUTxOList(utxos: UTxO[]): UTxO[] {
+    return utxos.map((u) => ({
+        ...u,
+        assets: Object.fromEntries(Object.entries(u.assets).map(([k, v]) => [k, BigInt(v.toString())])),
+    }));
+}
 
 //---------------------------------------------------------------
 
@@ -736,7 +561,11 @@ export function getTotalOfUnitInUTxOList(aC_Lucid: AC, uTxOsAtWallet: UTxO[], sw
     //console.log("storeWallet - getTotalOfUnit - unit: " + aC_Lucid)
     const [CS, TN_Hex] = splitTokenLucidKey(aC_Lucid);
 
-    const isADA = aC_Lucid === 'lovelace';
+    const isADA = isTokenADA(CS, TN_Hex);
+    if (isADA) {
+        aC_Lucid = 'lovelace';
+    }
+
     const isWithoutTokenName = !isADA && TN_Hex === '';
 
     //console.log("storeWallet - getTotalOfUnit - isADA: " + isADA + " - isWithoutTokenName: " + isWithoutTokenName)
@@ -778,7 +607,14 @@ export function getTotalOfUnitInUTxOList(aC_Lucid: AC, uTxOsAtWallet: UTxO[], sw
 export function getAssetsFromCS(assets: Assets, token_CS: CS): Assets {
     const assetsRes: Assets = {};
     for (const [key, value] of Object.entries(assets)) {
-        const [CS_, TN_Hex_] = splitTokenLucidKey(key);
+        let [CS_, TN_Hex_] = splitTokenLucidKey(key);
+        const isADA = isTokenADA(CS_, TN_Hex_);
+        if (isADA) {
+            CS_ = '';
+        }
+        if (token_CS === 'lovelace') {
+            token_CS = '';
+        }
         if (token_CS === CS_) {
             assetsRes[key] = value;
         }
@@ -789,11 +625,19 @@ export function getAssetsFromCS(assets: Assets, token_CS: CS): Assets {
 //---------------------------------------------------------------
 
 export function isNFT_With_AC_Lucid_InValue(assets: Assets, aC_Lucid: AC) {
-    if (aC_Lucid in assets) {
+    let aC_Lucid2 = aC_Lucid;
+    if (aC_Lucid === 'lovelace') {
+        aC_Lucid2 = '';
+    }
+    if (aC_Lucid in assets || aC_Lucid2 in assets) {
         if (assets[aC_Lucid] === 1n) {
             return true;
         } else {
-            return false;
+            if (assets[aC_Lucid2] === 1n) {
+                return true;
+            } else {
+                return false;
+            }
         }
     } else {
         return false;
@@ -803,11 +647,19 @@ export function isNFT_With_AC_Lucid_InValue(assets: Assets, aC_Lucid: AC) {
 //---------------------------------------------------------------
 
 export function isToken_With_AC_Lucid_InValue(assets: Assets, aC_Lucid: AC) {
-    if (aC_Lucid in assets) {
+    let aC_Lucid2 = aC_Lucid;
+    if (aC_Lucid === 'lovelace') {
+        aC_Lucid2 = '';
+    }
+    if (aC_Lucid in assets || aC_Lucid2 in assets) {
         if (assets[aC_Lucid] > 0n) {
             return true;
         } else {
-            return false;
+            if (assets[aC_Lucid2] > 0n) {
+                return true;
+            } else {
+                return false;
+            }
         }
     } else {
         return false;
@@ -885,6 +737,17 @@ export function findSmallerUTxO(uTxOs: UTxO[]) {
 
 //------------------------------------------------------
 
+export function findUTxOWithAssets(utxos: UTxO[], value: Assets): UTxO | undefined {
+    for (const uTxO of utxos) {
+        if (isIncludeValue(value, uTxO.assets)) {
+            return uTxO;
+        }
+    }
+    return undefined;
+}
+
+//------------------------------------------------------
+
 // export async function findDatumIfMissing(lucid: Lucid, uTxO: UTxO): Promise<UTxO> {
 //     console.log ("findDatumIfMissing")
 //     if (uTxO.datumHash && !uTxO.datum) {
@@ -895,7 +758,7 @@ export function findSmallerUTxO(uTxOs: UTxO[]) {
 //             uTxO.datum = datum;
 //         } else {
 //             console.log ("findDatumIfMissing - looking for datumHash in lucid")
-//             uTxO.datum = await lucid.provider.getDatum(uTxO.datumHash);
+//             uTxO.datum = await lucid.config().provider.getDatum(uTxO.datumHash);
 //             if (uTxO.datum) {
 //                 //console.log(`findDatumIfMissing - datum in lucid: ${uTxO.datum }`)
 //                 console.log ("findDatumIfMissing - saving datumHash in Database")
@@ -1037,34 +900,84 @@ export function calculateMinAdaOfAssets_OLD(assets: Assets, isHash: boolean): bi
 
 //---------------------------------------------------------------
 
-export async function signMessage(lucid: Lucid, privateKeyCborHex: string, dataStr: string) {
+export function signDataByteString(privateKeyBench32: string, data: Uint8Array) {
     //--------------------------------------
-    dataStr = dataStr.replace(/:/g, ': ').replace(/,/g, ', ').replace(/\"/g, "'");
+    const paymentKey = CML.PrivateKey.from_bech32(privateKeyBench32);
     //--------------------------------------
-    const dataHex = strToHex(dataStr);
-    //--------------------------------------
-    const privateKeyBytes = new Uint8Array(Buffer.from(privateKeyCborHex, 'hex'));
-    const privateKey = C.PrivateKey.from_bytes(privateKeyBytes);
-    const privateKeyBench32 = privateKey.to_bech32();
-    lucid.selectWalletFromPrivateKey(privateKeyBench32);
-    const address = await lucid.wallet.address();
-    //--------------------------------------
-    const signature = await lucid.wallet.signMessage(address, dataHex);
+    const signedSigStruc = paymentKey.sign(data).to_raw_bytes();
+    const signature = bytesUint8ArraToStringHex(signedSigStruc);
     //--------------------------------------
     return signature;
 }
 
-export function verifyMessage(lucid: Lucid, publicKeyCborHex: string, dataStr: string, signature: SignedMessage) {
+//---------------------------------------------------------------
+
+export async function signMessage(lucid: LucidEvolution, privateKeyCborHex: string, dataStr: string) {
     //--------------------------------------
-    const address = getAddressFromKeyCborHex(publicKeyCborHex);
+    dataStr = dataStr.replace(/:/g, ': ').replace(/,/g, ', ').replace(/\"/g, "'");
+    // console.log(`dataStr = ${dataStr}\n`);
+    //--------------------------------------
+    const dataHex = strToHex(dataStr);
+    // console.log(`dataHex = ${dataHex}\n`);
+    //--------------------------------------
+    let privateKeyBytes = new Uint8Array(Buffer.from(privateKeyCborHex, 'hex'));
+    // original length check before slicing
+    if (privateKeyBytes.length === 34 || privateKeyBytes.length === 66) {
+        privateKeyBytes = privateKeyBytes.slice(2);
+    }
+    let privateKey;
+    if (privateKeyBytes.length === 32) {
+        privateKey = CML.PrivateKey.from_normal_bytes(privateKeyBytes);
+    } else if (privateKeyBytes.length === 64) {
+        privateKey = CML.PrivateKey.from_extended_bytes(privateKeyBytes);
+    } else {
+        throw new Error(`Invalid private key length: ${privateKeyBytes.length}`);
+    }
+    const privateKeyBench32 = privateKey.to_bech32();
+    //--------------------------------------
+    lucid.selectWallet.fromPrivateKey(privateKeyBench32);
+    //--------------------------------------
+    const address = await lucid.wallet().address();
+    //--------------------------------------
+    const signature = await lucid.wallet().signMessage(address, dataHex);
+    //--------------------------------------
+    return signature;
+}
+
+export function verifyMessage(lucid: LucidEvolution, publicKeyCborHex: string, dataStr: string, signature: SignedMessage, network_id?: number) {
     //--------------------------------------
     dataStr = dataStr.replace(/:/g, ': ').replace(/,/g, ', ').replace(/\"/g, "'");
     // console.log(`dataStr = ${dataStr}\n`);
     const dataHex = strToHex(dataStr);
     // console.log(`dataHex = ${dataHex}\n`);
     //--------------------------------------
-    return lucid.verifyMessage(address, dataHex, signature);
+    const address = getAddressFromKeyCborHex(publicKeyCborHex, network_id);
+    // console.log(`address = ${address}\n`);
+    //--------------------------------------
+    const {
+        paymentCredential,
+        stakeCredential,
+        address: { bech32, hex },
+    } = getAddressDetails(address);
+    //--------------------------------------
+    const keyHash = paymentCredential?.hash || stakeCredential?.hash;
+    //--------------------------------------
+    if (!keyHash) throw new Error('Not a valid address provided.');
+    //--------------------------------------
+    return verifyData(hex, keyHash, dataHex, signature);
     //--------------------------------------
 }
 
 //---------------------------------------------------------------
+
+export function calculateEpochFromSlot(slot: number, network_name?: string): number {
+    network_name = network_name !== undefined ? network_name : process.env.NEXT_PUBLIC_CARDANO_NET!;
+    let slotsPerEpoch: number = slotsPerEpochForLucid[network_name as keyof typeof slotsPerEpochForLucid];
+    if (slotsPerEpoch === undefined) {
+        throw new Error('Unsupported network type');
+    }
+    return Math.floor(slot / slotsPerEpoch);
+}
+
+//---------------------------------------------------------------
+

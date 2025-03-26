@@ -1,4 +1,4 @@
-import { type StakeKeyHash, type PaymentKeyHash } from "lucid-cardano";
+import { type StakeKeyHash, type PaymentKeyHash } from '@lucid-evolution/lucid';
 import 'reflect-metadata';
 import { Convertible, asEntity } from '../Commons/index.js';
 import { BaseEntity } from './Base/Base.Entity.js';
@@ -11,15 +11,6 @@ export class WalletEntity extends BaseEntity {
     // #region fields
 
     @Convertible()
-    createdAt!: Date;
-
-    @Convertible()
-    createdBy!: string;
-
-    @Convertible()
-    lastConnection!: Date;
-
-    @Convertible()
     walletUsed!: string;
 
     @Convertible()
@@ -30,9 +21,9 @@ export class WalletEntity extends BaseEntity {
 
     @Convertible()
     stakePKH!: StakeKeyHash;
-    
+
     @Convertible()
-    name!: PaymentKeyHash;
+    name!: string;
 
     @Convertible()
     email!: string;
@@ -46,6 +37,17 @@ export class WalletEntity extends BaseEntity {
     @Convertible()
     mainnet_address!: string;
 
+    @Convertible()
+    createdBy!: string;
+
+    @Convertible()
+    lastConnection!: Date;
+
+    @Convertible({ isCreatedAt: true })
+    createdAt!: Date;
+
+    @Convertible({ isUpdatedAt: true })
+    updatedAt!: Date;
 
     // #endregion fields
 }

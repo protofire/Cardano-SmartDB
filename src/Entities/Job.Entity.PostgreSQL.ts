@@ -1,11 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { PostgreSQLDatabaseService } from '../BackEnd/DatabaseService/PostgreSQL.Database.Service.js';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
-import { getPostgreSQLTableName } from '../Commons/utils.js';
 import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js'; // Change the base class to the TypeORM version
 import { JobEntity } from './Job.Entity.js'; // Assuming JobEntity is implemented in TypeORM
 
 @PostgreSQLAppliedFor([JobEntity])
-@Entity({ name: getPostgreSQLTableName(JobEntity.className()) })
+@Entity({ name: PostgreSQLDatabaseService.getTableName(JobEntity.className()) })
 export class JobEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = JobEntity;
 
@@ -68,6 +68,12 @@ export class JobEntityPostgreSQL extends BaseEntityPostgreSQL {
 
     @Column({ type: 'varchar', nullable: true })
     error!: string;
+
+    @CreateDateColumn()
+    createdAt!: Date;
+
+    @UpdateDateColumn()
+    updatedAt!: Date;
 
     // #endregion fields
 }

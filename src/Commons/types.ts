@@ -1,6 +1,8 @@
-import { Address, Data, Lucid, PaymentKeyHash, SignedMessage, UTxO } from 'lucid-cardano';
+import { Address, Data, LucidEvolution, PaymentKeyHash, SignedMessage, UTxO } from '@lucid-evolution/lucid';
 import { ISODateString } from 'next-auth';
 import { yup } from './yupLocale.js';
+
+//-------------------------------------------------------------
 
 export type PaymentPubKey = string;
 export type StakeCredentialPubKeyHash = PaymentKeyHash;
@@ -15,6 +17,8 @@ export type CS = string;
 export type TN = string;
 
 export type POSIXTime = bigint;
+
+//-------------------------------------------------------------
 
 export interface LookUpFields {
     from: string; // The collection to join with
@@ -82,7 +86,6 @@ export const optionsGetMinimalWithSmartUTxOCompleteFields: OptionsGet = {
     optionsGetForRelation: { smartUTxO_id: { ...optionsGetMinimal, fieldsForSelect: {} } },
 };
 
-
 export const optionsGetMinimalWithSmartUTxOWithDates: OptionsGet = {
     ...optionsGetMinimalWithSmartUTxO,
     optionsGetForRelation: { smartUTxO_id: { ...optionsGetMinimalWithCallBack, fieldsForSelect: {} } },
@@ -101,7 +104,6 @@ export interface OptionsGetOne {
     checkRelations?: boolean;
     lookUpFields?: LookUpFields[];
 }
-
 
 export const optionsGetOneDefault: OptionsGetOne = {
     sort: undefined,
@@ -155,6 +157,8 @@ export const lookUpFieldsSchema = yup.object().shape({
 
 // Define a placeholder outside the schema to reference it recursively
 const optionsGetSchemaPlaceholder: any = {};
+
+//-------------------------------------------------------------
 
 export const yupValidateOptionsGet = {
     skip: yup.number().positive().integer().optional(),
@@ -244,16 +248,11 @@ export const yupValidateOptionsDelete = {
     }),
 };
 
-// export type CurrencySymbol = string;
-
-// export type TokenName = string;
-
-// export type AssetClass = {
-//     currencySymbol: CurrencySymbol;
-//     tokenName: TokenName;
-// };
+//-------------------------------------------------------------
 
 export type Decimals = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20;
+
+//-------------------------------------------------------------
 
 export type Token = {
     CS: CS;
@@ -261,6 +260,7 @@ export type Token = {
 };
 
 export type Token_With_Metadata = Token & {
+    ticker?: TN;
     decimals?: Decimals;
     image?: string;
     colorHex?: string;
@@ -269,6 +269,8 @@ export type Token_With_Metadata = Token & {
 export type Token_With_Metadata_And_Amount = Token_With_Metadata & { amount: bigint };
 
 export type Token_With_Price = Token & { priceADAx1e6: bigint };
+
+export type Token_With_Change24 = Token & { change24: number | undefined };
 
 export type Token_With_Price_And_Metadata = Token_With_Price & Token_With_Metadata;
 
@@ -291,10 +293,6 @@ export type Token_With_Price_And_Date_And_Signature_And_Amount_And_Metadata_And_
 
 export type TokensWithMetadataAndAmount = Token_With_Metadata_And_Amount[];
 
-export type TokensParticipation = Token_With_Price_And_Date_And_Signature_And_Amount_And_Metadata_And_Percentage & {
-    fundName: string;
-};
-
 export interface UTxOWithDetails extends UTxO {
     hasScriptRef: string;
     assetWithDetails: TokensWithMetadataAndAmount;
@@ -306,12 +304,14 @@ export interface WalletTxParams {
     pkh: PaymentKeyHash;
     stakePkh?: StakeCredentialPubKeyHash;
     address: Address;
-    rewardAddress?: Address;
+    rewardAddress: Address | undefined;
     utxos: UTxO[];
 }
 
+//-------------------------------------------------------------
+
 export const scriptSchema = yup.object().shape({
-    type: yup.mixed<'Native' | 'PlutusV1' | 'PlutusV2'>().oneOf(['Native', 'PlutusV1', 'PlutusV2']).required(),
+    type: yup.mixed<'Native' | 'PlutusV1' | 'PlutusV2' | 'PlutusV3'>().oneOf(['Native', 'PlutusV1', 'PlutusV2', 'PlutusV3']).required(),
     script: yup.string().required(),
 });
 
@@ -350,34 +350,61 @@ export type TransactionDatum = {
 
 export type TransactionRedeemer = {
     tx_index: number;
-    purpose: 'mint' | 'spend';
+    purpose: string;
     script_hash?: string;
     redeemer_data_hash?: string;
     datum_hash?: string;
-    unit_mem?: string;
-    unit_steps?: string;
-    fee?: string;
+    unit_mem?: number;
+    unit_steps?: number;
     redeemerObj?: Object;
+    CBORHex?: string;
 };
 
-//-------------------------------------------------------------
+export type TransactionDetails = {
+    transactionBlockchain: Record<string, any>;
+    pkh: string;
+    inputs: Record<string, any>[];
+    outputs: Record<string, any>[];
+    redeemersBlockchain: Record<string, any>[];
+};
 
-declare module 'next-auth' {
-    export interface User extends SessionWalletInfo {
-        id?: string;
-    }
+//------------------------------------------
 
-    export interface JWT extends SessionWalletInfo {}
+export type ConversionFunctions<T> = {
+    type?: Function;
+    isArray?: boolean;
+    interfaceName?: string;
+    propertyToFill?: string;
+    relation?: string;
+    typeRelation?: Function;
+    cascadeLoad?: boolean;
+    cascadeSave?: boolean;
+    isDB_id?: boolean;
+    isUnique?: boolean;
+    isForDatum?: boolean;
+    isForRedeemer?: boolean;
+    isCreatedAt?: boolean;
+    isUpdatedAt?: boolean;
+    required?: boolean;
+    optionsGet?: OptionsGet | OptionsGetOne;
+    optionsCreateOrUpdate?: OptionsCreateOrUpdate;
+    toMongoInterface?: (value: any | undefined) => T | undefined;
+    fromMongoInterface?: (value: T | undefined) => any | undefined;
+    toPostgreSQLInterface?: (value: any | undefined) => T | undefined;
+    fromPostgreSQLInterface?: (value: T | undefined) => any | undefined;
+    toPlainObject?: (value: any | undefined) => Object | undefined;
+    fromPlainObject?: (value: Object | undefined) => any | undefined;
+    toPlutusData?: (value: any | undefined) => Data | undefined;
+    fromPlutusData?: (lucidDataForDatum: any) => any;
+};
 
-    export interface Session {
-        user?: User;
-        expires: ISODateString;
-    }
-}
+//------------------------------------------
 
 export interface ConnectedWalletInfo {
     network: string;
-    walletNameOrSeedOrKey: string;
+    walletName: string;
+    walletSeed?: string;
+    walletKey?: string;
     address: Address;
     pkh: PaymentKeyHash;
     stakePkh: PaymentKeyHash | undefined;
@@ -392,7 +419,7 @@ export interface SessionWalletInfo extends ConnectedWalletInfo {
 }
 
 export interface Wallet {
-    lucid: Lucid | undefined;
+    lucid: LucidEvolution | undefined;
     protocolParameters: any;
     info: ConnectedWalletInfo | undefined;
 }
@@ -449,33 +476,19 @@ export interface CardanoWallet {
     link: string;
     isInstalled?: boolean;
 }
-
 //---------------------------------
 
-export type ConversionFunctions<T> = {
-    type?: Function;
-    isArray?: boolean;
-    interfaceName?: string;
-    propertyToFill?: string;
-    relation?: string;
-    typeRelation?: Function;
-    cascadeLoad?: boolean;
-    cascadeSave?: boolean;
-    isDB_id?: boolean;
-    isUnique?: boolean;
-    isForDatum?: boolean;
-    isCreatedAt?: boolean;
-    isUpdatedAt?: boolean;
-    required?: boolean;
-    optionsGet?: OptionsGet | OptionsGetOne;
-    optionsCreateOrUpdate?: OptionsCreateOrUpdate;
-    toMongoInterface?: (value: any | undefined) => T | undefined;
-    fromMongoInterface?: (value: T | undefined) => any | undefined;
-    toPostgreSQLInterface?: (value: any | undefined) => T | undefined;
-    fromPostgreSQLInterface?: (value: T | undefined) => any | undefined;
-    toPlainObject?: (value: any | undefined) => Object | undefined;
-    fromPlainObject?: (value: Object | undefined) => any | undefined;
-    toPlutusData?: (value: any | undefined) => Data | undefined;
-    fromPlutusData?: (lucidDataForDatum: any) => any;
-};
+declare module 'next-auth' {
+    export interface User extends SessionWalletInfo {
+        id?: string;
+    }
+
+    export interface JWT extends SessionWalletInfo {}
+
+    export interface Session {
+        user?: User;
+        expires: ISODateString;
+    }
+}
+
 //---------------------------------

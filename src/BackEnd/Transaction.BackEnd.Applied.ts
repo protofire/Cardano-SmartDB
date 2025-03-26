@@ -1,5 +1,5 @@
+import { OutRef } from '@lucid-evolution/lucid';
 import { addMilliseconds } from 'date-fns';
-import { OutRef } from 'lucid-cardano';
 import { console_log } from '../Commons/BackEnd/globalLogs.js';
 import { getGlobalTransactionStatusUpdater } from '../Commons/BackEnd/globalTransactionStatusUpdater.js';
 import { BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndAppliedFor.js';
@@ -7,18 +7,19 @@ import {
     isArrayEmpty,
     isFrontEndEnvironment,
     isNullOrBlank,
+    TRANSACTION_STATUS_CANCELED,
     TRANSACTION_STATUS_CONFIRMED,
     TRANSACTION_STATUS_CREATED,
     TRANSACTION_STATUS_FAILED,
     TRANSACTION_STATUS_PENDING,
     TRANSACTION_STATUS_PENDING_TIMEOUT,
     TRANSACTION_STATUS_SUBMITTED,
-    TRANSACTION_STATUS_USER_CANCELED,
+    TRANSACTION_STATUS_TIMEOUT,
     TransactionDatum,
     TransactionRedeemer,
     TransactionStatus,
-    TX_CONSUMING_TIME,
-    TX_PREPARING_TIME,
+    TX_CONSUMING_TIME_MS,
+    TX_PREPARING_TIME_MS,
 } from '../Commons/index.js';
 import { TransactionEntity } from '../Entities/Transaction.Entity.js';
 import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied.js';
@@ -30,6 +31,223 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
     protected static _BackEndMethods = BaseBackEndMethods;
 
     // #region class methods
+
+    // #region helpers status
+
+    public static async releaseUTxOsByTxHash(txHash: string, swReleaseIsPreparing: boolean = true, swReleaseIsConsuming: boolean = true) {
+        //-------------------------
+        const transaction = await this.getOneByParams_<TransactionEntity>({ hash: txHash });
+        if (transaction === undefined) {
+            throw `Transaction not found - hash: ${txHash}`;
+        }
+        //-------------------------
+        await this.releaseUTxOsByTx(transaction, swReleaseIsPreparing, swReleaseIsConsuming);
+    }
+
+    public static async releaseUTxOsByTx(transaction: TransactionEntity, swReleaseIsPreparing: boolean = true, swReleaseIsConsuming: boolean = true) {
+        //-------------------------
+        const SmartUTxOBackEndApplied = (await import('../BackEnd/SmartUTxO.BackEnd.Applied.js')).SmartUTxOBackEndApplied;
+        //-------------------------
+        const reading_UTxOs = transaction.reading_UTxOs;
+        //-------------------------
+        for (let reading_UTxO of reading_UTxOs) {
+            //-------------------------
+            const txHash = reading_UTxO.txHash;
+            const outputIndex = reading_UTxO.outputIndex;
+            //-------------------------
+            await SmartUTxOBackEndApplied.releaseUTxO(txHash, outputIndex, swReleaseIsPreparing, swReleaseIsConsuming);
+            //-------------------------
+        }
+        //-------------------------
+        const consuming_UTxOs = transaction.consuming_UTxOs;
+        //-------------------------
+        for (let consuming_UTxO of consuming_UTxOs) {
+            //-------------------------
+            const txHash = consuming_UTxO.txHash;
+            const outputIndex = consuming_UTxO.outputIndex;
+            //-------------------------
+            await SmartUTxOBackEndApplied.releaseUTxO(txHash, outputIndex, swReleaseIsPreparing, swReleaseIsConsuming);
+            //-------------------------
+        }
+    }
+
+    public static async reserveUTxOsByTx(
+        transaction: TransactionEntity,
+        swForPreparing: boolean = true // si es true, setea solo for prearing si no ya la marca como usada en reading o consuming
+    ) {
+        //-------------------------
+        const SmartUTxOBackEndApplied = (await import('../BackEnd/SmartUTxO.BackEnd.Applied.js')).SmartUTxOBackEndApplied;
+        //-------------------------
+        const reading_UTxOs = transaction.reading_UTxOs;
+        //-------------------------
+        for (let reading_UTxO of reading_UTxOs) {
+            //-------------------------
+            const txHash = reading_UTxO.txHash;
+            const outputIndex = reading_UTxO.outputIndex;
+            //-------------------------
+            await SmartUTxOBackEndApplied.reserveUTxO(txHash, outputIndex, transaction.date, swForPreparing, true, false);
+            //-------------------------
+        }
+        //-------------------------
+        const consuming_UTxOs = transaction.consuming_UTxOs;
+        //-------------------------
+        for (let consuming_UTxO of consuming_UTxOs) {
+            //-------------------------
+            const txHash = consuming_UTxO.txHash;
+            const outputIndex = consuming_UTxO.outputIndex;
+            //-------------------------
+            await SmartUTxOBackEndApplied.reserveUTxO(txHash, outputIndex, transaction.date, swForPreparing, false, true);
+            //-------------------------
+        }
+    }
+
+    public static async getTransactionStatus(txHash: string): Promise<string | undefined> {
+        //-------------------------
+        if (isNullOrBlank(txHash)) {
+            throw `txHash not defined`;
+        }
+        //-------------------------
+        if (isFrontEndEnvironment()) {
+            throw `Can't run this method in the Browser`;
+        }
+        //-------------------------
+        const transaction = await this.getOneByParams_<TransactionEntity>({ hash: txHash });
+        //-------------------------
+        return transaction?.status;
+    }
+
+    public static async updateTransactionStatusByHash(txHash: string, status: TransactionStatus, error?: any) {
+        //-------------------------
+        if (isNullOrBlank(txHash)) {
+            throw `txHash not defined`;
+        }
+        //-------------------------
+        if (isFrontEndEnvironment()) {
+            throw `Can't run this method in the Browser`;
+        }
+        //-------------------------
+        const transaction = await this.getOneByParams_<TransactionEntity>({ hash: txHash });
+        if (transaction === undefined) {
+            throw `Transaction not found - hash: ${txHash}`;
+        }
+        //-------------------------
+        await this.updateTransactionStatus(transaction, status, error);
+        //--------------------------------------
+        return transaction;
+    }
+
+    public static async updateTransactionStatus(transaction: TransactionEntity, status: TransactionStatus, error?: any) {
+        //-------------------------
+        transaction.status = status;
+        if (error !== undefined) {
+            transaction.error = error;
+        }
+        //-------------------------
+        await this.update(transaction);
+        //-------------------------
+    }
+
+    public static async setPendingTransaction(createdTransaction: TransactionEntity, fields: Partial<TransactionEntity>, swReserveUTxOsForPreparing: boolean = true) {
+        //-------------------------
+        // este metodo se usa cuando se crea la tx en CREATED y luego se actualiza con todo el resto de los campos
+        //-------------------------
+        createdTransaction.status = TRANSACTION_STATUS_PENDING;
+        //-------------------------
+        await this.updateMeWithParams(createdTransaction, fields);
+        //-------------------------
+        if (swReserveUTxOsForPreparing === true) {
+            await this.reserveUTxOsByTx(createdTransaction, true);
+        }
+        //-------------------------
+    }
+
+    public static async setPendingTransactionTimeoutByHash(txHash: string) {
+        const tx = await this.updateTransactionStatusByHash(txHash, TRANSACTION_STATUS_PENDING_TIMEOUT);
+        //-------------------------
+        await this.releaseUTxOsByTx(tx);
+        //-------------------------
+    }
+
+    public static async setPendingTransactionTimeout(pendingTransaction: TransactionEntity) {
+        await this.updateTransactionStatus(pendingTransaction, TRANSACTION_STATUS_PENDING_TIMEOUT);
+        //-------------------------
+        await this.releaseUTxOsByTx(pendingTransaction);
+        //-------------------------
+    }
+
+    public static async setUserCanceledTransactionByHash(txHash: string, error: any) {
+        const tx = await this.updateTransactionStatusByHash(txHash, TRANSACTION_STATUS_CANCELED, error);
+        //-------------------------
+        await this.releaseUTxOsByTx(tx);
+        //-------------------------
+    }
+
+    public static async setUserCanceledTransaction(pendingTransaction: TransactionEntity, error: any) {
+        await this.updateTransactionStatus(pendingTransaction, TRANSACTION_STATUS_CANCELED, error);
+        //-------------------------
+        await this.releaseUTxOsByTx(pendingTransaction);
+        //-------------------------
+    }
+
+    public static async setSubmittedTransactionByHash(txHash: string, swReserveUTxOs: boolean = true) {
+        const tx = await this.updateTransactionStatusByHash(txHash, TRANSACTION_STATUS_SUBMITTED);
+        //-------------------------
+        if (swReserveUTxOs === true) await this.reserveUTxOsByTx(tx, false);
+        //-------------------------
+    }
+
+    public static async setSubmittedTransaction(pendingTransaction: TransactionEntity) {
+        await this.updateTransactionStatus(pendingTransaction, TRANSACTION_STATUS_SUBMITTED);
+        //-------------------------
+        await this.reserveUTxOsByTx(pendingTransaction, false);
+        //-------------------------
+    }
+
+    public static async setFailedTransactionByHash(txHash: string, error: any) {
+        const tx = await this.updateTransactionStatusByHash(txHash, TRANSACTION_STATUS_FAILED, error);
+        //-------------------------
+        await this.releaseUTxOsByTx(tx);
+        //-------------------------
+    }
+
+    public static async setFailedTransaction(submittedTransaction: TransactionEntity, error: any) {
+        await this.updateTransactionStatus(submittedTransaction, TRANSACTION_STATUS_FAILED, error);
+        //-------------------------
+        await this.releaseUTxOsByTx(submittedTransaction);
+        //-------------------------
+    }
+
+    public static async setTransactionTimeoutByHash(txHash: string) {
+        const tx = await this.updateTransactionStatusByHash(txHash, TRANSACTION_STATUS_TIMEOUT);
+        //-------------------------
+        await this.releaseUTxOsByTx(tx);
+        //-------------------------
+    }
+
+    public static async setTransactionTimeout(pendingTransaction: TransactionEntity) {
+        await this.updateTransactionStatus(pendingTransaction, TRANSACTION_STATUS_TIMEOUT);
+        //-------------------------
+        await this.releaseUTxOsByTx(pendingTransaction);
+        //-------------------------
+    }
+
+    public static async setConfirmedTransactionByHash(txHash: string) {
+        const tx = await this.updateTransactionStatusByHash(txHash, TRANSACTION_STATUS_CONFIRMED);
+        //-------------------------
+        await this.releaseUTxOsByTx(tx);
+        //-------------------------
+    }
+
+    public static async setConfirmedTransaction(submittedTransaction: TransactionEntity) {
+        await this.updateTransactionStatus(submittedTransaction, TRANSACTION_STATUS_CONFIRMED);
+        //-------------------------
+        await this.releaseUTxOsByTx(submittedTransaction);
+        //-------------------------
+    }
+
+    // #endregion helpers status
+
+    // #region helpers smart utxo status
 
     public static async getPreparingOrConsuming<T extends TransactionEntity>(): Promise<T[]> {
         //----------------------------
@@ -45,11 +263,11 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
                     $or: [
                         {
                             status: { $in: [TRANSACTION_STATUS_PENDING, TRANSACTION_STATUS_CREATED] },
-                            date: { $gte: addMilliseconds(serverTime, -TX_PREPARING_TIME) },
+                            date: { $gte: addMilliseconds(serverTime, -TX_PREPARING_TIME_MS) },
                         },
                         {
                             status: TRANSACTION_STATUS_SUBMITTED,
-                            date: { $gte: addMilliseconds(serverTime, -TX_CONSUMING_TIME) },
+                            date: { $gte: addMilliseconds(serverTime, -TX_CONSUMING_TIME_MS) },
                         },
                     ],
                 },
@@ -155,11 +373,11 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
                     $or: [
                         {
                             status: { $in: [TRANSACTION_STATUS_PENDING, TRANSACTION_STATUS_CREATED] },
-                            date: { $gte: addMilliseconds(serverTime, -TX_PREPARING_TIME) }, // Date for PENDING and CREATED
+                            date: { $gte: addMilliseconds(serverTime, -TX_PREPARING_TIME_MS) }, // Date for PENDING and CREATED
                         },
                         {
                             status: TRANSACTION_STATUS_SUBMITTED,
-                            date: { $gte: addMilliseconds(serverTime, -TX_CONSUMING_TIME) }, // Date for SUBMITTED
+                            date: { $gte: addMilliseconds(serverTime, -TX_CONSUMING_TIME_MS) }, // Date for SUBMITTED
                         },
                     ],
                 },
@@ -192,11 +410,11 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
                     $or: [
                         {
                             status: { $in: [TRANSACTION_STATUS_PENDING, TRANSACTION_STATUS_CREATED] },
-                            date: { $gte: addMilliseconds(serverTime, -TX_PREPARING_TIME) }, // Date for PENDING and CREATED
+                            date: { $gte: addMilliseconds(serverTime, -TX_PREPARING_TIME_MS) }, // Date for PENDING and CREATED
                         },
                         {
                             status: TRANSACTION_STATUS_SUBMITTED,
-                            date: { $gte: addMilliseconds(serverTime, -TX_CONSUMING_TIME) }, // Date for SUBMITTED
+                            date: { $gte: addMilliseconds(serverTime, -TX_CONSUMING_TIME_MS) }, // Date for SUBMITTED
                         },
                     ],
                 },
@@ -228,6 +446,7 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
         }
         //----------------------------
         const TimeBackEnd = (await import('../lib/Time/Time.BackEnd.js')).TimeBackEnd;
+        //----------------------------
         let serverTime = await TimeBackEnd.getServerTime();
         //----------------------------
         // Query for "preparing" transactions (Pending or Created) for Reading
@@ -235,7 +454,7 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
             $and: [
                 {
                     status: { $in: [TRANSACTION_STATUS_PENDING, TRANSACTION_STATUS_CREATED] },
-                    date: { $gte: addMilliseconds(serverTime, -TX_PREPARING_TIME) },
+                    date: { $gte: addMilliseconds(serverTime, -TX_PREPARING_TIME_MS) },
                 },
                 {
                     reading_UTxOs: { $in: [outRefToSearch] }, // Check if OutRef is in reading_UTxOs array
@@ -247,7 +466,7 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
             $and: [
                 {
                     status: TRANSACTION_STATUS_SUBMITTED,
-                    date: { $gte: addMilliseconds(serverTime, -TX_CONSUMING_TIME) },
+                    date: { $gte: addMilliseconds(serverTime, -TX_CONSUMING_TIME_MS) },
                 },
                 {
                     reading_UTxOs: { $in: [outRefToSearch] }, // Check if OutRef is in reading_UTxOs array
@@ -259,7 +478,7 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
             $and: [
                 {
                     status: { $in: [TRANSACTION_STATUS_PENDING, TRANSACTION_STATUS_CREATED] },
-                    date: { $gte: addMilliseconds(serverTime, -TX_PREPARING_TIME) },
+                    date: { $gte: addMilliseconds(serverTime, -TX_PREPARING_TIME_MS) },
                 },
                 {
                     consuming_UTxOs: { $in: [outRefToSearch] }, // Check if OutRef is in consuming_UTxOs array
@@ -271,7 +490,7 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
             $and: [
                 {
                     status: TRANSACTION_STATUS_SUBMITTED,
-                    date: { $gte: addMilliseconds(serverTime, -TX_CONSUMING_TIME) },
+                    date: { $gte: addMilliseconds(serverTime, -TX_CONSUMING_TIME_MS) },
                 },
                 {
                     consuming_UTxOs: { $in: [outRefToSearch] }, // Check if OutRef is in consuming_UTxOs array
@@ -302,96 +521,15 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
         };
     }
 
-    public static async setPendingTransaction(
-        createdTransaction: TransactionEntity,
-        fields: { hash: string; ids: Record<string, string>; redeemers: Record<string, TransactionRedeemer>; datums: Record<string, TransactionDatum> }
-    ) {
-        //-------------------------
-        createdTransaction.hash = fields.hash;
-        createdTransaction.ids = fields.ids;
-        createdTransaction.redeemers = fields.redeemers;
-        createdTransaction.datums = fields.datums;
-        createdTransaction.status = TRANSACTION_STATUS_PENDING;
-        //-------------------------
-        await this.update(createdTransaction);
-    }
+    // #endregion helpers smart utxo status
 
-    public static async setPendingTransactionTimeoutByHash(txHash: string) {
-        await this.updateTransactionStatusByHash(txHash, TRANSACTION_STATUS_PENDING_TIMEOUT);
-    }
-
-    public static async setPendingTransactionTimeout(pendingTransaction: TransactionEntity) {
-        await this.updateTransactionStatus(pendingTransaction, TRANSACTION_STATUS_PENDING_TIMEOUT);
-    }
-
-    public static async setCanceledTransactionByHash(txHash: string, error: any) {
-        await this.updateTransactionStatusByHash(txHash, TRANSACTION_STATUS_USER_CANCELED, error);
-    }
-
-    public static async setCanceledTransaction(pendingTransaction: TransactionEntity, error: any) {
-        await this.updateTransactionStatus(pendingTransaction, TRANSACTION_STATUS_USER_CANCELED, error);
-    }
-
-    public static async setSubmittedTransactionByHash(txHash: string) {
-        await this.updateTransactionStatusByHash(txHash, TRANSACTION_STATUS_SUBMITTED);
-    }
-
-    public static async setSubmittedTransaction(pendingTransaction: TransactionEntity) {
-        await this.updateTransactionStatus(pendingTransaction, TRANSACTION_STATUS_SUBMITTED);
-    }
-
-    public static async setFailedTransactionByHash(txHash: string, error: any) {
-        await this.updateTransactionStatusByHash(txHash, TRANSACTION_STATUS_FAILED, error);
-    }
-
-    public static async setFailedTransaction(submittedTransaction: TransactionEntity, error: any) {
-        await this.updateTransactionStatus(submittedTransaction, TRANSACTION_STATUS_FAILED, error);
-    }
-
-    public static async setConfirmedTransactionByHash(txHash: string) {
-        await this.updateTransactionStatusByHash(txHash, TRANSACTION_STATUS_CONFIRMED);
-    }
-
-    public static async setConfirmedTransaction(submittedTransaction: TransactionEntity) {
-        await this.updateTransactionStatus(submittedTransaction, TRANSACTION_STATUS_CONFIRMED);
-    }
-
-    public static async updateTransactionStatusByHash(txHash: string, status: TransactionStatus, error?: any) {
-        //-------------------------
-        if (isNullOrBlank(txHash)) {
-            throw `txHash not defined`;
-        }
+    public static async beginStatusUpdaterJob(swCheckAgainTxTimeOut: boolean = false, swCheckAgainTxPendingTimeOut: boolean = false, swCheckAgainTxFailed: boolean = false) {
         //-------------------------
         if (isFrontEndEnvironment()) {
             throw `Can't run this method in the Browser`;
         }
         //-------------------------
-        const transaction = await this.getOneByParams_<TransactionEntity>({ hash: txHash });
-        if (transaction === undefined) {
-            throw `Transaction not found - hash: ${txHash}`;
-        }
-        //-------------------------
-        await this.updateTransactionStatus(transaction, status, error);
-        //--------------------------------------
-    }
-
-    public static async updateTransactionStatus(transaction: TransactionEntity, status: TransactionStatus, error?: any) {
-        //-------------------------
-        transaction.status = status;
-        if (error !== undefined) {
-            transaction.error = error;
-        }
-        //-------------------------
-        await this.update(transaction);
-        //-------------------------
-    }
-
-    public static async beginStatusUpdaterJob(swCheckAgainTxWithTimeOut: boolean = false) {
-        //-------------------------
-        if (isFrontEndEnvironment()) {
-            throw `Can't run this method in the Browser`;
-        }
-        (await getGlobalTransactionStatusUpdater()).startUpdaterJob(swCheckAgainTxWithTimeOut);
+        (await getGlobalTransactionStatusUpdater()).startUpdaterJob(swCheckAgainTxTimeOut, swCheckAgainTxPendingTimeOut, swCheckAgainTxFailed);
         //-------------------------
     }
 
@@ -414,23 +552,8 @@ export class TransactionBackEndApplied extends BaseBackEndApplied {
             await (await getGlobalTransactionStatusUpdater()).transactionUpdater(txHash);
             //-------------------------
         } catch (error) {
-            throw `${error}`;
+            throw error;
         }
-    }
-
-    public static async getTransactionStatus(txHash: string): Promise<string | undefined> {
-        //-------------------------
-        if (isNullOrBlank(txHash)) {
-            throw `txHash not defined`;
-        }
-        //-------------------------
-        if (isFrontEndEnvironment()) {
-            throw `Can't run this method in the Browser`;
-        }
-        //-------------------------
-        const transaction = await this.getOneByParams_<TransactionEntity>({ hash: txHash });
-        //-------------------------
-        return transaction?.status;
     }
 
     // #endregion class methods

@@ -1,5 +1,6 @@
 import { ARROW_BUTTON } from '../../Commons/Constants/images.js';
 // import styles from './OpenInNewTabButton.module.css';
+// comment the import and set classname to avoid css module error
 
 export default function OpenInNewTabButton({ url }: { url: string }) {
     function handleBtnOpen(url: string) {

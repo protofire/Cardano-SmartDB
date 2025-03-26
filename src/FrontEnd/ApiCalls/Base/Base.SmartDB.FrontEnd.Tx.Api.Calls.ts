@@ -33,7 +33,7 @@ export class BaseSmartDBFrontEndTxApiCalls extends BaseSmartDBFrontEndApiCalls {
             return data;
         } catch (error) {
             console.log(`[${Entity.apiRoute()}] - callTxApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 

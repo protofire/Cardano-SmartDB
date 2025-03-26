@@ -1,8 +1,9 @@
 //--------------------------------------
-import { WalletTxParams, console_error, console_log, globalEmulator, isEmulator } from '../../Commons/index.BackEnd.js';
-import { ExternalWallet, Lucid } from 'lucid-cardano';
+import { WalletTxParams, console_error, console_log, fixUTxOList, globalEmulator, isEmulator, toJson } from '../../Commons/index.BackEnd.js';
+import { ExternalWallet, Lucid, LucidEvolution, ProtocolParameters } from '@lucid-evolution/lucid';
 import { LucidToolsFrontEnd } from './LucidTools.FrontEnd.js';
 import { BlockfrostCustomProviderBackEnd } from '../BlockFrost/BlockFrost.BackEnd.js';
+import { protocolParametersForLucid } from '../../Commons/Constants/protocolParameters.js';
 //--------------------------------------
 
 export class LucidToolsBackEnd extends LucidToolsFrontEnd {
@@ -11,7 +12,19 @@ export class LucidToolsBackEnd extends LucidToolsFrontEnd {
     public static initializeLucidWithBlockfrost = async () => {
         console.log(`[Lucid] - initializeLucidWithBlockfrost`);
         try {
-            const lucid = await Lucid.new(new BlockfrostCustomProviderBackEnd(process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost', 'xxxx'), process.env.NEXT_PUBLIC_CARDANO_NET! as any);
+            //-----------------
+            const protocolParameters = protocolParametersForLucid[process.env.NEXT_PUBLIC_CARDANO_NET! as keyof typeof protocolParametersForLucid] as ProtocolParameters;
+            //-----------------
+            // const lucid = await Lucid(new Blockfrost(process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost', 'xxxx'), process.env.NEXT_PUBLIC_CARDANO_NET! as any, {
+            //     presetProtocolParameters: protocolParameters,
+            // });
+            const lucid = await Lucid(
+                new BlockfrostCustomProviderBackEnd(process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost', 'xxxx'),
+                process.env.NEXT_PUBLIC_CARDANO_NET! as any,
+                {
+                    presetProtocolParameters: protocolParameters,
+                }
+            );
             return lucid;
         } catch (error) {
             console.log(`[Lucid] - initializeLucidWithBlockfrost - Error: ${error}`);
@@ -29,7 +42,7 @@ export class LucidToolsBackEnd extends LucidToolsFrontEnd {
         console.log(`[Lucid] - initializeLucidWithBlockfrostAndWalletFromSeed`);
         try {
             const lucid = await this.initializeLucidWithBlockfrost();
-            lucid.selectWalletFromSeed(walletSeed, options);
+            lucid.selectWallet.fromSeed(walletSeed, options);
             return lucid;
         } catch (error) {
             console.log(`[Lucid] - initializeLucidWithBlockfrostAndWalletFromSeed - Error: ${error}`);
@@ -41,7 +54,7 @@ export class LucidToolsBackEnd extends LucidToolsFrontEnd {
         console.log('[Lucid] - initializeLucidWithBlockfrostAndWalletFromPrivateKey');
         try {
             const lucid = await this.initializeLucidWithBlockfrost();
-            lucid.selectWalletFromPrivateKey(walletPrivateKey);
+            lucid.selectWallet.fromPrivateKey(walletPrivateKey);
             return lucid;
         } catch (error) {
             console.log(`[Lucid] - initializeLucidWithBlockfrostAndWalletFromPrivateKey - Error: ${error}`);
@@ -53,7 +66,7 @@ export class LucidToolsBackEnd extends LucidToolsFrontEnd {
         console.log('[Lucid] - initializeLucidWithBlockfrostAndExternalWallet');
         try {
             const lucid = await this.initializeLucidWithBlockfrost();
-            lucid.selectWalletFrom(wallet);
+            lucid.selectWallet.fromAddress(wallet.address, wallet.utxos ?? []);
             return lucid;
         } catch (error) {
             console.log(`[Lucid] - initializeLucidWithBlockfrostAndExternalWallet - Error: ${error}`);
@@ -61,7 +74,7 @@ export class LucidToolsBackEnd extends LucidToolsFrontEnd {
         }
     };
 
-    public static async prepareLucidBackEndForTx(walletTxParams?: WalletTxParams): Promise<{ lucid: Lucid; wallet: ExternalWallet | undefined }> {
+    public static async prepareLucidBackEndForTx(walletTxParams?: WalletTxParams): Promise<{ lucid: LucidEvolution; wallet: ExternalWallet | undefined }> {
         try {
             //--------------------------------------
             console_log(0, `Lucid`, `prepareLucidBackEndForTx`);
@@ -76,9 +89,10 @@ export class LucidToolsBackEnd extends LucidToolsFrontEnd {
                 //--------------------------------------
                 wallet = {
                     address: walletTxParams.address,
-                    utxos: uTxOsAtWallet,
+                    utxos: fixUTxOList(uTxOsAtWallet),
                     rewardAddress: walletTxParams.rewardAddress,
                 };
+                console_log(0, `Lucid`, `prepareLucidBackEndForTx - Wallet: ${toJson(wallet)}`);
             }
             //--------------------------------------
             const lucid = await this.prepareLucidBackEnd(wallet);

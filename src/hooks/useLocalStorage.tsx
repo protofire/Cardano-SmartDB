@@ -1,15 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { toJson } from '../Commons/utils.js';
+import { Dispatch, SetStateAction, useState } from 'react';
 
 //Para guardar datos de forma persistente en el navegador
 
 // Hook
-export function useLocalStorage(key: string, initialValue: any) {
+export function useLocalStorage<T>(key: string, initialValue: T): [T, Dispatch<SetStateAction<T>>] {
     // State to store our value
     // Pass initial state function to useState so logic is only executed once
-    const [storedValue, setStoredValue] = useState(() => {
+    const [storedValue, setStoredValue] = useState<T>(() => {
         if (typeof window === 'undefined') {
             return initialValue;
         }
@@ -26,7 +25,7 @@ export function useLocalStorage(key: string, initialValue: any) {
     });
     // Return a wrapped version of useState's setter function that ...
     // ... persists the new value to localStorage.
-    const setValue = (value: (arg0: any) => any) => {
+    const setValueFn = (value: ((arg: any) => T) | T): T => {
         try {
             // Allow value to be a function so we have same API as useState
             const valueToStore = value instanceof Function ? value(storedValue) : value;
@@ -34,12 +33,15 @@ export function useLocalStorage(key: string, initialValue: any) {
             setStoredValue(valueToStore);
             // Save to local storage
             if (typeof window !== 'undefined') {
-                window.localStorage.setItem(key, toJson(valueToStore));
+                window.localStorage.setItem(key, JSON.stringify(valueToStore));
             }
+            return valueToStore;
         } catch (error) {
             // A more advanced implementation would handle the error case
             console.log(`useLocalStorage - setValue - Error: ${error}`);
+            throw error;
         }
     };
-    return [storedValue, setValue];
+
+    return [storedValue, setValueFn];
 }

@@ -10,21 +10,40 @@ export interface IAppStoreModel {
     swInitApiCompleted?: boolean;
     setSwInitApiCompleted: Action<IAppStoreModel, boolean | undefined>;
 
+    isNavigating: boolean;
+    setIsNavigating: Action<IAppStoreModel, boolean>;
+
+    navigationTimeoutId: NodeJS.Timeout | null;
+    setNavigationTimeoutId: Action<IAppStoreModel, NodeJS.Timeout | null>;
+
     swExistAnyWallet?: boolean;
     setSwExistAnyWallet: Action<IAppStoreModel, boolean | undefined>;
-    checkIfExistAnyWallet: Thunk<IAppStoreModel>;
+    checkIfExistAnyWallet: Thunk<IAppStoreModel, undefined, any, {}, Promise<boolean>>;
 
     siteSettings?: SiteSettingsEntity;
     setSiteSettings: Action<IAppStoreModel, SiteSettingsEntity | undefined>;
 
     isAppStoreLoading: Computed<IAppStoreModel & IWalletStoreModel, boolean>;
     isAppStoreLoaded: Computed<IAppStoreModel & IWalletStoreModel, boolean>;
+
+    isProcessingTx: boolean;
+    setIsProcessingTx: Action<IAppStoreModel, boolean>;
 }
 
 export const AppStoreModel: IAppStoreModel = {
     swInitApiCompleted: undefined,
     setSwInitApiCompleted: action((state, swInitApiCompleted) => {
         state.swInitApiCompleted = swInitApiCompleted;
+    }),
+
+    isNavigating: false,
+    setIsNavigating: action((state, isNavigating) => {
+        state.isNavigating = isNavigating;
+    }),
+
+    navigationTimeoutId: null,
+    setNavigationTimeoutId: action((state, navigationTimeoutId) => {
+        state.navigationTimeoutId = navigationTimeoutId;
     }),
 
     swExistAnyWallet: undefined,
@@ -37,14 +56,16 @@ export const AppStoreModel: IAppStoreModel = {
         try {
             actions.setSwExistAnyWallet(undefined);
             //--------------------------------------
-            const count = await WalletFrontEndApiCalls.getCountApi_();
-            if (count > 0) {
-                actions.setSwExistAnyWallet(true);
-            } else {
-                actions.setSwExistAnyWallet(false);
-            }
+            const { count } = await WalletFrontEndApiCalls.getCountApi_();
+            //--------------------------------------
+            const result = count > 0;
+            //--------------------------------------
+            actions.setSwExistAnyWallet(result);
             //--------------------------------------
             console.log(`[AppStore] - checkIfExistAnyWallet - OK`);
+            //--------------------------------------
+            return result;
+            //--------------------------------------
         } catch (error) {
             console.log(`[AppStore] - checkIfExistAnyWallet - Error: ${error}`);
             throw error;
@@ -58,17 +79,29 @@ export const AppStoreModel: IAppStoreModel = {
 
     isAppStoreLoading: computed((state) => {
         return (
+            state.swInitApiCompleted === false ||
             state.siteSettings === undefined ||
-            // state.swExistAnyProtocol === undefined ||
-            // state.swExistAnyWallet === undefined ||
-            // (state.swExistAnyProtocol === true && (state.protocol === undefined || state.protocols === undefined)) ||
+            state.swExistAnyWallet === undefined ||
             (isEmulator === true && state.emulatorDB === undefined)
         );
     }),
 
     isAppStoreLoaded: computed((state) => {
-        return state.siteSettings !== undefined && state.swExistAnyWallet !== undefined && (isEmulator === false || state.emulatorDB !== undefined);
+        return (
+            state.swInitApiCompleted === true ||
+            (
+                state.siteSettings !== undefined &&
+                state.swExistAnyWallet !== undefined &&
+                (isEmulator === false || state.emulatorDB !== undefined))
+        );
     }),
+
+    isProcessingTx: false,
+    setIsProcessingTx: action((state, payload) => {
+        state.isProcessingTx = payload;
+    }),
+
+ 
 };
 
 //------------------------------------

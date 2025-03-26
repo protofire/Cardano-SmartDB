@@ -1,11 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { PostgreSQLDatabaseService } from '../BackEnd/DatabaseService/PostgreSQL.Database.Service.js';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
-import { getPostgreSQLTableName } from '../Commons/utils.js';
 import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js';
 import { SiteSettingsEntity } from './SiteSettings.Entity.js';
 
 @PostgreSQLAppliedFor([SiteSettingsEntity])
-@Entity({ name: getPostgreSQLTableName(SiteSettingsEntity.className()) })
+@Entity({ name: PostgreSQLDatabaseService.getTableName(SiteSettingsEntity.className()) })
 export class SiteSettingsEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = SiteSettingsEntity;
     protected static _postgreSQLTableName: string = SiteSettingsEntity.className();
@@ -58,8 +58,8 @@ export class SiteSettingsEntityPostgreSQL extends BaseEntityPostgreSQL {
     @Column({ type: 'varchar', length: 255, nullable: true })
     welcomeMessage!: string;
 
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    welcomeMessageIndex!: string;
+    @Column({ type: 'number', nullable: true })
+    welcomeMessageIndex!: number;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
     blockfrost_url_api_mainnet!: string;
@@ -80,10 +80,19 @@ export class SiteSettingsEntityPostgreSQL extends BaseEntityPostgreSQL {
     blockfrost_url_explorer_preprod!: string;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
-    oracle_wallet_publickey!: string;
+    taptools_url_explorer_mainnet!: string;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    oracle_wallet_publickey_cborhex!: string;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
     oracle_internal_wallet_publickey_cborhex!: string;
+
+    @CreateDateColumn()
+    createdAt!: Date;
+
+    @UpdateDateColumn()
+    updatedAt!: Date;
 
     public static PostgreSQLModel() {
         return this;

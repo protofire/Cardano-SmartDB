@@ -1,14 +1,15 @@
-import { Assets, Emulator, PrivateKey, addAssets } from 'lucid-cardano';
+import { Assets, Emulator, PrivateKey, ProtocolParameters, addAssets } from '@lucid-evolution/lucid';
 import { NextApiResponse } from 'next';
-import { getAddressFromPrivateKey, isFrontEndEnvironment, sanitizeForDatabase, showData, strToHex } from '../Commons/index.js';
+import { getAddressFromPrivateKeyBench32, isFrontEndEnvironment, sanitizeForDatabase, showData, strToHex } from '../Commons/index.js';
 import { BackEndApiHandlersFor, BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndAppliedFor.js';
-import { yup }  from '../Commons/yupLocale.js';
+import { yup } from '../Commons/yupLocale.js';
 import { EmulatorEntity } from '../Entities/Emulator.Entity.js';
 import { NextApiRequestAuthenticated } from '../lib/Auth/backEnd.js';
 import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
 import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied.js';
 import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods.js';
 import { console_error, console_log } from '../Commons/BackEnd/globalLogs.js';
+import { protocolParametersForLucid } from '../Commons/Constants/protocolParameters.js';
 
 @BackEndAppliedFor(EmulatorEntity)
 export class EmulatorBackEndApplied extends BaseBackEndApplied {
@@ -30,33 +31,39 @@ export class EmulatorBackEndApplied extends BaseBackEndApplied {
             return emulatorDB;
         }
         //----------------------------
-        const privateKeys: PrivateKey[] = [];
-        privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey1!);
-        privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey2!);
-        privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey3!);
-        privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey4!);
-
-        // privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey5!)
-        // privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey6!)
-        // privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey7!)
-        // privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey8!)
-        // privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey9!)
-        // privateKeys.push(process.env.NEXT_PUBLIC_emulatorWalletPrivateKey10!)
-
         const emulator_InitAssets: Assets = { lovelace: 1_000_000_000n };
-
+        // const tokenEmergency_AC_Lucid = EMERGENCY_ADMIN_TOKEN_CS + strToHex(EMERGENCY_ADMIN_TOKEN_TN_STR);
+        // const tokenAdmin_AC_Lucid = ADMIN_TOKEN_CS + strToHex(ADMIN_TOKEN_TN_STR);
+        //----------------------------
+        // const emulator_InitAssetsWithEmergencyToken: Assets = addAssets(emulator_InitAssets, { [tokenEmergency_AC_Lucid]: 1n });
+        // const emulator_InitAssetsWithAdminToken: Assets = addAssets(emulator_InitAssets, { [tokenAdmin_AC_Lucid]: 1n });
+        //----------------------------
+        const privateKeys = [
+            { key: process.env.NEXT_PUBLIC_emulatorWalletPrivateKey1!, assets: emulator_InitAssets },
+            { key: process.env.NEXT_PUBLIC_emulatorWalletPrivateKey2!, assets: emulator_InitAssets },
+            { key: process.env.NEXT_PUBLIC_emulatorWalletPrivateKey3!, assets: emulator_InitAssets },
+            { key: process.env.NEXT_PUBLIC_emulatorWalletPrivateKey4!, assets: emulator_InitAssets },
+        ];
+        //----------------------------
         const accounts: any = [];
-
-        for (const key of privateKeys) {
-            const address = await getAddressFromPrivateKey(key);
-            const account = { address, assets: { ...emulator_InitAssets } };
+        for (const { key, assets } of privateKeys) {
+            const address = getAddressFromPrivateKeyBench32(key);
+            const account = { address, assets };
             accounts.push(account);
         }
-
-        const emulator = new Emulator(accounts);
-        emulatorDB = new EmulatorEntity({ name, emulator, privateKeys, current, zeroTime: emulator.time });
+        //-----------------
+        const protocolParameters = protocolParametersForLucid[process.env.NEXT_PUBLIC_CARDANO_NET! as keyof typeof protocolParametersForLucid] as ProtocolParameters;
+        //-----------------
+        const emulator = new Emulator(accounts, protocolParameters);
+        emulatorDB = new EmulatorEntity({
+            name,
+            emulator,
+            privateKeys: privateKeys.map(({ key }) => key), // Extract only keys
+            current,
+            zeroTime: emulator.time,
+        });
         const emulatorDB_ = await this.create(emulatorDB);
-
+        //-----------------
         return emulatorDB_;
         //----------------------------
     }

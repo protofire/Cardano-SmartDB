@@ -1,6 +1,6 @@
 import { NextApiResponse } from 'next';
 import { User } from 'next-auth';
-import { BackEndApiHandlersFor, OptionsGet,  RegistryManager,  isEmulator, sanitizeForDatabase, showData, yupValidateOptionsGet } from '../Commons/index.js';
+import { BackEndApiHandlersFor, OptionsGet, RegistryManager, isEmulator, sanitizeForDatabase, showData, yupValidateOptionsGet } from '../Commons/index.js';
 import { globalEmulator } from '../Commons/BackEnd/globalEmulator.js';
 import { console_error, console_log } from '../Commons/BackEnd/globalLogs.js';
 import { AddressToFollowEntity } from '../Entities/AddressToFollow.Entity.js';
@@ -8,7 +8,8 @@ import { NextApiRequestAuthenticated } from '../lib/Auth/types.js';
 import { AddressToFollowBackEndApplied } from './AddressToFollow.BackEnd.Applied.js';
 import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
 import { BaseSmartDBBackEndMethods } from './Base/Base.SmartDB.BackEnd.Methods.js';
-import { yup }  from '../Commons/yupLocale.js';
+import { yup } from '../Commons/yupLocale.js';
+import { BlockFrostBackEnd } from '../lib/BlockFrost/BlockFrost.BackEnd.js';
 
 //BackEnd Api Handlers siempre llevan seteado la entidad y el backend methods
 
@@ -18,7 +19,7 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
     protected static _BackEndApplied = AddressToFollowBackEndApplied;
 
     // #region custom api handlers
-    protected static _ApiHandlers: string[] = ['by-address', 'sync-all', 'clean'];
+    protected static _ApiHandlers: string[] = ['by-address', 'sync-all', 'clean', 'from-to-block'];
 
     protected static async executeApiHandlers(command: string, req: NextApiRequestAuthenticated, res: NextApiResponse) {
         //--------------------
@@ -26,8 +27,8 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
         //--------------------
         if (this._ApiHandlers.includes(command) && query !== undefined) {
             if (query[0] === 'by-address') {
-                if (query.length === 2) {
-                    req.query = { address: query[1] };
+                if (query.length === 3) {
+                    req.query = { address: query[1], CS: query[2] };
                 } else {
                     req.query = {};
                 }
@@ -36,6 +37,13 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
                 return await this.syncAllApiHandler(req, res);
             } else if (query[0] === 'clean') {
                 return await this.cleanApiHandler(req, res);
+            } else if (query[0] === 'from-to-block') {
+                if (query.length === 2) {
+                    req.query = { address: query[1] };
+                } else {
+                    req.query = {};
+                }
+                return await this.getFromAndToBlockApiHandler(req, res);
             } else {
                 console_error(-1, this._Entity.className(), `executeApiHandlers - Error: Api Handler function not found`);
                 return res.status(500).json({ error: `Api Handler function not found` });
@@ -65,7 +73,9 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
     }
 
     // #endregion restrict api handlers
+
     // #region api handlers
+
     public static async getByAddressApiHandler<T extends AddressToFollowEntity>(req: NextApiRequestAuthenticated, res: NextApiResponse) {
         if (req.method === 'GET') {
             //-------------------------
@@ -78,6 +88,7 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
                 //-------------------------
                 const schemaQuery = yup.object().shape({
                     address: yup.string().required(),
+                    CS: yup.string().required(),
                 });
                 //-------------------------
                 let validatedQuery;
@@ -88,12 +99,12 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
                     return res.status(400).json({ error });
                 }
                 //--------------------------------------
-                const { address } = validatedQuery;
+                const { address, CS } = validatedQuery;
                 //-------------------------
                 const user = req.user;
                 let restricFilter = await this.restricFilter(user);
                 //-------------------------
-                const addressesToFollow = await this._BackEndApplied.getByAddress<T>(address, undefined, restricFilter);
+                const addressesToFollow = await this._BackEndApplied.getByAddress<T>(address, CS, undefined, restricFilter);
                 //-------------------------
                 console_log(-1, this._Entity.className(), `getByAddressApiHandler - GET - OK`);
                 //-------------------------
@@ -114,6 +125,7 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
                 //-------------------------
                 const schemaQuery = yup.object().shape({
                     address: yup.string().required(),
+                    CS: yup.string().required(),
                 });
                 //-------------------------
                 let validatedQuery;
@@ -124,7 +136,7 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
                     return res.status(400).json({ error });
                 }
                 //--------------------------------------
-                const { address } = validatedQuery;
+                const { address, CS } = validatedQuery;
                 //-------------------------
                 const sanitizedBody = sanitizeForDatabase(req.body);
                 //-------------------------
@@ -143,7 +155,7 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
                 const user = req.user;
                 let restricFilter = await this.restricFilter(user);
                 //-------------------------
-                const addressesToFollow = await this._BackEndApplied.getByAddress<T>(address, optionsGet, restricFilter);
+                const addressesToFollow = await this._BackEndApplied.getByAddress<T>(address, CS, optionsGet, restricFilter);
                 //-------------------------
                 console_log(-1, this._Entity.className(), `getByAddressApiHandler - POST - OK`);
                 //-------------------------
@@ -224,7 +236,7 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
                     // await TimeBackEnd.syncBlockChainWithServerTime()
                 }
                 //--------------------------------------
-                // // TODO: estoy usandod esde la libreria generica esto que usa entidades de example... deberia hacer este metodo en una clase de example directamente
+                // //TODO: estoy usandod esde la libreria generica esto que usa entidades de example... deberia hacer este metodo en una clase de example directamente
                 // const ProtocolBackEndApplied = (await import('../../example/backEnd.js')).ProtocolBackEndApplied;
                 // const FundBackEndApplied = (await import('../../example/backEnd.js')).FundBackEndApplied;
                 // //--------------------------------------
@@ -263,7 +275,7 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
                 // //--------------------------------------
                 // for (let addressToFollow of addressesToFollow) {
                 //     //if addressToFollow.address is not in used addresses with same CS, we can delete it
-                //     if (!allUsedAddresses.some((usedAddress) => usedAddress.address === addressToFollow.address && usedAddress.CS === addressToFollow.currencySymbol)) {
+                //     if (!allUsedAddresses.some((usedAddress) => usedAddress.address === addressToFollow.address && usedAddress.CS === addressToFollow.CS)) {
                 //         console_log(0, this._Entity.className(), `cleanApiHandler - Deleting: ${addressToFollow.address}`);
                 //         this._BackEndApplied.delete(addressToFollow);
                 //     }
@@ -278,6 +290,48 @@ export class AddressToFollowBackEndApiHandlers extends BaseBackEndApiHandlers {
             }
         } else {
             console_error(-1, this._Entity.className(), `cleanApiHandler - Error: Method not allowed`);
+            return res.status(405).json({ error: `Method not allowed` });
+        }
+    }
+
+    public static async getFromAndToBlockApiHandler<T extends AddressToFollowEntity>(req: NextApiRequestAuthenticated, res: NextApiResponse) {
+        if (req.method === 'GET') {
+            console_log(1, this._Entity.className(), `getFromAndToBlockApiHandler - GET - Init`);
+            console_log(0, this._Entity.className(), `query: ${showData(req.query)}`);
+            //-------------------------
+            try {
+                //-------------------------
+                const sanitizedQuery = sanitizeForDatabase(req.query);
+                //-------------------------
+                const schemaQuery = yup.object().shape({
+                    address: yup.string().required(),
+                });
+                //-------------------------
+                let validatedQuery;
+                try {
+                    validatedQuery = await schemaQuery.validate(sanitizedQuery);
+                } catch (error) {
+                    console_error(-1, this._Entity.className(), `getFromAndToBlockApiHandler - Error: ${error}`);
+                    return res.status(400).json({ error });
+                }
+                //--------------------------------------
+                const { address } = validatedQuery;
+                //-------------------------
+                const result = await BlockFrostBackEnd.getFromAndToBlockInAddress_Api(address);
+                //-------------------------
+                if (result === undefined) {
+                    throw `Can't get from and to block of address: ${address}`;
+                }
+                //-------------------------
+                console_log(-1, this._Entity.className(), `getFromAndToBlockApiHandler - GET - OK`);
+                //-------------------------
+                return res.status(200).json({ fromBlock: result.fromBlock, toBlock: result.toBlock });
+            } catch (error) {
+                console_error(-1, this._Entity.className(), `getFromAndToBlockApiHandler - Error: ${error}`);
+                return res.status(500).json({ error: `An error occurred while getting from and to block of address: ${this._Entity.className()}: ${error}` });
+            }
+        } else {
+            console_error(-1, this._Entity.className(), `getFromAndToBlockApiHandler - Error: Method not allowed`);
             return res.status(405).json({ error: `Method not allowed` });
         }
     }

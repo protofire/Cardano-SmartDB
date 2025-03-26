@@ -2,11 +2,10 @@ import { Types } from 'mongoose';
 import 'reflect-metadata';
 import { deserealizeBigInt } from '../../Commons/conversions.js';
 import { getCombinedConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
-import { MongoAppliedFor } from '../../Commons/Decorators/Decorator.MongoAppliedFor.js';
 import { ConversionFunctions, executeFunction, toJson } from '../../Commons/index.js';
 import { BaseEntity } from './Base.Entity.js';
 
-@MongoAppliedFor([BaseEntity])
+// @MongoAppliedFor([BaseEntity])
 export class BaseEntityMongo {
     protected static Entity = BaseEntity;
     protected static _mongoTableName: string;
@@ -49,19 +48,19 @@ export class BaseEntityMongo {
 
     // #region mongo db
 
-    public static MongoModel(): any {
+    public static DBModel(): any {
         throw `${this.Entity.className()} - Mongo model not implemented`;
     }
 
-    public MongoModel(): any {
-        return this.getMongoStatic().MongoModel();
+    public DBModel(): any {
+        return this.getMongoStatic().DBModel();
     }
 
     // #endregion mongo db
 
     // #region conversions methods
 
-    public static async toMongoInterface<T extends BaseEntity>(instance: T, cascadeSave?: boolean): Promise<any> {
+    public static async toDBInterface<T extends BaseEntity>(instance: T, cascadeSave?: boolean): Promise<any> {
         const conversionFunctions = getCombinedConversionFunctions(this.getStatic());
         const interfaceObj: any = {};
         if (conversionFunctions) {
@@ -72,7 +71,7 @@ export class BaseEntityMongo {
                         // busco su entity mongo y llamo a toMongoInterface
                         const mongoEntity = value.getMongo();
                         if (mongoEntity) {
-                            value = await mongoEntity.toMongoInterface(value, cascadeSave);
+                            value = await mongoEntity.toDBInterface(value, cascadeSave);
                         } else {
                             throw `${this.className()} - ${propertyKey}: ${value.className()} - ${value} - MongoEntity not found`;
                         }
@@ -168,7 +167,7 @@ export class BaseEntityMongo {
         return interfaceObj as any;
     }
 
-    public static async fromMongoInterface<T extends BaseEntity>(dataInterface: any): Promise<T> {
+    public static async fromDBInterface<T extends BaseEntity>(dataInterface: any): Promise<T> {
         const instance = new this.Entity() as T;
         // from interface siempre crea una instancia por que siempre va a ser llamada con un documento
         // pero por eso al llamar de forma anidada, debo verificar que exista el documento
@@ -227,8 +226,8 @@ export class BaseEntityMongo {
                                     }
                                     for (let i = 0; i < value_ids.length; i++) {
                                         let value_id = value_ids[i];
-                                        if (process.env.USE_DATABASE === 'mongo') {
-                                            value_id = value_id?.toString ? value_id.toString() : value_id;
+                                        if (process.env.USE_DATABASE === 'mongo' && value_id && value_id.toString) {
+                                            value_id = value_id.toString();
                                         }
                                         if (value_id) {
                                             array_ids.push(value_id);
@@ -240,8 +239,8 @@ export class BaseEntityMongo {
                                 // OneToOne es una relacion de un registro de una tabla con un registro de otra tabla
                                 // ManyToOne es una relacion de muchos registros de esta tabla con un registro de otra tabla
                                 let value_id = plainDataInterface[conversions.interfaceName || propertyKey];
-                                if (process.env.USE_DATABASE === 'mongo') {
-                                    value_id = value_id?.toString ? value_id.toString() : value_id;
+                                if (process.env.USE_DATABASE === 'mongo' && value_id && value_id.toString) {
+                                    value_id = value_id.toString();
                                 }
                                 (instance as any)[propertyKey] = value_id;
                             }
@@ -255,8 +254,8 @@ export class BaseEntityMongo {
                                     for (let i = 0; i < value.length; i++) {
                                         let value_ = value[i];
                                         if (conversions.isDB_id) {
-                                            if (process.env.USE_DATABASE === 'mongo') {
-                                                value_ = value_?.toString ? value_.toString() : value_;
+                                            if (process.env.USE_DATABASE === 'mongo' && value_ && value_.toString) {
+                                                value_ = value_.toString()
                                             }
                                         }
                                         const item = await processValue(propertyKey, conversions, value_);
@@ -266,8 +265,8 @@ export class BaseEntityMongo {
                                 value = array;
                             } else {
                                 if (conversions.isDB_id) {
-                                    if (process.env.USE_DATABASE === 'mongo') {
-                                        value = value?.toString ? value.toString() : value;
+                                    if (process.env.USE_DATABASE === 'mongo' && value && value.toString) {
+                                        value = value.toString()
                                     }
                                 }
                                 value = await processValue(propertyKey, conversions, value);

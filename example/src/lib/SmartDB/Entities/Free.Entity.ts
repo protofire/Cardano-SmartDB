@@ -12,7 +12,7 @@ export class FreeEntity extends BaseSmartDBEntity {
     
     // #region fields
 
-    _NET_id_TN: string = 'FreeID';
+    _NET_id_TN_Str: string = 'FreeID';
 
     @Convertible({ isForDatum: true })
     fdValue!: bigint;

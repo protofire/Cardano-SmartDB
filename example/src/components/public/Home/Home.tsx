@@ -198,12 +198,13 @@ export default function Home() {
         //----------------------------
         if (lucid === undefined) return;
         if (validatorAddress === undefined) return;
+        if (datumID_CS === undefined) return;
         //----------------------------
         setIsLoadingSync(true);
         //----------------------------
         try {
             //----------------------------
-            await DummyApi.syncWithAddressApi(DummyEntity, validatorAddress, true);
+            await DummyApi.syncWithAddressApi(DummyEntity, validatorAddress, datumID_CS, true);
             const list: DummyEntity[] = await DummyApi.getAllApi_({ fieldsForSelect: {}, loadRelations: { smartUTxO_id: true } });
             setList(list);
             //----------------------------
@@ -462,7 +463,7 @@ export default function Home() {
                         <div className={styles.subTitle}>4: Create Dummy Entity</div>
                         <div className={styles.createContainer}>
                             <div>
-                                <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter value"/>
+                                <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter value" />
                             </div>
                             <button onClick={handleBtnCreateTx} className={styles.buttonCenterWithLoading}>
                                 Create Tx{' '}
@@ -506,7 +507,7 @@ export default function Home() {
                             <div className={styles.pkh}>{formatHash(item.ddPaymentPKH)}</div>
                             <div className={styles.value}>
                                 {isEditingValue && selectedItem === item ? (
-                                    <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} placeholder="Enter new value"/>
+                                    <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} placeholder="Enter new value" />
                                 ) : (
                                     item.ddValue.toString()
                                 )}

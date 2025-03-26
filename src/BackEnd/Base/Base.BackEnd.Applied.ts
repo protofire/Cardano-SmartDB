@@ -17,7 +17,7 @@ export class BaseBackEndApplied {
 
     // #region class methods applied to entity
 
-    public static async checkDuplicate_<T extends BaseEntity>( validatedData: any, id?: string) {
+    public static async checkDuplicate_<T extends BaseEntity>(validatedData: any, id?: string) {
         return await this.getBack().checkDuplicate<T>(this._Entity, validatedData, id);
     }
 
@@ -26,11 +26,11 @@ export class BaseBackEndApplied {
     }
 
     public static async updateWithParams_<T extends BaseEntity>(id: string, updateFields: Record<string, any>, optionsUpdate?: OptionsCreateOrUpdate): Promise<T> {
-        return await this.getBack().updateWithParams<T>(this._Entity, id, updateFields);
+        return await this.getBack().updateWithParams<T>(this._Entity, id, updateFields, optionsUpdate);
     }
 
     public static async updateMeWithParams<T extends BaseEntity>(instance: T, updateFields: Record<string, any>, optionsUpdate?: OptionsCreateOrUpdate): Promise<void> {
-        return await this.getBack().updateMeWithParams<T>(instance, updateFields);
+        return await this.getBack().updateMeWithParams<T>(instance, updateFields, optionsUpdate);
     }
 
     public static async update<T extends BaseEntity>(instance: T, optionsUpdate?: OptionsCreateOrUpdate): Promise<void> {
@@ -442,7 +442,7 @@ export class BaseBackEndApplied {
     }
 
     public static async cascadeDeleteRelations<T extends BaseEntity>(instance: T, deleteRelations?: Record<string, boolean>) {
-        // TODO: seria ideal aqui poder borrar los ManyToOne, pero como puedo hacerlo si no puedo obtener el tipo de la relacion
+        //TODO: seria ideal aqui poder borrar los ManyToOne, pero como puedo hacerlo si no puedo obtener el tipo de la relacion
         // no puedo hacerlo por que me genera dependencias circulares entre las clases
         // la clase con OneToMany, como Protocol tiene Funds
         // y la clase ManyToOne, como Fund tiene Protocol

@@ -1,21 +1,22 @@
 import { Action, Computed, Thunk, action, computed, thunk } from 'easy-peasy';
-import { Lucid, UTxO } from 'lucid-cardano';
+import { getAddressDetails, Lucid, LucidEvolution, UTxO } from '@lucid-evolution/lucid';
 import { User } from 'next-auth';
 import { signIn, signOut } from 'next-auth/react';
 import { EmulatorEntity } from '../Entities/Emulator.Entity.js';
 import { CardanoWallet, ConnectedWalletInfo } from '../Commons/types.js';
 import { CARDANO_WALLETS } from '../Commons/Constants/wallets.js';
 import {
-    LUCID_NETWORK_MAINNET_INT,
-    LUCID_NETWORK_TESTNET_INT,
-    WAIT_FOR_WALLET_ENABLING,
-    WAIT_FOR_WALLET_EXTENSIONS,
+    CONNECT_WALLET_WAIT_FOR_API_WALLETS_MS,
+    CONNECT_WALLET_WAIT_FOR_EXTENSIONS_POOL_WALLETS_MS,
     isEmulator,
     isMainnet,
     isTestnet,
+    LUCID_NETWORK_CUSTOM_NAME,
+    LUCID_NETWORK_MAINNET_ID,
+    LUCID_NETWORK_TESTNET_ID,
 } from '../Commons/Constants/constants.js';
 import { EmulatorDBFrontEndApiCalls, WalletFrontEndApiCalls } from '../FrontEnd/index.js';
-import { delay, toJson } from '../Commons/utils.js';
+import { sleep, toJson } from '../Commons/utils.js';
 import { LucidToolsFrontEnd } from '../lib/Lucid/LucidTools.FrontEnd.js';
 import { explainError } from '../Commons/explainError.js';
 import { Credentials } from '../lib/Auth/types.js';
@@ -44,16 +45,22 @@ export interface IWalletStoreModel {
     isConnected: boolean;
     setIsConnected: Action<IWalletStoreModel, boolean>;
 
+    swDoNotPromtForSigning: boolean;
+    setSwDoNotPromtForSigning: Action<IWalletStoreModel, boolean>;
+
     swHideBalance: boolean;
     setSwHideBalance: Action<IWalletStoreModel, boolean>;
 
-    _lucid: Lucid | undefined;
-    getLucid: Thunk<IWalletStoreModel, { emulatorDB?: EmulatorEntity } | undefined, any, any, Promise<Lucid | undefined>>;
-    setLucid: Action<IWalletStoreModel, Lucid>;
+    swProInterface: boolean;
+    setSwProInterface: Action<IWalletStoreModel, boolean>;
 
-    _lucidForUseAsUtils?: Lucid;
-    getLucidForUseAsUtils: Thunk<IWalletStoreModel, undefined, any, any, Promise<Lucid | undefined>>;
-    setLucidForUseAsUtils: Action<IWalletStoreModel, Lucid>;
+    _lucid: LucidEvolution | undefined;
+    getLucid: Thunk<IWalletStoreModel, { emulatorDB?: EmulatorEntity } | undefined, any, any, Promise<LucidEvolution | undefined>>;
+    setLucid: Action<IWalletStoreModel, LucidEvolution>;
+
+    _lucidForUseAsUtils?: LucidEvolution;
+    getLucidForUseAsUtils: Thunk<IWalletStoreModel, undefined, any, any, Promise<LucidEvolution | undefined>>;
+    setLucidForUseAsUtils: Action<IWalletStoreModel, LucidEvolution>;
 
     protocolParameters: unknown;
     setProtocolParameters: Action<IWalletStoreModel, unknown>;
@@ -94,11 +101,11 @@ export interface IWalletStoreModel {
         {
             session: any;
             status: any;
-            walletNameOrSeedOrKey: string;
+            walletName: string;
+            walletSeed?: string;
+            walletKey?: string;
             tryAgain: boolean;
             useBlockfrostToSubmit: boolean;
-            isWalletFromSeed: boolean;
-            isWalletFromKey: boolean;
             forceConnect?: boolean;
             emulatorDB?: EmulatorEntity;
             createSignedSession: boolean;
@@ -172,7 +179,7 @@ export const WalletStoreModel: IWalletStoreModel = {
                 // Use 2 since count starts from 0 (0, 1, 2)
                 setTimeout(() => {
                     pollWallets(pollWalletsCount + 1);
-                }, WAIT_FOR_WALLET_EXTENSIONS);
+                }, CONNECT_WALLET_WAIT_FOR_EXTENSIONS_POOL_WALLETS_MS);
             } else {
                 // Ensure setIsGettingWalletsDone is called even when no wallets are found
                 const state = helpers.getState();
@@ -194,7 +201,7 @@ export const WalletStoreModel: IWalletStoreModel = {
                 actions.setIsGettingWalletsDone(true);
             }
         };
-        if (process.env.NEXT_PUBLIC_CARDANO_NET !== 'Emulator') {
+        if (!isEmulator) {
             await pollWallets();
         }
     }),
@@ -203,6 +210,8 @@ export const WalletStoreModel: IWalletStoreModel = {
         console.log(`[WalletStore] - initWallet`);
 
         // state.emulatorDB = undefined;
+
+        state.swDoNotPromtForSigning = false;
 
         state.swHideBalance = true;
         state.isConnecting = false;
@@ -221,9 +230,19 @@ export const WalletStoreModel: IWalletStoreModel = {
         state._isCoreTeam = false;
     }),
 
+    swDoNotPromtForSigning: false,
+    setSwDoNotPromtForSigning: action((state, swDoNotPromtForSigning) => {
+        state.swDoNotPromtForSigning = swDoNotPromtForSigning;
+    }),
+
     swHideBalance: true,
     setSwHideBalance: action((state, swHideBalance) => {
         state.swHideBalance = swHideBalance;
+    }),
+
+    swProInterface: false,
+    setSwProInterface: action((state, swProInterface) => {
+        state.swProInterface = swProInterface;
     }),
 
     isConnecting: false,
@@ -239,9 +258,10 @@ export const WalletStoreModel: IWalletStoreModel = {
     _lucid: undefined,
     setLucid: action((state, newLucid) => {
         state._lucid = newLucid;
+        // console.log(`[WalletStore] - setLucid - Lucid Network: ${newLucid.config().network}`);
     }),
 
-    getLucid: thunk(async (actions, payload = {}, helpers): Promise<Lucid | undefined> => {
+    getLucid: thunk(async (actions, payload = {}, helpers): Promise<LucidEvolution | undefined> => {
         //-------------------------
         // normalmente lucid contiene el provider del emulador siempre actualizado en la misma ventan
         // pero si el emulador fue usado en otro lado, de esta forma me aseguro que se lea de la base de datos y se actualice en lucid
@@ -253,6 +273,7 @@ export const WalletStoreModel: IWalletStoreModel = {
         let lucid = state._lucid;
         //-------------------------
         if (lucid !== undefined) {
+            // console.log(`[WalletStore] - getLucid - Lucid Network: ${lucid.config().network}`);
             if (isEmulator) {
                 if (emulatorDB === undefined) {
                     console.log(`[WalletStore] - getLucid - Getting last updated emulatorDB...`);
@@ -261,7 +282,12 @@ export const WalletStoreModel: IWalletStoreModel = {
                 if (emulatorDB === undefined) {
                     throw 'emulatorDB current not defined';
                 } else {
-                    lucid.provider = emulatorDB.emulator;
+                    lucid.switchProvider(emulatorDB.emulator);
+                    // NOTE: tengo que reconectar billetera en emulador, por que adentro la billetera tiene provider y el provider de lucid se cambia y no se cambia el de adentro a enos que no recoencte la billetera
+                    if (state.info?.walletKey !== undefined) {
+                        let walletKey = state.info.walletKey;
+                        lucid.selectWallet.fromPrivateKey(walletKey);
+                    }
                     actions.setLucid(lucid);
                     actions.setEmulatorDB(emulatorDB);
                 }
@@ -276,7 +302,7 @@ export const WalletStoreModel: IWalletStoreModel = {
         state._lucidForUseAsUtils = payload;
     }),
 
-    getLucidForUseAsUtils: thunk(async (actions, payload, helpers): Promise<Lucid | undefined> => {
+    getLucidForUseAsUtils: thunk(async (actions, payload, helpers): Promise<LucidEvolution | undefined> => {
         // normalmente lucid contiene el provider del emulador siempre actualizado en la misma ventan
         // pero si el emulador fue usado en otro lado, de esta forma me aseguro que se lea de la base de datos y se actualice en lucid
         //-------------------------
@@ -291,7 +317,7 @@ export const WalletStoreModel: IWalletStoreModel = {
                 if (emulatorDB === undefined) {
                     throw 'emulatorDB current not defined';
                 } else {
-                    lucid.provider = emulatorDB.emulator;
+                    lucid.switchProvider(emulatorDB.emulator);
                     actions.setLucidForUseAsUtils(lucid);
                 }
             }
@@ -357,7 +383,7 @@ export const WalletStoreModel: IWalletStoreModel = {
                 const lucid = await actions.getLucid();
                 let uTxOsAtWallet: UTxO[] = [];
                 try {
-                    uTxOsAtWallet = await lucid!.wallet.getUtxos();
+                    uTxOsAtWallet = await lucid!.wallet().getUtxos();
                 } catch (error) {}
                 console.log('[WalletStore] - loadWalletData - uTxOsAtWallet: ' + uTxOsAtWallet.length);
                 actions.setUTxOsAtWallet(uTxOsAtWallet);
@@ -428,7 +454,7 @@ export const WalletStoreModel: IWalletStoreModel = {
             user.address !== undefined &&
             user.pkh !== undefined &&
             (walletInfo.stakePkh === undefined || user.stakePkh !== undefined) &&
-            user.walletNameOrSeedOrKey !== undefined &&
+            user.walletName !== undefined &&
             user.useBlockfrostToSubmit !== undefined &&
             user.isWalletFromSeed !== undefined &&
             user.isWalletFromKey !== undefined &&
@@ -440,7 +466,9 @@ export const WalletStoreModel: IWalletStoreModel = {
             address: user.address,
             pkh: user.pkh,
             stakePkh: user.stakePkh,
-            walletNameOrSeedOrKey: user.walletNameOrSeedOrKey,
+            walletName: user.walletName,
+            walletSeed: user.walletSeed,
+            walletKey: user.walletKey,
             useBlockfrostToSubmit: user.useBlockfrostToSubmit,
             isWalletFromSeed: user.isWalletFromSeed,
             isWalletFromKey: user.isWalletFromKey,
@@ -453,7 +481,9 @@ export const WalletStoreModel: IWalletStoreModel = {
             address: walletInfo.address,
             pkh: walletInfo.pkh,
             stakePkh: walletInfo.stakePkh,
-            walletNameOrSeedOrKey: walletInfo.walletNameOrSeedOrKey,
+            walletName: walletInfo.walletName,
+            walletSeed: walletInfo.walletSeed,
+            walletKey: walletInfo.walletKey,
             useBlockfrostToSubmit: walletInfo.useBlockfrostToSubmit,
             isWalletFromSeed: walletInfo.isWalletFromSeed,
             isWalletFromKey: walletInfo.isWalletFromKey,
@@ -466,7 +496,9 @@ export const WalletStoreModel: IWalletStoreModel = {
             prevUser.address === currentUser.address &&
             prevUser.pkh === currentUser.pkh &&
             prevUser.stakePkh === currentUser.stakePkh &&
-            prevUser.walletNameOrSeedOrKey === currentUser.walletNameOrSeedOrKey &&
+            prevUser.walletName === currentUser.walletName &&
+            prevUser.walletSeed === currentUser.walletSeed &&
+            prevUser.walletKey === currentUser.walletKey &&
             prevUser.useBlockfrostToSubmit === currentUser.useBlockfrostToSubmit &&
             prevUser.isWalletFromSeed === currentUser.isWalletFromSeed &&
             prevUser.isWalletFromKey === currentUser.isWalletFromKey &&
@@ -498,8 +530,11 @@ export const WalletStoreModel: IWalletStoreModel = {
     connectWallet: thunk(async (actions, payload, helpers) => {
         console.log(`[WalletStore] - Connecting Wallet...`);
         //----------------------------
-        const { session, status, walletNameOrSeedOrKey, tryAgain, useBlockfrostToSubmit, isWalletFromSeed, isWalletFromKey, forceConnect, createSignedSession } = payload;
+        const { session, status, walletName, walletSeed, walletKey, tryAgain, useBlockfrostToSubmit, forceConnect, createSignedSession } = payload;
         let { emulatorDB } = payload;
+        //----------------------------
+        const isWalletFromSeed = walletSeed !== undefined;
+        const isWalletFromKey = walletKey !== undefined;
         //----------------------------
         let isNewConnection = false;
         //----------------------------
@@ -509,8 +544,10 @@ export const WalletStoreModel: IWalletStoreModel = {
             if (isWalletFromSeed === false && isWalletFromKey === false && window.cardano === undefined) {
                 throw `Install a Cardano Wallet and please try again...`;
             }
-            const isWalletApiEnabled = isWalletFromSeed || isWalletFromKey || (await window.cardano[walletNameOrSeedOrKey]?.isEnabled());
-            const isStoreWalletConnected = state.isConnected && state.info?.walletNameOrSeedOrKey === walletNameOrSeedOrKey;
+            //----------------------------
+            const isWalletApiEnabled = isWalletFromSeed || isWalletFromKey || (await window.cardano[walletName]?.isEnabled());
+            //----------------------------
+            const isStoreWalletConnected = state.isConnected && state.info?.walletName === walletName;
             //----------------------------
             let swConnect = forceConnect === true || isWalletApiEnabled === false || isStoreWalletConnected === false;
             //----------------------------
@@ -549,53 +586,33 @@ export const WalletStoreModel: IWalletStoreModel = {
                 actions.initWallet();
                 actions.setIsConnecting(true);
                 //----------------------------
-                let lucid: Lucid | undefined = undefined;
+                let lucid: LucidEvolution | undefined = undefined;
                 //----------------------------
                 if (isWalletFromSeed || isWalletFromKey) {
-                    //----------------------------
-                    // let walletSeed = '';
-                    // let walletPrivateKey = '';
-                    //----------------------------
-                    // const walletMasterSeed1 = process.env.NEXT_PUBLIC_walletMasterSeed1;
-                    // const walletMasterSeed2 = process.env.NEXT_PUBLIC_walletMasterSeed2;
-                    // //----------------------------
-                    // if (walletName === 'Master1') {
-                    //     walletSeed = walletMasterSeed1 != null ? walletMasterSeed1 : '';
-                    // } else if (walletName === 'Master2') {
-                    //     walletSeed = walletMasterSeed2 != null ? walletMasterSeed2 : '';
-                    // } else if (isEmulator) {
-                    //     const key = emulatorDB!.privateKeys.find((_, index) => walletName === `Emulator${index + 1}`);
-                    //     if (key === undefined) {
-                    //         throw `Emulator Wallet Key does not exists...`;
-                    //     }
-                    //     walletPrivateKey = key;
-                    // } else {
-                    //     throw `Seed Wallet or Key does not exists...`;
-                    // }
                     //----------------------------
                     try {
                         if (isEmulator) {
                             if (isWalletFromSeed) {
                                 console.log(`[WalletStore] - Init Lucid with Emulator and Private Key...`);
-                                lucid = await LucidToolsFrontEnd.initializeLucidWithEmulatorAndWalletFromSeed(emulatorDB!, walletNameOrSeedOrKey, {
+                                lucid = await LucidToolsFrontEnd.initializeLucidWithEmulatorAndWalletFromSeed(emulatorDB!, walletSeed, {
                                     addressType: 'Base',
                                     accountIndex: 0,
                                 });
                             } else if (isWalletFromKey) {
                                 console.log(`[WalletStore] - Init Lucid with Emulator and Private Key...`);
-                                lucid = await LucidToolsFrontEnd.initializeLucidWithEmulatorAndWalletFromPrivateKey(emulatorDB!, walletNameOrSeedOrKey);
+                                lucid = await LucidToolsFrontEnd.initializeLucidWithEmulatorAndWalletFromPrivateKey(emulatorDB!, walletKey);
                             }
                         } else {
                             if (isWalletFromSeed) {
                                 console.log(`[WalletStore] - Init Lucid with Wallet from Seed...`);
-                                lucid = await LucidToolsFrontEnd.initializeLucidWithBlockfrostAndWalletFromSeed(walletNameOrSeedOrKey, { addressType: 'Base', accountIndex: 0 });
+                                lucid = await LucidToolsFrontEnd.initializeLucidWithBlockfrostAndWalletFromSeed(walletSeed, { addressType: 'Base', accountIndex: 0 });
                             } else if (isWalletFromKey) {
                                 console.log(`[WalletStore] - Init Lucid with Emulator and Private Key...`);
-                                lucid = await LucidToolsFrontEnd.initializeLucidWithBlockfrostAndWalletFromPrivateKey(walletNameOrSeedOrKey);
+                                lucid = await LucidToolsFrontEnd.initializeLucidWithBlockfrostAndWalletFromPrivateKey(walletKey);
                             }
                         }
                     } catch (error) {
-                        throw `${error}`;
+                        throw error;
                     }
                     //----------------------------
                 } else {
@@ -608,8 +625,11 @@ export const WalletStoreModel: IWalletStoreModel = {
                         const maxError = tryAgain ? 2 : 1;
                         while (countError < maxError) {
                             try {
-                                if (countError > 0) await delay(WAIT_FOR_WALLET_ENABLING); //espero segundos para que se cargue la wallet
-                                walletApi = await window.cardano[walletNameOrSeedOrKey].enable();
+                                if (countError > 0) {
+                                    //espero para que se cargue la wallet
+                                    await sleep(CONNECT_WALLET_WAIT_FOR_API_WALLETS_MS);
+                                }
+                                walletApi = await window.cardano[walletName].enable();
                                 break;
                             } catch (error) {
                                 console.log('[WalletStore] - Try ' + countError + ' of ' + maxError + ' - Error: ' + error);
@@ -623,23 +643,23 @@ export const WalletStoreModel: IWalletStoreModel = {
                     } else {
                         console.log(`[WalletStore] - Wallet Api is already enabled`);
                         // deberia tener guardada la wallet api?
-                        walletApi = window.cardano[walletNameOrSeedOrKey];
-                        walletApi = await window.cardano[walletNameOrSeedOrKey].enable();
+                        walletApi = window.cardano[walletName];
+                        walletApi = await window.cardano[walletName].enable();
                     }
                     //----------------------------
                     try {
                         console.log(`[WalletStore] - Init Lucid with Wallet Api...`);
                         const networkId = await walletApi.getNetworkId();
                         console.log(`[WalletStore] - NetworkId: ${networkId}`);
-                        if (isMainnet && networkId !== LUCID_NETWORK_MAINNET_INT) {
+                        if (isMainnet && networkId !== LUCID_NETWORK_MAINNET_ID) {
                             throw `Must connect with a Mainnet Cardano Wallet`;
                         }
-                        if (isTestnet && networkId !== LUCID_NETWORK_TESTNET_INT) {
+                        if (isTestnet && networkId !== LUCID_NETWORK_TESTNET_ID) {
                             throw `Must connect with a ${process.env.NEXT_PUBLIC_CARDANO_NET!} Testnet Cardano Wallet`;
                         }
                         lucid = await LucidToolsFrontEnd.initializeLucidWithBlockfrostAndWalletApi(walletApi);
                     } catch (error) {
-                        throw `${error}`;
+                        throw error;
                     }
                 }
                 //----------------------------
@@ -647,9 +667,9 @@ export const WalletStoreModel: IWalletStoreModel = {
                     throw 'Lucid is not defined';
                 }
                 //----------------------------
-                const addressWallet = await lucid.wallet.address();
-                const pkh = lucid!.utils.getAddressDetails(addressWallet)?.paymentCredential?.hash;
-                const stakePkh = lucid!.utils.getAddressDetails(addressWallet)?.stakeCredential?.hash;
+                const addressWallet = await lucid.wallet().address();
+                const pkh = getAddressDetails(addressWallet)?.paymentCredential?.hash;
+                const stakePkh = getAddressDetails(addressWallet)?.stakeCredential?.hash;
                 // const stakePkh = addrToStakePubKeyHash (addressWallet)
                 //----------------------------
                 if (!pkh) {
@@ -657,9 +677,10 @@ export const WalletStoreModel: IWalletStoreModel = {
                 }
                 //----------------------------
                 console.log('[WalletStore] - Wallet connected with Lucid: pkh: ' + pkh);
+                console.log('[WalletStore] - Wallet connected with Lucid: addressWallet: ' + addressWallet);
                 console.log('[WalletStore] - Loading Wallet details...');
                 //----------------------------
-                const protocolParameters = await lucid.provider.getProtocolParameters();
+                const protocolParameters = lucid.config().protocolParameters;
                 //----------------------------
                 // let useBlockfrostToSubmit_ = useBlockfrostToSubmit;
                 // if (status === 'authenticated') {
@@ -673,7 +694,9 @@ export const WalletStoreModel: IWalletStoreModel = {
                 // useBlockfrostToSubmit_ = false;
                 //----------------------------
                 const info: ConnectedWalletInfo = {
-                    walletNameOrSeedOrKey,
+                    walletName,
+                    walletSeed,
+                    walletKey,
                     address: addressWallet,
                     pkh,
                     stakePkh,
@@ -683,6 +706,13 @@ export const WalletStoreModel: IWalletStoreModel = {
                     network: process.env.NEXT_PUBLIC_CARDANO_NET!,
                     isWalletValidatedWithSignedToken: createSignedSession,
                 };
+                //----------------------------
+                if (
+                    (lucid.config().network !== process.env.NEXT_PUBLIC_CARDANO_NET && isEmulator === false) ||
+                    (lucid.config().network !== LUCID_NETWORK_CUSTOM_NAME && isEmulator === true)
+                ) {
+                    throw `Connected Wallet is not from the same network as the application ${lucid.config().network} !== ${process.env.NEXT_PUBLIC_CARDANO_NET}`;
+                }
                 //----------------------------
                 actions.setLucid(lucid);
                 if (emulatorDB !== undefined) {
@@ -719,7 +749,9 @@ export const WalletStoreModel: IWalletStoreModel = {
                     //--------------------------------------
                     const credentials: Credentials = {
                         address: info.address,
-                        walletNameOrSeedOrKey: info.walletNameOrSeedOrKey,
+                        walletName: info.walletName,
+                        walletSeed: info.walletSeed,
+                        walletKey: info.walletKey,
                         useBlockfrostToSubmit: state.info?.useBlockfrostToSubmit ? 'true' : 'false',
                         isWalletFromSeed: state.info?.isWalletFromSeed ? 'true' : 'false',
                         isWalletFromKey: state.info?.isWalletFromKey ? 'true' : 'false',

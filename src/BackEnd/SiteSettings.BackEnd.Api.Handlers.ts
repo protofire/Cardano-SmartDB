@@ -1,9 +1,9 @@
 import { NextApiResponse } from 'next';
+import { BackEndApiHandlersFor, console_error, console_log, showData } from '../Commons/index.BackEnd.js';
 import { SiteSettingsEntity } from '../Entities/SiteSettings.Entity.js';
+import { NextApiRequestAuthenticated } from '../lib/Auth/index.js';
 import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
 import { SiteSettingsBackEndApplied } from './SiteSettings.BackEnd.Applied.js';
-import { NextApiRequestAuthenticated } from '../lib/Auth/index.js';
-import { BackEndApiHandlersFor, console_error, console_log, showData, tabs } from '../Commons/index.BackEnd.js';
 
 @BackEndApiHandlersFor(SiteSettingsEntity)
 export class SiteSettingsBackEndApiHandlers extends BaseBackEndApiHandlers {
@@ -24,7 +24,8 @@ export class SiteSettingsBackEndApiHandlers extends BaseBackEndApiHandlers {
                 return await this.createInitApiHandler(req, res);
             } else if (query[0] === 'refresh-server') {
                 return await this.refreshServerSiteSettingsApiHandler(req, res);
-            }{
+            }
+            {
                 console_error(-1, this._Entity.className(), `executeApiHandlers - Error: Api Handler function not found`);
                 return res.status(500).json({ error: `Api Handler function not found` });
             }
@@ -71,7 +72,7 @@ export class SiteSettingsBackEndApiHandlers extends BaseBackEndApiHandlers {
                 //-------------------------
                 console_log(-1, this._Entity.className(), `refreshSiteSettingsApiHandler - GET - OK`);
                 //-------------------------
-                return res.status(200).json({result});
+                return res.status(200).json({ result });
             } catch (error) {
                 console_error(-1, this._Entity.className(), `refreshSiteSettingsApiHandler - Error: ${error}`);
                 return res.status(500).json({ error: `An error occurred while adding the ${this._Entity.className()}: ${error}` });

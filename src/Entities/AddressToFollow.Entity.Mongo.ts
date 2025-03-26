@@ -43,24 +43,29 @@ export class AddressToFollowEntityMongo extends BaseEntityMongo {
 
     // #region mongo db
 
-    public static MongoModel() {
+    public static DBModel() {
         interface Interface {
             address: string;
-            currencySymbol: string;
-            tokenName: string;
+            CS: string;
+            TN_Str: string;
             txCount: number;
             apiRouteToCall: string;
             datumType: string;
+            createdAt: Date;
+            updatedAt: Date;
         }
 
-        const schema = new Schema<Interface>({
-            address: { type: String, required: true },
-            currencySymbol: { type: String, required: true },
-            tokenName: { type: String, required: false },
-            txCount: { type: Number, required: true },
-            apiRouteToCall: { type: String, required: true },
-            datumType: { type: String, required: true },
-        });
+        const schema = new Schema<Interface>(
+            {
+                address: { type: String, required: true },
+                CS: { type: String, required: true },
+                TN_Str: { type: String, required: false },
+                txCount: { type: Number, required: true },
+                apiRouteToCall: { type: String, required: true },
+                datumType: { type: String, required: true },
+            },
+            { timestamps: true }
+        );
 
         const modelDB = models[this._mongoTableName] || model<Interface>(this._mongoTableName, schema);
         return modelDB;

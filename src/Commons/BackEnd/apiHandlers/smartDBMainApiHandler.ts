@@ -6,14 +6,14 @@ import { AuthBackEnd, authOptionsBase, credentialProviderConfig } from '../../..
 import { TimeBackEndApiHandlers } from '../../../lib/Time/Time.BackEnd.Api.Handlers.js';
 import { NextApiRequestAuthenticated } from '../../../lib/index.js';
 import { RegistryManager } from '../../Decorators/registerManager.js';
-import { console_error, console_log, enhanceResWithLogFlushing, flushLogs } from '../globalLogs.js';
+import { showData } from '../../utils.js';
+import { console_error, console_log, flushLogs } from '../globalLogs.js';
 import { initGlobals } from '../initGlobals.js';
 import { blockfrostProxyApiHandlerWithContext } from './blockFrostApiHandler.js';
 import { healthApiHandlerWithContext } from './healthApiHandler.js';
 import { initApiHandlerWithContext } from './initApiHandler.js';
 import { initApiRequestWithContext } from './initApiRequestWithContext.js';
-import { requestContext, requestId } from '../globalContext.js';
-import { showData } from '../../utils.js';
+
 const CredentialsProvider = require('next-auth/providers/credentials').default;
 const NextAuth = require('next-auth').default;
 
@@ -31,7 +31,6 @@ export async function parseBody(req: NextApiRequestAuthenticated) {
         throw new Error(`Unsupported content type: ${contentType}`);
     }
 }
-
 
 // entrada de todas las llamadas api. Llama al metodo mainApiHandler del backendApiHandler correspondiente
 
@@ -154,7 +153,7 @@ async function smartDBMainApiHandlerWithContext(req: NextApiRequestAuthenticated
                     return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
                 }
                 //--------------------------------------
-                // TODO: aqui se podria implementar tomar del globalconfig las options y providers
+                //TODO: aqui se podria implementar tomar del globalconfig las options y providers
                 // para que el usuario pueda sobreescribir esos metodos
                 const authOptions: NextAuthOptions = {
                     ...authOptionsBase,

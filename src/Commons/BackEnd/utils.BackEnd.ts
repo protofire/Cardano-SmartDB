@@ -1,25 +1,25 @@
 //--------------------------------------
-import { Script } from "lucid-cardano";
+import { Script } from '@lucid-evolution/lucid';
 import path from 'path';
 import fs from 'fs/promises';
 //---------------------------------------------------------------
 
 export function createScriptFromHEXCBOR(hexCbor: string, type = 'PlutusScriptV2') {
     const script: Script = {
-        type: type === 'PlutusScriptV1' ? 'PlutusV1' : 'PlutusV2',
+        type: type === 'PlutusScriptV1' ? 'PlutusV1' : type === 'PlutusScriptV2' ? 'PlutusV2' : 'PlutusV3',
         script: '59084c' + hexCbor,
     };
     return script;
 }
 
-export async function getScriptFromFile(pathToFile: string) : Promise<Script>{
+export async function getScriptFromFile(pathToFile: string): Promise<Script> {
     try {
-            //const pathToFile =  path.join(process.env.REACT_SERVER_PATH_FOR_SCRIPTS!, filename);
+        //const pathToFile =  path.join(process.env.REACT_SERVER_PATH_FOR_SCRIPTS!, filename);
         const data = await fs.readFile(pathToFile, { encoding: 'utf8' });
         //console.log(data);
         const jsonFile = JSON.parse(data);
         const script: Script = {
-            type: jsonFile.type === 'PlutusScriptV1' ? 'PlutusV1' : 'PlutusV2',
+            type: jsonFile.type === 'PlutusScriptV1' ? 'PlutusV1' : jsonFile.type === 'PlutusScriptV2' ? 'PlutusV2' : 'PlutusV3',
             script: jsonFile.cborHex,
         };
         return script;
@@ -72,7 +72,6 @@ export async function rmdir(dir: string) {
     } catch (error) {
         console.log("Delete folder error (maybe the folder doesn't exists): " + error);
     }
-
 }
 
 //---------------------------------------------------------------

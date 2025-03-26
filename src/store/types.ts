@@ -1,29 +1,52 @@
-import { Lucid, UTxO } from 'lucid-cardano';
+import { LucidEvolution, UTxO } from '@lucid-evolution/lucid';
 import { User } from 'next-auth';
-import { SiteSettingsEntity } from '../Entities/SiteSettings.Entity.js';
-import { CS, CardanoWallet, ConnectedWalletInfo, Decimals, TN, Token, Token_With_Price_And_Date_And_Signature_And_Metadata, Token_With_Price_And_Date_And_Signature_And_Validity_And_Metadata } from '../Commons/types.js';
+import {
+    CS,
+    CardanoWallet,
+    ConnectedWalletInfo,
+    Decimals,
+    TN,
+    Token,
+    Token_With_Price_And_Date_And_Signature_And_Metadata,
+    Token_With_Price_And_Date_And_Signature_And_Validity_And_Metadata,
+} from '../Commons/types.js';
 import { EmulatorEntity } from '../Entities/Emulator.Entity.js';
-
+import { SiteSettingsEntity } from '../Entities/SiteSettings.Entity.js';
 
 export interface IUseAppStore {
-
     swInitApiCompleted?: boolean;
     setSwInitApiCompleted: (swInitApiCompleted: boolean | undefined) => void;
 
+    isNavigating: boolean;
+    setIsNavigating: (isNavigating: boolean) => void;
+
+    navigationTimeoutId: NodeJS.Timeout | null;
+    setNavigationTimeoutId: (navigationTimeoutId: NodeJS.Timeout | null) => void;
+
     swExistAnyWallet?: boolean;
-    checkIfExistAnyWallet: () => Promise<void>;
+    checkIfExistAnyWallet: () => Promise<boolean>;
 
     siteSettings?: SiteSettingsEntity;
     setSiteSettings: (siteSettings: SiteSettingsEntity | undefined) => void;
 
     isAppStoreLoading: boolean;
     isAppStoreLoaded: boolean;
-}
 
+    isProcessingTx: boolean;
+    setIsProcessingTx: (isProcessingTx: boolean) => void;
+}
 
 export type Token_For_Store = Token_With_Price_And_Date_And_Signature_And_Metadata & { isFT: boolean; tokensInFT: Token[]; followUp?: boolean; keepAlive?: boolean };
 
-export type TokensToAdd = { tokens: Partial<Token_For_Store>[]; swAddPrice?: boolean; swAddMetadata?: boolean; followUp?: boolean; job: string; keepAlive?: boolean };
+export type TokensToAdd = {
+    tokens: Partial<Token_For_Store>[];
+    swAddPrice?: boolean;
+    swAddMetadata?: boolean;
+    swCreateMetadataWhenNotFound?: boolean;
+    followUp?: boolean;
+    job: string;
+    keepAlive?: boolean;
+};
 
 export type Token_For_Store_With_Validity = Token_With_Price_And_Date_And_Signature_And_Validity_And_Metadata & {
     isFT: boolean;
@@ -41,7 +64,7 @@ export interface IUseTokensStore {
     jobTokensToAddFinished: TokensToAdd[];
 
     createJobTokensToAdd: (jobTokensToAdd: TokensToAdd) => void;
-    
+
     getFinishedJobTokensToAdd: (job: string) => Token_For_Store[] | undefined;
 
     isExecuting: boolean;
@@ -60,8 +83,22 @@ export interface IUseTokensStore {
 
     cleanStore: () => Promise<void>;
 
-    addToken: (payload: { token: Partial<Token_For_Store>; swAddPrice?: boolean; swAddMetadata?: boolean; followUp?: boolean; keepAlive?: boolean }) => Promise<Token_For_Store>;
-    addTokens: (payload: { tokens: Partial<Token_For_Store>[]; swAddPrice?: boolean; swAddMetadata?: boolean; followUp?: boolean; keepAlive?: boolean }) => Promise<Token_For_Store[]>;
+    addToken: (payload: {
+        token: Partial<Token_For_Store>;
+        swAddPrice?: boolean;
+        swAddMetadata?: boolean;
+        swCreateMetadataWhenNotFound?: boolean;
+        followUp?: boolean;
+        keepAlive?: boolean;
+    }) => Promise<Token_For_Store>;
+    addTokens: (payload: {
+        tokens: Partial<Token_For_Store>[];
+        swAddPrice?: boolean;
+        swAddMetadata?: boolean;
+        swCreateMetadataWhenNotFound?: boolean;
+        followUp?: boolean;
+        keepAlive?: boolean;
+    }) => Promise<Token_For_Store[]>;
 
     removeToken: (token: { CS: CS; TN_Hex: TN }) => Promise<void>;
 
@@ -74,12 +111,19 @@ export interface IUseTokensStore {
     getTokensPriceAndMetadata: (tokens: Partial<Token_For_Store>[]) => Token_For_Store[];
     getTokenDecimals: (CS: CS, TN_Hex: TN) => Decimals | undefined;
 
-    showTokenPriceAndValidity: (CS: CS, TN_Hex: TN, swRoundWithLetter?: boolean, showAtLeastDecimals?: Decimals) => string;
-    showTokenPrice: (CS: CS, TN_Hex: TN, swRoundWithLetter?: boolean, showAtLeastDecimals?: Decimals) => string;
+    showTokenPriceAndValidity: (CS: CS, TN_Hex: TN, swRounded?: boolean, showDecimals?: Decimals) => string;
+    showTokenPrice: (CS: CS, TN_Hex: TN, swRounded?: boolean, showDecimals?: Decimals) => string;
     showTokenValidity: (CS: CS, TN_Hex: TN, swAddValidFor?: boolean) => string;
 
-    showTokenWithAmount: (amount: bigint | number | undefined, CS: CS, TN_Hex: TN, swRoundWithLetter?: boolean, showAtLeastDecimals?: Decimals) => string;
-    showTokenPriceMultipliedByAmount: (amount: bigint | number | undefined, CS: CS, TN_Hex: TN, swRoundWithLetter?: boolean, showAtLeastDecimals?: Decimals, divideAfterMultiplyBy?: bigint | number) => string;
+    showTokenWithAmount: (amount: bigint | number | undefined, CS: CS, TN_Hex: TN, swRounded?: boolean, showADecimals?: Decimals) => string;
+    showTokenPriceMultipliedByAmount: (
+        amount: bigint | number | undefined,
+        CS: CS,
+        TN_Hex: TN,
+        swRounded?: boolean,
+        showDecimals?: Decimals,
+        decimalsInAmount?: Decimals
+    ) => string;
 }
 
 export interface IUseWalletStore {
@@ -91,18 +135,21 @@ export interface IUseWalletStore {
     getCardanoWallets: () => void;
     isGettingWalletsDone: boolean;
 
+    swDoNotPromtForSigning: boolean;
+    setSwDoNotPromtForSigning: (swDoNotPromtForSigning: boolean) => void;
+
     swHideBalance: boolean;
     setSwHideBalance: (swHideBalance: boolean) => void;
 
     isConnecting: boolean;
     isConnected: boolean;
 
-    getLucid: (payload?: { emulatorDB?: EmulatorEntity }) => Promise<Lucid | undefined>;
-    setLucid: (lucid: Lucid) => void;
+    getLucid: (payload?: { emulatorDB?: EmulatorEntity }) => Promise<LucidEvolution | undefined>;
+    setLucid: (lucid: LucidEvolution) => void;
 
-    getLucidForUseAsUtils: () => Promise<Lucid | undefined>;
-    setLucidForUseAsUtils: (lucid: Lucid) => void;
-    _lucidForUseAsUtils: Lucid | undefined;
+    getLucidForUseAsUtils: () => Promise<LucidEvolution | undefined>;
+    setLucidForUseAsUtils: (lucid: LucidEvolution) => void;
+    _lucidForUseAsUtils: LucidEvolution | undefined;
 
     protocolParameters: unknown;
 
@@ -114,7 +161,7 @@ export interface IUseWalletStore {
     loadWalletPrivileges: () => Promise<void>;
     isWalletPrivilegesLoading: boolean;
     isWalletPrivilegesLoaded: boolean;
-    
+
     isWalletDataLoading: boolean;
     isWalletDataLoaded: boolean;
 
@@ -123,18 +170,16 @@ export interface IUseWalletStore {
 
     isCoreTeam: (swUseSession?: boolean, session?: any, status?: any) => boolean;
 
-    loadWalletData: (payload?: {  }) => Promise<void>;
+    loadWalletData: (payload?: {}) => Promise<void>;
 
-    checkSessionValidity: (params: {
-        user: User;
-        walletInfo: ConnectedWalletInfo;
-        isCoreTeam: boolean;
-    }) => Promise<boolean>;
+    checkSessionValidity: (params: { user: User; walletInfo: ConnectedWalletInfo; isCoreTeam: boolean }) => Promise<boolean>;
 
     connectWallet: (params: {
         session: any;
         status: any;
-        walletNameOrSeedOrKey: string;
+        walletName: string;
+        walletSeed?: string;
+        walletKey?: string;
         tryAgain: boolean;
         useBlockfrostToSubmit: boolean;
         isWalletFromSeed: boolean;

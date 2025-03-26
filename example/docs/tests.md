@@ -133,10 +133,10 @@ export const CONFIG = {
 4. Adjust other parameters as needed for your testing environment. 
 
 #### Understanding Test Parameters
-- `INITIAL_DELAY_BETWEEN_USERS`: Time delay between starting transactions for each user (ms)
-- `DELAY_BETWEEN_TXS`: Time delay between transactions for the same user (ms)
+- `INITIAL_DELAY_BETWEEN_USERS`: Time sleep between starting transactions for each user (ms)
+- `DELAY_BETWEEN_TXS`: Time sleep between transactions for the same user (ms)
 - `MAX_RETRIES_TX`: Maximum number of retry attempts for a failed transaction
-- `RETRY_DELAY_TX`: Time delay between transaction retry attempts (ms)
+- `RETRY_DELAY_TX`: Time sleep between transaction retry attempts (ms)
 - `REQUIRED_UTXOS`: Minimum number of UTXOs required for each wallet
 - `COLLATERAL_UTXO_VALUE`: Value of collateral UTXOs in lovelace
 

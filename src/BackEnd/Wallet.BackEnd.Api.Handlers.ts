@@ -1,18 +1,18 @@
 import { NextApiResponse } from 'next';
+import { console_error, console_log } from '../Commons/BackEnd/globalLogs.js';
+import { BackEndApiHandlersFor, sanitizeForDatabase, showData } from '../Commons/index.js';
+import { yup } from '../Commons/yupLocale.js';
+import { WalletEntity } from '../Entities/Wallet.Entity.js';
 import { NextApiRequestAuthenticated } from '../lib/Auth/index.js';
 import { BaseBackEndApiHandlers } from './Base/Base.BackEnd.Api.Handlers.js';
-import { console_error, console_log, tabs } from '../Commons/BackEnd/globalLogs.js';
 import { WalletBackEndApplied } from './Wallet.BackEnd.Applied.js';
-import { WalletEntity } from '../Entities/Wallet.Entity.js';
-import { showData, sanitizeForDatabase, BackEndApiHandlersFor } from '../Commons/index.js';
-import { yup }  from '../Commons/yupLocale.js';
 
 @BackEndApiHandlersFor(WalletEntity)
 export class WalletBackEndApiHandlers extends BaseBackEndApiHandlers {
     protected static _Entity = WalletEntity;
     protected static _BackEndApplied = WalletBackEndApplied;
     // protected static _BackEndMethods = this._BackEndApplied.getBack();
-   
+
     // #region custom api handlers
     protected static _ApiHandlers: string[] = ['is-core-team'];
 
@@ -84,6 +84,4 @@ export class WalletBackEndApiHandlers extends BaseBackEndApiHandlers {
     }
 
     // #endregion api handlers
-
-
 }

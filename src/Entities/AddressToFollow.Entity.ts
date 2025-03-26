@@ -13,10 +13,10 @@ export class AddressToFollowEntity extends BaseEntity {
     address!: string;
 
     @Convertible()
-    currencySymbol!: CS;
+    CS!: CS;
 
     @Convertible()
-    tokenName!: TN;
+    TN_Str!: TN;
 
     @Convertible()
     txCount!: number;
@@ -27,6 +27,12 @@ export class AddressToFollowEntity extends BaseEntity {
     @Convertible()
     datumType!: string;
 
+    @Convertible({ isCreatedAt: true })
+    createdAt!: Date;
+
+    @Convertible({ isUpdatedAt: true })
+    updatedAt!: Date;
+    
     // #endregion fields
 
    

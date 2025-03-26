@@ -29,7 +29,7 @@ export class EmulatorDBFrontEndApiCalls extends BaseFrontEndApiCalls {
             //-------------------------
         } catch (error) {
             console.log(`[${this._Entity.className()}] - createInitEmulatorApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 

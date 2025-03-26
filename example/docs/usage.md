@@ -544,7 +544,7 @@ export class DummyEntity extends BaseSmartDBEntity {
 
     // #region fields
 
-    _NET_id_TN: string = 'DummyID';
+    _NET_id_TN_Str: string = 'DummyID';
 
     // #endregion fields
 
@@ -710,7 +710,7 @@ export class DummyEntityPostgreSQL extends  BaseSmartDBEntityPostgreSQL {
     _id!: number; // Auto-generated primary key
 
     @Column({ type: "varchar", length: 255  })
-    _NET_id_TN!:string;
+    _NET_id_TN_Str!:string;
     @Column({ type: "varchar", length: 255  })
     ddPaymentPKH!: PaymentKeyHash ;
     @Column({ type: "varchar", length: 255  })

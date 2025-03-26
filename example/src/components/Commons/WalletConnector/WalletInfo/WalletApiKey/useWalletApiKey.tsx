@@ -15,7 +15,9 @@ export const useWalletApiKey = () => {
         if (status === 'authenticated' && lucid !== undefined && session && session.user && apiToken === '') {
             const credentials: Credentials = {
                 address: session.user.address,
-                walletNameOrSeedOrKey: session.user.walletNameOrSeedOrKey,
+                walletName: session.user.walletName,
+                walletSeed: session.user.walletSeed,
+                walletKey: session.user.walletKey,
                 useBlockfrostToSubmit: session.user.useBlockfrostToSubmit ? 'true' : 'false',
                 isWalletFromSeed: session.user.isWalletFromSeed ? 'true' : 'false',
                 isWalletFromKey: session.user.isWalletFromKey ? 'true' : 'false',

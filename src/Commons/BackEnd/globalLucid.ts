@@ -1,11 +1,12 @@
-import { Lucid } from 'lucid-cardano';
-import { isEmulator } from '../Constants/constants.js';
+import { Lucid, LucidEvolution, ProtocolParameters } from '@lucid-evolution/lucid';
+import { isEmulator, LUCID_NETWORK_CUSTOM_NAME } from '../Constants/constants.js';
 import { globalEmulator } from './globalEmulator.js';
 import { console_log } from './globalLogs.js';
 import { BlockfrostCustomProviderBackEnd } from '../../lib/BlockFrost/BlockFrost.BackEnd.js';
+import { protocolParametersForLucid } from '../Constants/protocolParameters.js';
 
 interface GlobalLucid {
-    lucid: Lucid | undefined;
+    lucid: LucidEvolution | undefined;
 }
 
 let globalState: any;
@@ -19,30 +20,36 @@ if (typeof window !== 'undefined') {
 }
 
 if (!globalState.globalLucid) {
-    globalState.globalLucid ={
-        lucid: undefined as Lucid | undefined,
+    globalState.globalLucid = {
+        lucid: undefined as LucidEvolution | undefined,
     } as GlobalLucid;
 }
 
-export const globalLucid = globalState.globalLucid;
+export const globalLucid = globalState.globalLucid as GlobalLucid;
 
-export async function getGlobalLucid(refresh: boolean = false): Promise<Lucid> {
+export async function getGlobalLucid(refresh: boolean = false): Promise<LucidEvolution> {
     //-----------------
     console_log(0, `GlobalLucid`, `Get getGlobalLucid - refresh: ${refresh} - Loaded already: ${globalLucid.lucid !== undefined}`);
     //-----------------
     if (globalLucid.lucid === undefined || refresh === true) {
+        //-----------------
+        const protocolParameters = protocolParametersForLucid[process.env.NEXT_PUBLIC_CARDANO_NET! as keyof typeof protocolParametersForLucid] as ProtocolParameters;
+        //-----------------
         if (isEmulator) {
             if (globalEmulator.emulatorDB === undefined) {
                 throw `globalEmulator emulatorDB current not found`;
             }
             const emulatorTime = globalEmulator.emulatorDB.emulator.time;
-            globalEmulator.emulatorDB.emulator.time = globalEmulator.emulatorDB.zeroTime;
-            globalLucid.lucid = await Lucid.new(globalEmulator.emulatorDB.emulator);
+            globalEmulator.emulatorDB.emulator.time = Number(globalEmulator.emulatorDB.zeroTime.toString());
+            globalLucid.lucid = await Lucid(globalEmulator.emulatorDB.emulator, LUCID_NETWORK_CUSTOM_NAME, { presetProtocolParameters: protocolParameters });
             globalEmulator.emulatorDB.emulator.time = emulatorTime;
         } else {
-            globalLucid.lucid = await Lucid.new(
+            globalLucid.lucid = await Lucid(
                 new BlockfrostCustomProviderBackEnd(process.env.NEXT_PUBLIC_REACT_SERVER_URL + '/api/blockfrost', 'xxxx'),
-                process.env.NEXT_PUBLIC_CARDANO_NET! as any
+                process.env.NEXT_PUBLIC_CARDANO_NET! as any,
+                {
+                    presetProtocolParameters: protocolParameters,
+                }
             );
         }
     }

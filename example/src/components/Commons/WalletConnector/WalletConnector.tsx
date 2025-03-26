@@ -38,7 +38,6 @@ const WalletConnector: React.FC<Props> = ({ lucid }) => {
             try {
                 const privateKey = lucid.utils.generatePrivateKey(); // Bech32 encoded private key
                 setPrivateKey(privateKey);
-                console.log(`privateKey: ${privateKey}`);
             } catch (e) {
                 console.error(e);
             }
@@ -81,7 +80,7 @@ const WalletConnector: React.FC<Props> = ({ lucid }) => {
                                     className={styles.buttonCenterWithLoading}
                                     onClick={async () => {
                                         if (privateKey !== undefined) {
-                                            await walletFromKeyConnect(privateKey, createSignedSession, true, false);
+                                            await walletFromKeyConnect('PRIVATEKEY', privateKey, createSignedSession, true, false);
                                         }
                                     }}
                                 >
@@ -93,8 +92,6 @@ const WalletConnector: React.FC<Props> = ({ lucid }) => {
                                 walletSelected={walletSelected}
                                 walletConnect={walletConnect}
                                 walletInstall={walletInstall}
-                                walletFromSeedConnect={walletFromSeedConnect}
-                                walletFromKeyConnect={walletFromKeyConnect}
                                 createSignedSession={createSignedSession}
                             />
                         </>

@@ -1,11 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
-import { getPostgreSQLTableName } from '../Commons/utils.js';
+import { PostgreSQLDatabaseService } from '../BackEnd/DatabaseService/PostgreSQL.Database.Service.js';
 import { AddressToFollowEntity } from './AddressToFollow.Entity.js';
 import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js';
 
 @PostgreSQLAppliedFor([AddressToFollowEntity])
-@Entity({ name: getPostgreSQLTableName(AddressToFollowEntity.className()) })
+@Entity({ name: PostgreSQLDatabaseService.getTableName(AddressToFollowEntity.className()) })
 export class AddressToFollowEntityPostgreSQL extends BaseEntityPostgreSQL {
     protected static Entity = AddressToFollowEntity;
 
@@ -46,10 +46,10 @@ export class AddressToFollowEntityPostgreSQL extends BaseEntityPostgreSQL {
     address!: string;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
-    currencySymbol!: string;
+    CS!: string;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
-    tokenName!: string;
+    TN_Str!: string;
 
     @Column({ nullable: true })
     txCount!: number;
@@ -59,6 +59,12 @@ export class AddressToFollowEntityPostgreSQL extends BaseEntityPostgreSQL {
 
     @Column({ type: 'varchar', length: 255, nullable: true })
     datumType!: string;
+
+    @CreateDateColumn()
+    createdAt!: Date;
+
+    @UpdateDateColumn()
+    updatedAt!: Date;
 
     public static PostgreSQLModel() {
         return this;

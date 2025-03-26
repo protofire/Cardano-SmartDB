@@ -2,15 +2,15 @@ import { NextApiResponse } from 'next';
 import { User } from 'next-auth';
 import { globalEmulator } from '../../Commons/BackEnd/globalEmulator.js';
 import { console_errorLv1, console_logLv1 } from '../../Commons/BackEnd/globalLogs.js';
-import { OptionsCreateOrUpdate, OptionsGet, isEmulator, sanitizeForDatabase, showData, yupValidateOptionsCreate, yupValidateOptionsGet } from '../../Commons/index.js';
-import { yup }  from '../../Commons/yupLocale.js';
+import { OptionsCreateOrUpdate, OptionsGet, isEmulator, sanitizeForDatabase, showData, toJson, yupValidateOptionsCreate, yupValidateOptionsGet } from '../../Commons/index.js';
+import { yup } from '../../Commons/yupLocale.js';
 import { BaseEntity } from '../../Entities/Base/Base.Entity.js';
 import { BaseSmartDBEntity } from '../../Entities/Base/Base.SmartDB.Entity.js';
 import { NextApiRequestAuthenticated } from '../../lib/Auth/types.js';
 import { AddressToFollowBackEndApplied } from '../AddressToFollow.BackEnd.Applied.js';
 import { BaseBackEndApiHandlers } from './Base.BackEnd.Api.Handlers.js';
 import { BaseSmartDBBackEndApplied } from './Base.SmartDB.BackEnd.Applied.js';
-
+import { JobBackEndApplied } from '../Job.BackEnd.All.js';
 
 // #region api swagger
 
@@ -27,7 +27,6 @@ import { BaseSmartDBBackEndApplied } from './Base.SmartDB.BackEnd.Applied.js';
  *   description: Operations related to SmartDB entities (linked with Blockchain Datums)
  */
 
-
 /**
  * @swagger
  * components:
@@ -36,18 +35,18 @@ import { BaseSmartDBBackEndApplied } from './Base.SmartDB.BackEnd.Applied.js';
  *       type: object
  *       description: |
  *         Advanced query object that supports complex filtering with logical operators.
- *         
+ *
  *         Simple queries:
  *         - Direct field matching: { field: "value" }
  *         - Multiple conditions: { field1: "value1", field2: "value2" }
- *         
+ *
  *         Advanced queries using operators:
  *         - Comparison: $eq, $ne, $gt, $lt, $gte, $lte
  *         - Array: $in, $nin
  *         - Logical: $and, $or, $not
  *         - Element: $exists
  *         - Regex: $regex
- *         
+ *
  *         Nested fields are supported using dot notation:
  *         - { "nested.field": "value" }
  *       example:
@@ -104,7 +103,6 @@ import { BaseSmartDBBackEndApplied } from './Base.SmartDB.BackEnd.Applied.js';
  *       500:
  *         description: Internal server error
  */
-
 
 /**
  * @swagger
@@ -345,7 +343,7 @@ import { BaseSmartDBBackEndApplied } from './Base.SmartDB.BackEnd.Applied.js';
  *         description: Unauthorized
  *       500:
  *         description: Internal server error
- *   
+ *
  *   post:
  *     summary: Get all SmartDB entities with pagination, sorting and field selection
  *     tags: [SmartDB Entities]
@@ -420,7 +418,7 @@ import { BaseSmartDBBackEndApplied } from './Base.SmartDB.BackEnd.Applied.js';
  *               paramsFilter:
  *                 $ref: '#/components/schemas/QueryParameters'
  *                 description: Optional filtering parameters
-  *               fieldsForSelect:
+ *               fieldsForSelect:
  *                 type: Record<string, boolean>
  *                 description: Optional - Fields to include/exclude in the response. All values must be consistently either true (inclusion) or false (exclusion)
  *                 example: { "field1": true, "field2": true }
@@ -868,7 +866,6 @@ import { BaseSmartDBBackEndApplied } from './Base.SmartDB.BackEnd.Applied.js';
  *         description: Internal server error
  */
 
-
 // #endregion api swagger
 
 // Api Handlers siempre llevan una Entity y el backend methods, es especifico para cada entidad
@@ -1008,12 +1005,14 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
         } else if (query[0] === 'deployed') {
             return this.getDeployedApiHandlers(req, res);
         } else if (query[0] === 'sync') {
-            if (query.length === 2) {
-                req.query = { address: query[1] };
+            if (query.length === 3) {
+                req.query = { address: query[1], CS: query[2] };
             } else {
                 req.query = {};
             }
             return await this.syncWithAddressApiHandlers(req, res);
+        } else if (query[0] === 'parse-blockchain-address') {
+            return await this.parseBlockchainAddressApiHandler(req, res);
         } else if (query[0] === 'loadRelationMany') {
             if (query.length === 3) {
                 req.query = { id: query[1], relation: query[2] };
@@ -1110,7 +1109,7 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
             }
         } else if (req.method === 'POST') {
             // get deployed con limit, sort and fieldsForSelect
-            console_logLv1(1, this._Entity.className(), `getDeployedApiHandlers - GET - Init`);
+            console_logLv1(1, this._Entity.className(), `getDeployedApiHandlers - POST - Init`);
             console_logLv1(0, this._Entity.className(), `query: ${showData(req.query)}`);
             try {
                 //-------------------------
@@ -1158,6 +1157,7 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
                 //-------------------------
                 const schemaQuery = yup.object().shape({
                     address: yup.string().required(),
+                    CS: yup.string().required(),
                 });
                 //-------------------------
                 let validatedQuery;
@@ -1168,7 +1168,7 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
                     return res.status(400).json({ error });
                 }
                 //--------------------------------------
-                const { address }: { address: string } = validatedQuery;
+                const { address, CS }: { address: string; CS: string } = validatedQuery;
                 //--------------------------------------
                 const schemaBody = yup.object().shape({
                     event: yup.string().label('Event'),
@@ -1181,16 +1181,16 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
                 //--------------------------------------
                 if (isEmulator) {
                     // solo en emulator. Me aseguro de setear el emulador al tiempo real del server. Va a saltear los slots necesarios.
-                    // const TimeBackEnd = (await import('../../../Time/backEnd.js')).TimeBackEnd;
+                    // const TimeBackEnd = (await import('../../../Time/backEnd')).TimeBackEnd;
                     // await TimeBackEnd.syncBlockChainWithServerTime();
                 }
                 //--------------------------------------
                 const LucidToolsBackEnd = (await import('../../lib/Lucid/backEnd.js')).LucidToolsBackEnd;
                 var { lucid } = await LucidToolsBackEnd.prepareLucidBackEndForTx(undefined);
                 //--------------------------------------
-                console_logLv1(0, this._Entity.className(), `syncWithAddressApiHandlers - address: ${address} - event: ${showData(event)}`);
+                console_logLv1(0, this._Entity.className(), `syncWithAddressApiHandlers - address: ${address} - CS: ${CS} - event: ${showData(event)}`);
                 //--------------------------------------
-                const addressesToFollow = await AddressToFollowBackEndApplied.getByAddress(address);
+                const addressesToFollow = await AddressToFollowBackEndApplied.getByAddress(address, CS);
                 if (addressesToFollow.length > 0) {
                     //--------------------------------------
                     if (isEmulator === true && globalEmulator.emulatorDB === undefined) {
@@ -1220,6 +1220,7 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
                 //-------------------------
                 const schemaQuery = yup.object().shape({
                     address: yup.string().required(),
+                    CS: yup.string().required(),
                 });
                 //-------------------------
                 let validatedQuery;
@@ -1230,20 +1231,20 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
                     return res.status(400).json({ error });
                 }
                 //--------------------------------------
-                const { address }: { address: string } = validatedQuery;
+                const { address, CS }: { address: string; CS: string } = validatedQuery;
                 //--------------------------------------
                 if (isEmulator) {
                     // solo en emulator. Me aseguro de setear el emulador al tiempo real del server. Va a saltear los slots necesarios.
-                    // const TimeBackEnd = (await import('../../../Time/backEnd.js')).TimeBackEnd;
+                    // const TimeBackEnd = (await import('../../../Time/backEnd')).TimeBackEnd;
                     // await TimeBackEnd.syncBlockChainWithServerTime();
                 }
                 //--------------------------------------
                 const LucidToolsBackEnd = (await import('../../lib/Lucid/backEnd.js')).LucidToolsBackEnd;
                 var { lucid } = await LucidToolsBackEnd.prepareLucidBackEndForTx(undefined);
                 //--------------------------------------
-                console_logLv1(0, this._Entity.className(), `syncWithAddressApiHandlers - address: ${address}`);
+                console_logLv1(0, this._Entity.className(), `syncWithAddressApiHandlers - address: ${address} - CS: ${CS}`);
                 //--------------------------------------
-                const addressesToFollow = await AddressToFollowBackEndApplied.getByAddress(address);
+                const addressesToFollow = await AddressToFollowBackEndApplied.getByAddress(address, CS);
                 if (addressesToFollow.length > 0) {
                     //--------------------------------------
                     if (isEmulator === true && globalEmulator.emulatorDB === undefined) {
@@ -1264,6 +1265,67 @@ export class BaseSmartDBBackEndApiHandlers extends BaseBackEndApiHandlers {
             }
         } else {
             console_errorLv1(-1, this._Entity.className(), `syncWithAddressApiHandlers - Error: Method not allowed`);
+            return res.status(405).json({ error: `Method not allowed` });
+        }
+    }
+
+    public static async parseBlockchainAddressApiHandler(req: NextApiRequestAuthenticated, res: NextApiResponse) {
+        if (req.method === 'POST') {
+            console_logLv1(1, this._Entity.className(), `parseBlockchainAddressApiHandler - POST - Init`);
+            console_logLv1(0, this._Entity.className(), `query: ${showData(req.query)}`);
+            console_logLv1(0, this._Entity.className(), `body: ${showData(req.body)}`);
+            //-------------------------
+            try {
+                //-------------------------
+                const schemaBody = yup.object().shape({
+                    address: yup.string().required(),
+                    datumType: yup.string().required(),
+                    fromBlock: yup.number(),
+                    toBlock: yup.number(),
+                });
+                //--------------------------------------
+                const validatedBody = await schemaBody.validate(req.body);
+                //--------------------------------------
+                const { address, datumType, fromBlock, toBlock } = validatedBody;
+                //-------------------------
+                // Generate a unique job ID
+                // const jobId = `job-${Date.now()}`;
+                const jobId = `job-parse-blockchain`;
+                //--------------------------------------
+                const job = await JobBackEndApplied.getJob(jobId);
+                //--------------------------------------
+                if (job !== undefined) {
+                    if (job.status === 'running') {
+                        return res.status(400).json({ error: `Job already exists` });
+                    }
+                }
+                //--------------------------------------
+                // Start job with 'pending' status
+                await JobBackEndApplied.startJob(jobId, 'Starting parsing process...');
+                //-------------------------
+                // Asynchronously start parsing process
+                //-------------------------
+                setImmediate(async () => {
+                    try {
+                        await JobBackEndApplied.updateJob(jobId, 'running', undefined, undefined, `Starting...`);
+                        const result = await this._BackEndApplied.parseBlockchainAddress_(jobId, address, datumType, fromBlock, toBlock);
+                        await JobBackEndApplied.updateJob(jobId, 'completed', result, undefined, `Completed`);
+                    } catch (error) {
+                        await JobBackEndApplied.updateJob(jobId, 'failed', false, toJson(error));
+                    }
+                });
+                //-------------------------
+                console_logLv1(-1, this._Entity.className(), `parseBlockchainAddressApiHandler - jobId: ${jobId} - POST - OK`);
+                //-------------------------
+                // Return the job ID to the client
+                return res.status(202).json({ jobId });
+                //-------------------------
+            } catch (error) {
+                console_errorLv1(-1, this._Entity.className(), `parseBlockchainAddressApiHandler - Error: ${error}`);
+                return res.status(500).json({ error: `An error occurred while parsing the blockchain: ${error}` });
+            }
+        } else {
+            console_errorLv1(-1, this._Entity.className(), `parseBlockchainAddressApiHandler - Error: Method not allowed`);
             return res.status(405).json({ error: `Method not allowed` });
         }
     }

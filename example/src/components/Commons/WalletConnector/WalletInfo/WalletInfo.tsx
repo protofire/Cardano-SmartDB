@@ -15,7 +15,7 @@ const WalletInfo: React.FC<Props> = ({ walletStore, walletDisconnect }) => {
     return (
         <>
             <h2>
-                YOUR WALLET [{walletStore.info!.isWalletFromKey === true ? 'Key' : walletStore.info!.isWalletFromSeed === true ? 'Seed' : walletStore.info!.walletNameOrSeedOrKey}]
+                YOUR WALLET [{walletStore.info!.isWalletFromKey === true ? 'Key' : walletStore.info!.isWalletFromSeed === true ? 'Seed' : walletStore.info!.walletName}]
             </h2>
             <div className={styles.walletInfo}>
                 <ModalUTxOsAndBalance address={walletStore.info!.address} uTxOs={walletStore.uTxOsAtWallet}  showBalance={true}/>

@@ -1,5 +1,23 @@
 import fetchWrapper from '../../../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
-import { ITEMS_PER_PAGE, OptionsCreateOrUpdate, OptionsDelete, OptionsGet, OptionsGetOne, RegistryManager, createQueryURLString, getCombinedConversionFunctions, isEmptyObject, isEqual, isNullOrBlank, isObject, isString, optionsGetDefault, optionsGetOneDefault, showData, toJson } from '../../../Commons/index.js';
+import {
+    ITEMS_PER_PAGE,
+    OptionsCreateOrUpdate,
+    OptionsDelete,
+    OptionsGet,
+    OptionsGetOne,
+    RegistryManager,
+    createQueryURLString,
+    getCombinedConversionFunctions,
+    isEmptyObject,
+    isEqual,
+    isNullOrBlank,
+    isObject,
+    isString,
+    optionsGetDefault,
+    optionsGetOneDefault,
+    showData,
+    toJson,
+} from '../../../Commons/index.js';
 import { BaseEntity } from '../../../Entities/Base/Base.Entity.js';
 
 // es generica, todos los metodos llevan instancia o entidad como parametro
@@ -44,12 +62,12 @@ export class BaseFrontEndApiCalls {
         return await this.getAllApi(this._Entity, optionsGet);
     }
 
-    public static async getCountApi_<T extends BaseEntity>(paramsFilter?: Record<string, any>): Promise<number> {
+    public static async getCountApi_<T extends BaseEntity>(paramsFilter?: Record<string, any>): Promise<{ count: number }> {
         return await this.getCountApi(this._Entity, paramsFilter);
     }
 
-    public static async getTotalPagesApi_<T extends BaseEntity>(paramsFilter?: Record<string, any>, itemsPerPage?: number): Promise<number> {
-        return await this.getTotalPagesApi(this._Entity, paramsFilter, itemsPerPage);
+    public static async getTotalItemsAndPagesApi_<T extends BaseEntity>(paramsFilter?: Record<string, any>, itemsPerPage?: number): Promise<{ items: number; pages: number }> {
+        return await this.getTotalItemsAndPagesApi(this._Entity, paramsFilter, itemsPerPage);
     }
 
     public static async deleteByIdApi_<T extends BaseEntity>(id: string, optionsDelete?: OptionsDelete): Promise<boolean> {
@@ -80,7 +98,7 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${Entity.apiRoute()}] - callGenericPOSTApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -100,7 +118,7 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${Entity.apiRoute()}] - callGeneriGETApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -129,7 +147,7 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${instance.className()}] - createApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -145,7 +163,7 @@ export class BaseFrontEndApiCalls {
             Object.assign(instance, instance_);
         } catch (error) {
             console.log(`[${instance.className()}] - refreshApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -155,7 +173,7 @@ export class BaseFrontEndApiCalls {
             await this.updateMeWithParamsApi<T>(instance, updateFields, optionsUpdate, headers);
         } catch (error) {
             console.log(`[${instance.className()}] - updateApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -177,7 +195,7 @@ export class BaseFrontEndApiCalls {
             return instance;
         } catch (error) {
             console.log(`[${Entity.className()}] - updateWithParamsApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -216,7 +234,7 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${instance.className()}] - updateWithParamsApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -252,7 +270,7 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${Entity.className()}] - checkIfExistsApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -290,7 +308,7 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${Entity.className()}] - getByIdApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -305,7 +323,7 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${Entity.className()}] - getOneByParamsApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -322,26 +340,31 @@ export class BaseFrontEndApiCalls {
             if (response.status === 200) {
                 const datas = await response.json();
                 console.log(`[${Entity.className()}] - getByParamsApi - response OK`);
-                const instances = await Promise.all(datas.map(async (data: any) => {
-                    //-----------------------
-                    const instance = Entity.fromPlainObject<T>(data);
-                    //-----------------------
-                    if (optionsGet !== undefined && optionsGet.lookUpFields !== undefined && optionsGet.lookUpFields.length > 0) {
-                        for (let lookUpField of optionsGet.lookUpFields) {
-                            const EntityClass = RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from) !== undefined ? RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from) : RegistryManager.getFromEntitiesRegistry(lookUpField.from);
-                            if (EntityClass !== undefined) {
-                                console.log(`[${Entity.className()}] - getByParams - getByParamsApi- LookUpField: ${lookUpField.from} - Loading...`);
-                                const instance_ = await EntityClass.fromPlainObject(data[lookUpField.as as keyof typeof data]);
-                                if (instance_ !== undefined) {
-                                    instance[lookUpField.as as keyof typeof instance] = instance_;
+                const instances = await Promise.all(
+                    datas.map(async (data: any) => {
+                        //-----------------------
+                        const instance = Entity.fromPlainObject<T>(data);
+                        //-----------------------
+                        if (optionsGet !== undefined && optionsGet.lookUpFields !== undefined && optionsGet.lookUpFields.length > 0) {
+                            for (let lookUpField of optionsGet.lookUpFields) {
+                                const EntityClass =
+                                    RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from) !== undefined
+                                        ? RegistryManager.getFromSmartDBEntitiesRegistry(lookUpField.from)
+                                        : RegistryManager.getFromEntitiesRegistry(lookUpField.from);
+                                if (EntityClass !== undefined) {
+                                    console.log(`[${Entity.className()}] - getByParams - getByParamsApi- LookUpField: ${lookUpField.from} - Loading...`);
+                                    const instance_ = await EntityClass.fromPlainObject(data[lookUpField.as as keyof typeof data]);
+                                    if (instance_ !== undefined) {
+                                        instance[lookUpField.as as keyof typeof instance] = instance_;
+                                    }
                                 }
                             }
                         }
-                    }
-                    //-----------------------
-                    return instance;
-                    //-----------------------
-                }));
+                        //-----------------------
+                        return instance;
+                        //-----------------------
+                    })
+                );
                 console.log(
                     `[${Entity.className()}] - getByParamsApi - params: ${showData(paramsFilter)} - len: ${instances.length} - show firts 5: ${instances
                         .slice(0, 5)
@@ -356,7 +379,7 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${Entity.className()}] - getByParamsApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -388,11 +411,11 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${Entity.className()}] - getAllApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
-    public static async getCountApi<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter?: Record<string, any>): Promise<number> {
+    public static async getCountApi<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter?: Record<string, any>): Promise<{ count: number }> {
         try {
             const body = toJson({ paramsFilter });
             const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/${Entity.apiRoute()}/count`, {
@@ -404,8 +427,8 @@ export class BaseFrontEndApiCalls {
             });
             if (response.status === 200) {
                 const data = await response.json();
-                console.log(`[${Entity.className()}] - getCountApi: ${data.count}`);
-                return data.count;
+                console.log(`[${Entity.className()}] - getCountApi - count: ${data.count}`);
+                return { count: data.count };
             } else {
                 const errorData = await response.json();
                 //throw `Received status code ${response.status} with message: ${errorData.error.message ? errorData.error.message : errorData.error}`;
@@ -413,14 +436,18 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${Entity.className()}] - getCountApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
-    public static async getTotalPagesApi<T extends BaseEntity>(Entity: typeof BaseEntity, paramsFilter?: Record<string, any>, itemsPerPage?: number): Promise<number> {
-        const totalItems = await this.getCountApi(Entity, paramsFilter);
-        const totalPages = Math.ceil(totalItems / (itemsPerPage ?? ITEMS_PER_PAGE));
-        return totalPages;
+    public static async getTotalItemsAndPagesApi<T extends BaseEntity>(
+        Entity: typeof BaseEntity,
+        paramsFilter?: Record<string, any>,
+        itemsPerPage?: number
+    ): Promise<{ items: number; pages: number }> {
+        const { count: items } = await this.getCountApi(Entity, paramsFilter);
+        const totalPages = Math.ceil(items / (itemsPerPage ?? ITEMS_PER_PAGE));
+        return { items, pages: totalPages };
     }
 
     public static async deleteByIdApi<T extends BaseEntity>(Entity: typeof BaseEntity, id: string, optionsDelete?: OptionsDelete): Promise<boolean> {
@@ -447,7 +474,7 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${Entity.className()}] - deleteByIdApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -475,7 +502,7 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${instance.className()}] - deleteApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -516,7 +543,7 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${instance.className()}] - fillWithRelationApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -565,7 +592,7 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${instance.className()}] - loadRelationManyApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 
@@ -614,7 +641,7 @@ export class BaseFrontEndApiCalls {
             }
         } catch (error) {
             console.log(`[${instance.className()}] - loadRelationManyApi - Error: ${error}`);
-            throw `${error}`;
+            throw error;
         }
     }
 

@@ -40,7 +40,8 @@ export class SiteSettingsBackEndApplied extends BaseBackEndApplied {
         const blockfrost_url_api_preprod = process.env.NEXT_PUBLIC_BLOCKFROST_URL_PREPROD;
         const blockfrost_url_explorer_preprod = process.env.NEXT_PUBLIC_BLOCKCHAIN_EXPLORER_URL_PREPROD;
 
-        const oracle_wallet_publickey = process.env.NEXT_PUBLIC_ORACLE_WALLET_PUBLICKEY;
+        const taptools_url_explorer_mainnet = process.env.NEXT_PUBLIC_TAPTOOLS_URL_MAINNET;
+        const oracle_wallet_publickey_cborhex = process.env.NEXT_PUBLIC_ORACLE_WALLET_PUBLICKEY;
         // const oracle_internal_wallet_privatekey_cborhex = process.env.ORACLE_INTERNAL_WALLET_PRIVATEKEY_CBORHEX;
         const oracle_internal_wallet_publickey_cborhex = process.env.NEXT_PUBLIC_ORACLE_INTERNAL_WALLET_PUBLICKEY_CBORHEX;
         //-------------------------
@@ -57,8 +58,8 @@ export class SiteSettingsBackEndApplied extends BaseBackEndApplied {
             blockfrost_url_explorer_preview,
             blockfrost_url_api_preprod,
             blockfrost_url_explorer_preprod,
-            oracle_wallet_publickey,
-            // oracle_internal_wallet_privatekey_cborhex,
+            taptools_url_explorer_mainnet,
+            oracle_wallet_publickey_cborhex,
             oracle_internal_wallet_publickey_cborhex,
         });
         //-------------------------

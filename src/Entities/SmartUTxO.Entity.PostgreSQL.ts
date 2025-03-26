@@ -1,13 +1,12 @@
-import type { Datum, Script } from 'lucid-cardano';
+import type { Datum, Script } from '@lucid-evolution/lucid';
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { PostgreSQLDatabaseService } from '../BackEnd/DatabaseService/PostgreSQL.Database.Service.js';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
-import { getPostgreSQLTableName } from '../Commons/utils.js';
 import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js'; // Change the base class to the TypeORM version
 import { SmartUTxOEntity } from './SmartUTxO.Entity.js'; // Assuming SmartUTxOEntity is implemented in TypeORM
-import { SmartUTxOWithDetailsEntity } from './SmartUTxO.WithDetails.Entity.js'; // Assuming SmartUTxOWithDetailsEntity is implemented in TypeORM
 
-@PostgreSQLAppliedFor([SmartUTxOEntity, SmartUTxOWithDetailsEntity])
-@Entity(getPostgreSQLTableName(SmartUTxOEntity.className()))
+@PostgreSQLAppliedFor([SmartUTxOEntity])
+@Entity({ name: PostgreSQLDatabaseService.getTableName(SmartUTxOEntity.className()) })
 @Index(['txHash', 'outputIndex']) // Composite index
 // @Index(['isPreparing', 'isConsuming']) // Additional index
 export class SmartUTxOEntityPostgreSQL extends BaseEntityPostgreSQL {
@@ -57,10 +56,10 @@ export class SmartUTxOEntityPostgreSQL extends BaseEntityPostgreSQL {
     outputIndex!: number;
 
     @Column({ type: 'timestamptz', nullable: true })
-    isPreparingForReading!: Date [];
+    isPreparingForReading!: Date[];
 
     @Column({ type: 'timestamptz', nullable: true })
-    isReading!: Date [];
+    isReading!: Date[];
 
     @Column({ type: 'timestamptz', nullable: true })
     isPreparingForConsuming!: Date | undefined;
@@ -87,7 +86,7 @@ export class SmartUTxOEntityPostgreSQL extends BaseEntityPostgreSQL {
     _NET_id_CS!: string;
 
     @Column({ type: 'varchar', nullable: false })
-    _NET_id_TN!: string;
+    _NET_id_TN_Str!: string;
 
     @Column({ type: 'boolean', nullable: false })
     _is_NET_id_Unique!: boolean;

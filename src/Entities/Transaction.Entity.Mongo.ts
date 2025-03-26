@@ -2,7 +2,7 @@ import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
 import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
 import { TransactionEntity } from './Transaction.Entity.js';
-import { OutRef, PaymentKeyHash, UTxO } from 'lucid-cardano';
+import { OutRef, PaymentKeyHash, UTxO } from '@lucid-evolution/lucid';
 import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
 import { TransactionDatum, TransactionRedeemer } from '../Commons/index.js';
 
@@ -45,7 +45,7 @@ export class TransactionEntityMongo extends BaseEntityMongo {
 
     // #region mongo db
 
-    public static MongoModel() {
+    public static DBModel() {
         interface Interface extends Document {
             hash: string;
             paymentPKH: PaymentKeyHash;
@@ -53,11 +53,21 @@ export class TransactionEntityMongo extends BaseEntityMongo {
             type: string;
             status: string;
             error: Object;
-            ids: Record<string, string>;
+            parse_info: string;
+            ids: Record<string, string | undefined>;
             redeemers: Record<string, TransactionRedeemer>;
             datums: Record<string, TransactionDatum>;
-            consuming_UTxOs: OutRef[];
-            reading_UTxOs: OutRef[];
+            consuming_UTxOs: UTxO[];
+            reading_UTxOs: UTxO[];
+            valid_from: number;
+            valid_until: number;
+            unit_mem: number;
+            unit_steps: number;
+            fee: number;
+            size: number;
+            CBORHex: string;
+            createdAt: Date;
+            updatedAt: Date;
         }
 
         const schema = new Schema<Interface>(
@@ -68,11 +78,19 @@ export class TransactionEntityMongo extends BaseEntityMongo {
                 type: { type: String, required: true, index: true },
                 status: { type: String, required: true, index: true },
                 error: { type: Object, required: false },
+                parse_info: { type: String, required: false },
                 ids: { type: Object, required: false },
                 redeemers: { type: Object, required: false },
                 datums: { type: Object, required: false },
                 consuming_UTxOs: { type: [Object], required: false },
                 reading_UTxOs: { type: [Object], required: false },
+                valid_from: { type: Number, required: false },
+                valid_until: { type: Number, required: false },
+                unit_mem: { type: Number, required: false },
+                unit_steps: { type: Number, required: false },
+                fee: { type: Number, required: false },
+                size: { type: Number, required: false },
+                CBORHex: { type: String, required: false },
             },
             { timestamps: true }
         );

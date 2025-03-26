@@ -2,7 +2,7 @@ import { ClaimFreeTxParams, CreateFreeTxParams, UpdateFreeTxParams } from '@exam
 import { FreeApi } from '@example/src/lib/SmartDB/FrontEnd';
 import assert from 'assert';
 import { Assets, Lucid } from 'lucid-cardano';
-import { ConnectedWalletInfo, delay, getTotalOfUnitInUTxOList, LucidToolsFrontEnd, toJson, WalletTxParams } from 'smart-db';
+import { ConnectedWalletInfo, sleep, getTotalOfUnitInUTxOList, LucidToolsFrontEnd, toJson, WalletTxParams } from 'smart-db';
 import { TestResult } from './results';
 
 export interface TestCase {
@@ -198,7 +198,7 @@ export async function prepareWallets(
                 }
                 retries++;
                 console.log(`Retrying in ${RETRY_DELAY / 1000} seconds...`);
-                await delay(RETRY_DELAY);
+                await sleep(RETRY_DELAY);
             }
         }
     }
@@ -277,7 +277,7 @@ export async function executeTransaction(testName: string, walletLucid: Lucid, e
     };
     //---------------------
     const connectedWalletInfo: ConnectedWalletInfo = {
-        walletNameOrSeedOrKey: addressWallet,
+        walletName: addressWallet,
         address: addressWallet,
         pkh,
         stakePkh,
@@ -335,19 +335,19 @@ export async function runTestCase(
     await Promise.all(
         walletLucids.slice(0, users).map(async (walletLucid, userIndex) => {
             //---------------------
-            // Initial delay for each user
+            // Initial sleep for each user
             // const initialDelayMs = (initialDelayBetweenUsers * userIndex) / users;
             const initialDelayMs = initialDelayBetweenUsers * userIndex;
             //---------------------
             console.log(`[TEST - ${testName}] - initialDelayMs: ${initialDelayMs} ms`);
             //---------------------
-            await delay(initialDelayMs);
+            await sleep(initialDelayMs);
             //---------------------
             for (let txIndex = 0; txIndex < transactionsPerUser; txIndex++) {
                 //---------------------
                 if (txIndex > 0) {
                     // Delay between transactions for the same user
-                    await delay(delayBetweenTxs);
+                    await sleep(delayBetweenTxs);
                 }
                 //---------------------
                 for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -366,7 +366,7 @@ export async function runTestCase(
                         if (attempt === maxRetries - 1) {
                             failed++;
                         } else {
-                            await delay(delayBetweenRetries); // Wait a bit before retrying
+                            await sleep(delayBetweenRetries); // Wait a bit before retrying
                         }
                     }
                 }

@@ -1,4 +1,4 @@
-import { SYNC_SERVER_TIME_ALWAYS, SYNC_SERVER_TIME_OPTIONAL } from '../Constants/constants.js';
+import { isEmulator, SYNC_SERVER_TIME_ALWAYS_MS, SYNC_SERVER_TIME_OPTIONAL_MS } from '../Constants/constants.js';
 import { convertMillisToTime } from '../utils.js';
 import { console_log } from './globalLogs.js';
 
@@ -35,6 +35,14 @@ export async function getGlobalBlockchainTime(refresh: boolean = false): Promise
     // si paso mas de 10 minutos desde la ultima vez del fetch, pido serverTime from blockchain de nuevo
     // si no, devuelvo el mismo valor plus la diferencia de tiempo
     //----------------
+    if (isEmulator) {
+        //--------------------------------------
+        const TimeBackEnd = (await import('../../lib/Time/Time.BackEnd.js')).TimeBackEnd;
+        //-------------------------
+        // solo en emulator. Me aseguro de setear el emulador al tiempo real del server. Va a saltear los slots necesarios.
+        await TimeBackEnd.syncEmulatorBlockChainWithServerTime();
+    }
+    //----------------
     // este deberia ser el unico lugar donde se pide Date.now() que es la hora del server
     // a partir de aca, se usa el globalTime.time, que es un calculo de la hora del server a partir de la hora de la blockchain
     if (globalBlockChainTime.time !== undefined && globalBlockChainTime.lastFetch !== undefined) {
@@ -46,9 +54,9 @@ export async function getGlobalBlockchainTime(refresh: boolean = false): Promise
         const now = Date.now();
         //----------------
         const diff = now - globalBlockChainTime.lastFetch;
-        if (diff > SYNC_SERVER_TIME_ALWAYS) {
+        if (diff > SYNC_SERVER_TIME_ALWAYS_MS) {
             refresh = true;
-        } else if (refresh === true && diff > SYNC_SERVER_TIME_OPTIONAL) {
+        } else if (refresh === true && diff > SYNC_SERVER_TIME_OPTIONAL_MS) {
             refresh = true;
         } else {
             refresh = false;

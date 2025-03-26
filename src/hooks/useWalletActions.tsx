@@ -4,8 +4,27 @@ import { useTokensStore, useWalletStore } from '../store/useGlobalStore.js';
 import { CardanoWallet } from '../Commons/types.js';
 import { pushSucessNotification, pushWarningNotification } from '../Commons/pushNotification.js';
 import { explainError } from '../Commons/explainError.js';
-import { delay } from '../Commons/utils.js';
-import { WAIT_FOR_WALLET_ACTIVATION } from '../Commons/Constants/constants.js';
+import { sleep } from '../Commons/utils.js';
+import { CONNECT_WALLET_WAIT_FOR_WALLET_ACTIVATION_MS } from '../Commons/Constants/constants.js';
+import { useLocalStorage } from './useLocalStorage.js';
+
+export function useWalletSession() {
+    //--------------------------------------
+    const { data: session, status } = useSession();
+    //--------------------------------------
+    const { checkSessionAndConnectIfNeeded } = useWalletActions();
+    //--------------------------------------
+    useEffect(() => {
+        if (status === 'authenticated') {
+            console.log(`[WalletConnector] - Session authenticated, might trigger a wallet connection... (status: ${status})`);
+            checkSessionAndConnectIfNeeded();
+        } else if (status === 'unauthenticated') {
+            console.log(`[WalletConnector] - No Session`);
+        } else if (status === 'loading') {
+            console.log(`[WalletConnector] - Loading Session`);
+        }
+    }, [status]);
+}
 
 export function useWalletActions() {
     //--------------------------------------
@@ -20,18 +39,43 @@ export function useWalletActions() {
     //--------------------------------------
     const [createSignedSession, setCreateSignedSession] = useState(false);
     //--------------------------------------
+    const [swHideBalance, setHideBalance] = useLocalStorage<boolean | undefined>('HideBalance', undefined);
+    const [swDoNotPromtForSigning, setSwDoNotPromtForSigning] = useLocalStorage<boolean | undefined>('DoNotPromtForSigning', undefined);
+    //--------------------------------------
     const walletStore = useWalletStore();
     const tokensStore = useTokensStore();
+     //--------------------------------------
+     useEffect(() => {
+        if (walletStore.swDoNotPromtForSigning !== swDoNotPromtForSigning && swDoNotPromtForSigning !== undefined) {
+            walletStore.setSwDoNotPromtForSigning(swDoNotPromtForSigning);
+        }
+    }, [swDoNotPromtForSigning]);
+     //--------------------------------------
+     useEffect(() => {
+        if (walletStore.swHideBalance !== swHideBalance && swHideBalance !== undefined) {
+            walletStore.setSwHideBalance(swHideBalance);
+        }
+    }, [swHideBalance]);
+     //--------------------------------------
+     const handleToggleIsHide = () => {
+        // walletStore.setSwHideBalance(!walletStore.swHideBalance);
+        setHideBalance(!swHideBalance);
+    };
     //--------------------------------------
-    const walletConnect = async (wallet: CardanoWallet, createSignedSession: boolean, forceConnect: boolean = false, closeModal = true, tryAgain = false) => {
-        console.log('[WalletConnector] - walletConnect: ' + wallet.name);
+    const handleClickToggleDontPromtForSigning = () => {
+        // walletStore.setSwDoNotPromtForSigning(!walletStore.swDoNotPromtForSigning);
+        setSwDoNotPromtForSigning(!swDoNotPromtForSigning);
+    };
+    //--------------------------------------
+    const walletConnect = async (wallet: CardanoWallet, createSignedSession: boolean, forceConnect: boolean = false, tryAgain = false, closeModal?: () => void) => {
+        console.log('[WalletConnector] - walletConnect: ' + wallet.wallet);
         try {
             setWalletSelected(wallet.wallet);
             if (
                 await walletStore.connectWallet({
                     session,
                     status,
-                    walletNameOrSeedOrKey: wallet.wallet,
+                    walletName: wallet.wallet,
                     forceConnect,
                     tryAgain,
                     useBlockfrostToSubmit: false,
@@ -40,26 +84,30 @@ export function useWalletActions() {
                     createSignedSession,
                 })
             ) {
-                pushSucessNotification(`WalletConnector`, `Connected with <b> ${wallet.name}</b>!`, false);
+                pushSucessNotification(`WalletConnector`, `Connected with <b> ${wallet.wallet}</b>!`, false);
+                if (closeModal) {
+                    closeModal();
+                }
             }
         } catch (error) {
             const error_explained = explainError(error);
             console.log(`[WalletConnector] - walletConnect - Error: ${error_explained}`);
-            pushWarningNotification(`WalletConnector`, `Error connecting with <b> ${wallet.name}</b><br></br> ${error_explained}`);
+            pushWarningNotification(`WalletConnector`, `Error connecting with <b> ${wallet.wallet}</b><br></br> ${error_explained}`);
         } finally {
             setWalletSelected(undefined);
         }
     };
     //--------------------------------------
-    const walletFromSeedConnect = async (walletSeed: string, createSignedSession: boolean, forceConnect: boolean = false, closeModal = true) => {
+    const walletFromSeedConnect = async (walletName: string, walletSeed: string, createSignedSession: boolean, forceConnect: boolean = false, closeModal?: () => void) => {
         console.log(`[WalletConnector] - walletFromSeedConnect`);
         try {
-            setWalletSelected(walletSeed);
+            setWalletSelected(walletName);
             if (
                 await walletStore.connectWallet({
                     session,
                     status,
-                    walletNameOrSeedOrKey: walletSeed,
+                    walletName: walletName,
+                    walletSeed: walletSeed,
                     forceConnect,
                     tryAgain: false,
                     useBlockfrostToSubmit: false,
@@ -68,26 +116,30 @@ export function useWalletActions() {
                     createSignedSession,
                 })
             ) {
-                pushSucessNotification(`WalletConnector`, `Connected with <b> ${walletSeed}</b>!`, false);
+                pushSucessNotification(`WalletConnector`, `Connected with <b> ${walletName}</b>!`, false);
+                if (closeModal) {
+                    closeModal();
+                }
             }
         } catch (error) {
             const error_explained = explainError(error);
             console.log(`[WalletConnector] - walletFromSeedConnect - Error: ${error_explained}`);
-            pushWarningNotification(`WalletConnector`, `Error connecting with <b> ${walletSeed}</b><br></br> ${error_explained}`);
+            pushWarningNotification(`WalletConnector`, `Error connecting with <b> ${walletName}</b><br></br> ${error_explained}`);
         } finally {
             setWalletSelected(undefined);
         }
     };
     //--------------------------------------
-    const walletFromKeyConnect = async (walletKey: string, createSignedSession: boolean, forceConnect: boolean = false, closeModal = true) => {
+    const walletFromKeyConnect = async (walletName: string, walletKey: string, createSignedSession: boolean, forceConnect: boolean = false, closeModal?: () => void) => {
         console.log(`[WalletConnector] - walletFromKeyConnect`);
         try {
-            setWalletSelected(walletKey);
+            setWalletSelected(walletName);
             if (
                 await walletStore.connectWallet({
                     session,
                     status,
-                    walletNameOrSeedOrKey: walletKey,
+                    walletName: walletName,
+                    walletKey: walletKey,
                     forceConnect,
                     tryAgain: false,
                     useBlockfrostToSubmit: false,
@@ -96,12 +148,15 @@ export function useWalletActions() {
                     createSignedSession,
                 })
             ) {
-                pushSucessNotification(`WalletConnector`, `Connected with <b> ${walletKey}</b>!`, false);
+                pushSucessNotification(`WalletConnector`, `Connected with <b> ${walletName}</b>!`, false);
+                if (closeModal) {
+                    closeModal();
+                }
             }
         } catch (error) {
             const error_explained = explainError(error);
             console.log(`[WalletConnector] - walletFromKeyConnect - Error: ${error_explained}`);
-            pushWarningNotification(`WalletConnector`, `Error connecting with <b> ${walletKey}</b><br></br> ${error_explained}`);
+            pushWarningNotification(`WalletConnector`, `Error connecting with <b> ${walletName}</b><br></br> ${error_explained}`);
         } finally {
             setWalletSelected(undefined);
         }
@@ -119,21 +174,24 @@ export function useWalletActions() {
     };
 
     const walletRefresh = async () => {
-        console.log('[WalletConnector] - walletRefresh: ' + walletStore.info!.walletNameOrSeedOrKey);
+        console.log('[WalletConnector] - walletRefresh: ' + walletStore.info!.walletName);
         try {
             await walletStore.loadWalletPrivileges();
             await walletStore.loadWalletData();
         } catch (error) {
             const error_explained = explainError(error);
             console.log(`[WalletConnector] - walletRefresh - Error: ${error_explained}`);
-            pushWarningNotification(`WalletConnector`, `Error refreshing with <b> ${walletStore.info!.walletNameOrSeedOrKey}</b><br></br> ${error_explained}`);
+            pushWarningNotification(`WalletConnector`, `Error refreshing with <b> ${walletStore.info!.walletName}</b><br></br> ${error_explained}`);
         }
     };
     //--------------------------------------
-    const walletDisconnect = async (closeModal = true) => {
+    const walletDisconnect = async (closeModal?: () => void) => {
         console.log(`[WalletConnector] - walletDisconnect`);
         try {
             await walletStore.disconnectWallet({ session, status });
+            if (closeModal) {
+                closeModal();
+            }
         } catch (error) {
             const error_explained = explainError(error);
             console.log(`[WalletConnector] - walletDisconnect - Error: ${error_explained}`);
@@ -146,26 +204,32 @@ export function useWalletActions() {
     //--------------------------------------
     async function sessionWalletConnect() {
         try {
-            if (session && session.user && session.user.walletNameOrSeedOrKey) {
-                //console.log(`[Session] - walletConnect - session.walletNameOrSeedOrKey: ${session.user.walletNameOrSeedOrKey}`)
-                const foundWallet = walletStore.cardanoWallets.find((wallet) => wallet.wallet === session.user!.walletNameOrSeedOrKey);
+            if (session && session.user && session.user.walletName) {
+                //console.log(`[Session] - walletConnect - session.walletName: ${session.user.walletName}`)
+                const foundWallet = walletStore.cardanoWallets.find((wallet) => wallet.wallet === session.user!.walletName);
                 if (window.cardano !== undefined && (foundWallet || session.user.isWalletFromSeed || session.user.isWalletFromKey)) {
                     //si la wallet estaba conectada en la session anterior, tengo que reconectarla
-                    console.log('[WalletConnector] - Triggering a connection with session wallet: ' + session.user.walletNameOrSeedOrKey);
-                    await delay (WAIT_FOR_WALLET_ACTIVATION);
+                    console.log('[WalletConnector] - Triggering a connection with session wallet: ' + session.user.walletName);
                     if (session.user.isWalletFromSeed) {
-                        await walletFromSeedConnect(session.user.walletNameOrSeedOrKey, session.user.isWalletValidatedWithSignedToken, false, false);
+                        if (session.user.walletSeed === undefined) {
+                            throw 'No walletSeed in session';
+                        }
+                        await walletFromSeedConnect(session.user.walletName, session.user.walletSeed, session.user.isWalletValidatedWithSignedToken, false);
                     } else if (session.user.isWalletFromKey) {
-                        await walletFromKeyConnect(session.user.walletNameOrSeedOrKey, session.user.isWalletValidatedWithSignedToken, false, false);
+                        if (session.user.walletKey === undefined) {
+                            throw 'No walletKey in session';
+                        }
+                        await walletFromKeyConnect(session.user.walletName, session.user.walletKey, session.user.isWalletValidatedWithSignedToken, false);
                     } else {
-                        await walletConnect(foundWallet!, session.user.isWalletValidatedWithSignedToken, false, false, true);
+                        await sleep(CONNECT_WALLET_WAIT_FOR_WALLET_ACTIVATION_MS);
+                        await walletConnect(foundWallet!, session.user.isWalletValidatedWithSignedToken, false, true);
                     }
                 } else {
-                    console.log('[WalletConnector] - Not connecting to any wallet. Wallet of previus session not found: ' + session.user.walletNameOrSeedOrKey);
+                    console.log('[WalletConnector] - Not connecting to any wallet. Wallet of previus session not found: ' + session.user.walletName);
                     throw 'Wallet of previus session not found';
                 }
             } else {
-                throw 'No wallet Name Or Seed Or Key in session';
+                throw 'No wallet in session';
             }
         } catch (error) {
             console.log(`[WalletConnector] - sessionWalletConnect - Error: ${error}`);
@@ -204,41 +268,36 @@ export function useWalletActions() {
     //--------------------------------------
     const handleClickToggleAdminMode = async () => {
         try {
-            if (session && session.user && session.user.walletNameOrSeedOrKey) {
-                const foundWallet = walletStore.cardanoWallets.find((wallet) => wallet.wallet === session.user!.walletNameOrSeedOrKey);
+            if (session && session.user && session.user.walletName) {
+                const foundWallet = walletStore.cardanoWallets.find((wallet) => wallet.wallet === session.user!.walletName);
                 if (window.cardano !== undefined && (foundWallet || session.user.isWalletFromSeed || session.user.isWalletFromKey)) {
-                    console.log('[WalletConnector] - Triggering a re-connection with wallet: ' + session.user.walletNameOrSeedOrKey);
-                    await delay (WAIT_FOR_WALLET_ACTIVATION);
+                    console.log('[WalletConnector] - Triggering a re-connection with wallet: ' + session.user.walletName);
                     if (session.user.isWalletFromSeed) {
-                        await walletFromSeedConnect(session.user.walletNameOrSeedOrKey, session.user.isWalletValidatedWithSignedToken, false, false);
+                        if (session.user.walletSeed === undefined) {
+                            throw 'No walletSeed in session';
+                        }
+                        await walletFromSeedConnect(session.user.walletName, session.user.walletSeed, !walletStore.info?.isWalletValidatedWithSignedToken, true);
                     } else if (session.user.isWalletFromKey) {
-                        await walletFromKeyConnect(session.user.walletNameOrSeedOrKey, session.user.isWalletValidatedWithSignedToken, false, false);
+                        if (session.user.walletKey === undefined) {
+                            throw 'No walletKey in session';
+                        }
+                        await walletFromKeyConnect(session.user.walletName, session.user.walletKey, !walletStore.info?.isWalletValidatedWithSignedToken, true);
                     } else {
-                        await walletConnect(foundWallet!, !walletStore.info?.isWalletValidatedWithSignedToken, true, false, true);
+                        await sleep(CONNECT_WALLET_WAIT_FOR_WALLET_ACTIVATION_MS);
+                        await walletConnect(foundWallet!, !walletStore.info?.isWalletValidatedWithSignedToken, true, true);
                     }
                 } else {
-                    console.log('[WalletConnector] - Not connecting to any wallet. Wallet not found: ' + session.user.walletNameOrSeedOrKey);
+                    console.log('[WalletConnector] - Not connecting to any wallet. Wallet not found: ' + session.user.walletName);
                     throw 'Wallet not found';
                 }
             } else {
-                throw 'No Wallet Name Or Seed Or Key in session';
+                throw 'No wallet in session';
             }
         } catch (error) {
             console.log(`[WalletConnector] - handleClickToggleAdminMode - Error: ${error}`);
             await signOut({ redirect: false });
         }
     };
-    //--------------------------------------
-    useEffect(() => {
-        if (status === 'authenticated') {
-            console.log(`[WalletConnector] - Session authenticated, might trigger a wallet connection... (status: ${status})`);
-            checkSessionAndConnectIfNeeded();
-        } else if (status === 'unauthenticated') {
-            console.log(`[WalletConnector] - No Session`);
-        } else if (status === 'loading') {
-            console.log(`[WalletConnector] - Loading Session`);
-        }
-    }, [status]);
     //--------------------------------------
     return {
         isRefreshing,
@@ -258,6 +317,8 @@ export function useWalletActions() {
         walletDisconnect,
         checkSessionAndConnectIfNeeded,
         handleClickToggleAdminMode,
+        handleClickToggleDontPromtForSigning,
+        handleToggleIsHide,
     };
     //--------------------------------------
 }

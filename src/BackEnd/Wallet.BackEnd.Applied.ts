@@ -1,10 +1,10 @@
-import { PaymentKeyHash } from "lucid-cardano";
-import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods.js';
+import { PaymentKeyHash } from '@lucid-evolution/lucid';
+import { console_log } from '../Commons/BackEnd/globalLogs.js';
+import { BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndAppliedFor.js';
+import { isFrontEndEnvironment, isNullOrBlank } from '../Commons/utils.js';
 import { WalletEntity } from '../Entities/Wallet.Entity.js';
 import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied.js';
-import { BackEndAppliedFor } from '../Commons/Decorators/Decorator.BackEndAppliedFor.js';
-import { isFrontEndEnvironment, isNullOrBlank } from "../Commons/utils.js";
-import { console_log } from "../Commons/BackEnd/globalLogs.js";
+import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods.js';
 
 @BackEndAppliedFor(WalletEntity)
 export class WalletBackEndApplied extends BaseBackEndApplied {
@@ -34,5 +34,3 @@ export class WalletBackEndApplied extends BaseBackEndApplied {
 
     // #endregion class methods
 }
-
-

@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { delay, isFrontEndEnvironment, toJson } from '../../Commons/utils.js';
+import { sleep, isFrontEndEnvironment, toJson } from '../../Commons/utils.js';
 import { API_TRY_AGAIN } from '../../Commons/Constants/constants.js';
 
 export const fetchWrapper = async (url: string, options: RequestInit = {}, swAddChallengue: boolean = true, retryCount: number = 0, timeout: number = 0): Promise<Response> => {
@@ -75,7 +75,7 @@ export function createApiRequest(url: string, options: RequestInit, headers: Hea
                     error: error.response?.data?.error || error.response?.data || error.message || error.response?.statusText || 'Unknown error',
                     message: error.response?.data?.message || error.message || error.response?.statusText || 'Unknown error',
                     status: error.response?.status || 500,
-                    status_code: error.response?.data?.satus_code || error.response?.status || 500, 
+                    status_code: error.response?.data?.satus_code || error.response?.status || 500,
                     statusText: error.response?.statusText || 'Internal Server Error',
                     config: error.config,
                     code: error.code,
@@ -84,7 +84,7 @@ export function createApiRequest(url: string, options: RequestInit, headers: Hea
                 errorInfo = {
                     attempt: count + 1,
                     error: 'Request timed out',
-                    message: 'Request timed out',   
+                    message: 'Request timed out',
                     status: 408,
                     status_code: 408,
                     statusText: 'Request Timeout',
@@ -117,7 +117,7 @@ export function createApiRequest(url: string, options: RequestInit, headers: Hea
             //----------------------
             // Retry mechanism
             if (count < retryCount) {
-                await delay(API_TRY_AGAIN); // Delay before retrying
+                await sleep(API_TRY_AGAIN); // Delay before retrying
                 return retry(count + 1);
             }
             //----------------------
@@ -125,7 +125,7 @@ export function createApiRequest(url: string, options: RequestInit, headers: Hea
             let responseStatus: number;
             let responseStatusText: string;
             //----------------------
-            const uniqueErrors = new Set(errors.map(err => err.status));
+            const uniqueErrors = new Set(errors.map((err) => err.status));
             //----------------------
             if (errors.length === 1 || uniqueErrors.size === 1) {
                 const singleError = errors[0];
@@ -135,7 +135,7 @@ export function createApiRequest(url: string, options: RequestInit, headers: Hea
             } else {
                 errorBody = {
                     error: 'Multiple errors occurred',
-                    details: errors
+                    details: errors,
                 };
                 responseStatus = 500;
                 responseStatusText = 'Internal Server Error';
