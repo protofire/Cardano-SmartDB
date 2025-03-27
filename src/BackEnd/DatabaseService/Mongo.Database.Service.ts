@@ -3,7 +3,13 @@ import EventEmitter from 'events';
 import * as Mongoose from 'mongoose';
 import mongoose, { ClientSession, Types } from 'mongoose';
 import { console_error, console_log, swLogsMongoDebug } from '../../Commons/BackEnd/globalLogs.js';
-import { DB_LOCK_MAX_TIME_WAITING_TO_COMPLETE_MS, DB_LOCK_TIME_WAITING_TO_TRY_AGAIN_MS, DB_SERVERSELECCION_TIMEOUT_MS, DB_USE_TRANSACTIONS, DB_WRITE_TIMEOUT_MS } from '../../Commons/Constants/constants.js';
+import {
+    DB_LOCK_MAX_TIME_WAITING_TO_COMPLETE_MS,
+    DB_LOCK_TIME_WAITING_TO_TRY_AGAIN_MS,
+    DB_SERVERSELECCION_TIMEOUT_MS,
+    DB_USE_TRANSACTIONS,
+    DB_WRITE_TIMEOUT_MS,
+} from '../../Commons/Constants/constants.js';
 import { getCombinedConversionFunctions, getFilteredConversionFunctions } from '../../Commons/Decorators/Decorator.Convertible.js';
 import { OptionsGet } from '../../Commons/types.js';
 import { calculateBackoffDelay, isEmptyObject, isString, sleep, toJson } from '../../Commons/utils.js';
@@ -20,7 +26,6 @@ dbEvents.on('dbError', (err) => {
 export const sessionStorage = new AsyncLocalStorage<ClientSession | undefined>();
 
 export class MongoDatabaseService {
-    
     public static connectDB = (): Promise<void> => {
         return new Promise(async (resolve, reject) => {
             if (database !== null) {
@@ -247,7 +252,7 @@ export class MongoDatabaseService {
     public static async getCollections() {
         return new Set((await mongoose.connection.db.listCollections().toArray()).map((col) => col.name));
     }
-    
+
     public static async withContextTransaction<T>(
         name: string,
         operation: () => Promise<T>,
@@ -256,7 +261,7 @@ export class MongoDatabaseService {
     ): Promise<T> {
         //----------------------------
         if (!DB_USE_TRANSACTIONS) {
-            // console_log(0, 'MONGO', `${name} - withContextTransaction - Transactions disabled - Executing operation without transaction.`);
+            console_log(0, 'MONGO', `${name} - withContextTransaction - Transactions disabled - Executing operation without transaction.`);
             return await operation();
         }
         //----------------------------
@@ -731,24 +736,36 @@ export class MongoDatabaseService {
                 if (Object.keys(addFieldsStage.$addFields).length > 0) {
                     pipeline.push(addFieldsStage);
 
-                    if (!isEmptyObject(fieldsForSelectForMongo)) {
+                    if (!isEmptyObject(fieldsForSelectForMongo) && Object.values(fieldsForSelectForMongo).every((value) => value === 1)) {
                         // esto es solo para testing...
                         // me aseguro que no sea empty, si no estaria agregando fields a la proyection con 1, y solo lenvatnaria los convertidos, en lugar de levantar todos como cuando es empty
-                        if (Object.values(fieldsForSelectForMongo).every((value) => value === 1)) {
-                            // si es una lista de inclusion me encargo de agregar los elementso que van always
-                            const additionalFieldsForProjection = Object.keys(addFieldsStage.$addFields).reduce((acc: Record<string, number>, field) => {
-                                acc[field] = 1;
-                                return acc;
-                            }, {});
-                            // Merge this object with fieldsForSelectForMongo
-                            fieldsForSelectForMongo = { ...fieldsForSelectForMongo, ...additionalFieldsForProjection };
-                        }
+                        // si es una lista de inclusion me encargo de agregar los elementso que van always
+
+                        // NOTE: no me queda claro nada de todo esto....
+                        // por que estaba agregando aqui todos los campos usados, los converted, etc, en la projeccion final???
+                        // y estaba tirando error en un caso donde agregaba campos que ya estaban en la proyeccion
+
+                        const additionalFieldsForProjection = Object.keys(addFieldsStage.$addFields).reduce((acc: Record<string, number>, field) => {
+                            // acc[field] = 1; // <-- Aquí se está agregando el campo convertido a la proyección
+                            return acc;
+                        }, {});
+
+                        // Merge this object with fieldsForSelectForMongo
+                        fieldsForSelectForMongo = { ...fieldsForSelectForMongo, ...additionalFieldsForProjection };
                     }
                 }
                 //----------------------------
                 // Add $lookup stages to the pipeline based on lookUpFields
                 if (useOptionGet.lookUpFields !== undefined && useOptionGet.lookUpFields.length > 0) {
                     useOptionGet.lookUpFields.forEach((lookupField) => {
+                        if (!isEmptyObject(fieldsForSelectForMongo) && Object.values(fieldsForSelectForMongo).every((value) => value === 1)) {
+                            // me aseguro que no sea empty, si no estaria agregando fields a la proyection con 1, y solo lenvatnaria los convertidos, en lugar de levantar todos como cuando es empty
+                            // y estaba tirando error en un caso donde agregaba campos que ya estaban en la proyeccion
+                            // agregar automáticamente los campos generados por lookups
+
+                            fieldsForSelectForMongo[lookupField.as] = 1;
+                        }
+
                         const fieldsForSelect = lookupField.fieldsForSelect;
                         let pipeline_: { $project: Record<string, number> }[] = [];
                         if (fieldsForSelect !== undefined && !isEmptyObject(fieldsForSelect)) {

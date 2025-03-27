@@ -103,7 +103,7 @@ export class JobManagerFrontEnd {
         }
         job.status = 'canceled';
         await JobFrontEndApiCalls.updateApi(job);
-        // const response = await fetch(`/api/jobs/cancel/${jobId}`);
+        // const response = await fetchWrapperBackEnd(`/api/jobs/cancel/${jobId}`);
         // if (!response.ok) throw new Error('Failed to cancel job');
         // console.log(`Job ${jobId} canceled.`);
         // if (JobManagerFrontEnd.cleanups[jobId]) {
@@ -124,7 +124,7 @@ export class JobManagerFrontEnd {
     //             delete JobManagerFrontEnd.cleanups[jobId];
     //         }
     //         // Assume this fetch call correctly hits your backend to remove the job
-    //         const response = await fetch(`/api/jobs/remove/${jobId}`); // Adjust as necessary
+    //         const response = await fetchWrapperBackEnd(`/api/jobs/remove/${jobId}`); // Adjust as necessary
     //         if (!response.ok) throw new Error('Failed to remove job');
     //         // If successful, remove jobId from tracking and execute its cleanup function
     //         JobManagerFrontEnd.jobIds = JobManagerFrontEnd.jobIds.filter((id) => id !== jobId);

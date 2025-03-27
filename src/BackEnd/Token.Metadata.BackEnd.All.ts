@@ -33,6 +33,7 @@ import { BaseBackEndApplied } from './Base/Base.BackEnd.Applied.js';
 import { BaseBackEndMethods } from './Base/Base.BackEnd.Methods.js';
 import { JobEntity } from '../Entities/Job.Entity.js';
 import { JobBackEndApplied } from './Job.BackEnd.All.js';
+import fetchWrapperBackEnd from '../lib/FetchWrapper/FetchWrapper.BackEnd.js';
 
 @BackEndAppliedFor(TokenMetadataEntity)
 export class TokenMetadataBackEndApplied extends BaseBackEndApplied {
@@ -429,7 +430,7 @@ export class TokenMetadataBackEndApplied extends BaseBackEndApplied {
                     },
                 };
                 //----------------------------
-                const response = await fetch(urlApi, requestOptions);
+                const response = await fetchWrapperBackEnd(urlApi, requestOptions);
                 //----------------------------
                 switch (response.status) {
                     case 200: {

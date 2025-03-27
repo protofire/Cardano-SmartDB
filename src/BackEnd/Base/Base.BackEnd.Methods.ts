@@ -389,7 +389,7 @@ export class BaseBackEndMethods {
                 //return await this.updateApi<T>(optionsUpdate);
                 throw `Can't run this method in the Browser`;
             }
-            //-----------------------
+            //----------------------------
             console_logLv2(1, instance.className(), `update - Options: ${showData(optionsUpdate)} - Init`);
             //----------------------------
             let useOptionUpdate = optionsCreateOrUpdateDefault;
@@ -868,7 +868,7 @@ export class BaseBackEndMethods {
                                     : RegistryManager.getFromEntitiesRegistry(lookUpField.from);
                             if (EntityClass !== undefined) {
                                 console_logLv2(0, Entity.className(), `getByParams - ${index}/${entities.length} - LookUpField: ${lookUpField.from} - Loading...`);
-                                const instance_ = await EntityClass.getEntityDB().fromMongoInterface(entity[lookUpField.as]);
+                                const instance_ = await EntityClass.getEntityDB().fromDBInterface(entity[lookUpField.as]);
                                 if (instance_ !== undefined) {
                                     instance[lookUpField.as as keyof typeof instance] = instance_;
                                 }

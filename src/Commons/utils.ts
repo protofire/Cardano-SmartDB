@@ -1119,6 +1119,7 @@ export function getTxRedeemersDetailsAndResources(tx: TxSignBuilder): {
 export function checkIfUserCanceled(error: any): boolean {
     const errorList = [
         'User canceled',
+        'user declined sign tx',
         'User denied account authorization',
         'User rejected the request',
         'User rejected the transaction',

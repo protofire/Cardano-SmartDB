@@ -76,14 +76,14 @@ export const optionsGetMinimalWithSmartUTxO: OptionsGet = {
     fieldsForSelect: { _id: true },
     doCallbackAfterLoad: false,
     loadRelations: { smartUTxO_id: true },
-    optionsGetForRelation: { smartUTxO_id: { ...optionsGetMinimal, fieldsForSelect: { txHash: true, outputIndex: true } } },
+    optionsGetForRelation: { smartUTxO_id: { ...optionsGetMinimalWithCallBack, fieldsForSelect: { txHash: true, outputIndex: true } } },
     checkRelations: false,
     lookUpFields: undefined,
 };
 
 export const optionsGetMinimalWithSmartUTxOCompleteFields: OptionsGet = {
     ...optionsGetMinimalWithSmartUTxO,
-    optionsGetForRelation: { smartUTxO_id: { ...optionsGetMinimal, fieldsForSelect: {} } },
+    optionsGetForRelation: { smartUTxO_id: { ...optionsGetMinimalWithCallBack, fieldsForSelect: {} } },
 };
 
 export const optionsGetMinimalWithSmartUTxOWithDates: OptionsGet = {
@@ -424,7 +424,7 @@ export interface Wallet {
     info: ConnectedWalletInfo | undefined;
 }
 
-//-------------------------------------------------------------
+//------------------------------------------
 
 export interface TaskComponentProps {
     onTaskLoading?: () => Promise<void>;
@@ -467,7 +467,7 @@ export interface ListComponentProps {
     swShowBtnUpdateTx?: boolean;
     swShowBtnDeleteTx?: boolean;
 }
-//---------------------------------
+//------------------------------------------
 
 export interface CardanoWallet {
     wallet: string;
@@ -476,7 +476,48 @@ export interface CardanoWallet {
     link: string;
     isInstalled?: boolean;
 }
-//---------------------------------
+
+//------------------------------------------
+
+export interface LiquidityPool {
+    name: string;
+    address: string;
+    feePercentage: bigint;
+    tokenID: {
+        CS: CS;
+        TN_Hex: TN;
+    };
+    poolToken: {
+        CS: CS;
+        TN_Hex: TN;
+    };
+    lpTokenTestnet: {
+        CS: CS;
+        TN_Hex: TN;
+    };
+    lpToken: {
+        CS: CS;
+        TN_Hex: TN;
+        amount: bigint;
+    };
+}
+
+export interface LiquidityPoolUtxoData {
+    lovelaceAmount: bigint;
+    poolTokenAmount: bigint;
+    lpTokenAmount: bigint;
+}
+
+//------------------------------------------
+
+export interface OracleExternalToken {
+    CS: string;
+    TN_Hex: string;
+    Api: string;
+    PublicKeyCborHex: string;
+}
+
+//------------------------------------------
 
 declare module 'next-auth' {
     export interface User extends SessionWalletInfo {
@@ -491,4 +532,4 @@ declare module 'next-auth' {
     }
 }
 
-//---------------------------------
+//------------------------------------------

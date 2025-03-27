@@ -117,6 +117,8 @@ export const ADA_TX_FEE_MARGIN = 10_000_000n;
 //------------------------------------------
 // ORACLE
 
+export const useOraclePrices = process.env.NEXT_PUBLIC_USE_ORACLE_PRICE !== undefined ? process.env.NEXT_PUBLIC_USE_ORACLE_PRICE === 'true' : false;
+
 // oracleData_Valid_Time = 300,000 (5 * 60 * 1000 = 5 minutes)
 // This is the real time that the oracle data is valid in the smart contract.
 //TODO: reemplazar por DEFAULT_VALID_ORACLE_PRICE_TIME_MS y usarlo solo al crear el protoclo, luego leer de protocol.

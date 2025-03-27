@@ -9,12 +9,31 @@ import { AC, CS, PaymentAndStakePubKeyHash, StakeCredentialPubKeyHash, Token_Wit
 import { TxOutRef } from './typesPlutus.js';
 import { bytesUint8ArraToStringHex, hexToStr, isNullOrBlank, isValidHex, searchValueInArray, strToHex } from './utils.js';
 import { slotsPerEpochForLucid } from './Constants/protocolParameters.js';
+import { TOKENS_EXTERNAL_ORACLE } from './TOKENS_EXTERNAL.js';
 
 //---------------------------------------------------------------
 
 export function isTokenADA(CS: string, TN_Hex: string) {
     return (CS === '' || CS === 'lovelace') && TN_Hex === '';
 }
+
+// Verifica si un token es un "Fund Token External"
+export const checkIfIsOracleExtenalToken = (CS: string, TN_Hex: string): boolean => {
+    const tokens = TOKENS_EXTERNAL_ORACLE;
+    if (!tokens) return false;
+    return tokens.some((token) => token.CS === CS && token.TN_Hex === TN_Hex);
+};
+
+// Obtiene la API para un token específico
+export const getOracleExtenalTokenApiRoute = (CS: string, TN_Hex: string): string | undefined => {
+    const tokens = TOKENS_EXTERNAL_ORACLE;
+    if (!tokens) return undefined;
+    const token = tokens.find((token) => token.CS === CS && token.TN_Hex === TN_Hex);
+    return token ? token.Api : undefined;
+};
+
+//---------------------------------------------------------------
+
 
 export function isToken_CS_And_TN_Valid(CS: string | undefined, TN_Hex: string | undefined) {
     if (CS === undefined || TN_Hex === undefined) {
