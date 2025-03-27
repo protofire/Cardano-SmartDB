@@ -2,20 +2,20 @@ import { createStore, createTypedHooks } from 'easy-peasy';
 import { IAppStoreModel, AppStoreModel } from './appStoreModel.js';
 import { IUseAppStore, IUseTokensStore, IUseWalletStore } from './types.js';
 import { IWalletStoreModel, WalletStoreModel } from './walletStoreModel.js';
-import { ITokensModel, TokensModel } from './tokensStoreModel.js';
+import { ITokensStoreModel, TokenStoreModel } from './tokensStoreModel.js';
 
-interface IGlobalModel extends IWalletStoreModel, IAppStoreModel, ITokensModel {
+interface IGlobalStoreModel extends IWalletStoreModel, IAppStoreModel, ITokensStoreModel {
     // Additional properties or methods can be defined here if needed
 }
-const GlobalModel: IGlobalModel = {
+const GlobalModel: IGlobalStoreModel = {
     ...WalletStoreModel,
     ...AppStoreModel,
-    ...TokensModel,
+    ...TokenStoreModel,
 };
 
-export const globalStore = createStore<IGlobalModel>(GlobalModel);
+export const globalStore = createStore<IGlobalStoreModel>(GlobalModel);
 
-const { useStoreActions, useStoreState, useStoreDispatch, useStore } = createTypedHooks<IGlobalModel>();
+const { useStoreActions, useStoreState, useStoreDispatch, useStore } = createTypedHooks<IGlobalStoreModel>();
 
 export function useWalletStore(): IUseWalletStore {
     const state = useStoreState((state) => state);
@@ -31,9 +31,12 @@ export function useWalletStore(): IUseWalletStore {
 
         swDoNotPromtForSigning: state.swDoNotPromtForSigning,
         setSwDoNotPromtForSigning: actions.setSwDoNotPromtForSigning,
-        
+
         swHideBalance: state.swHideBalance,
         setSwHideBalance: actions.setSwHideBalance,
+
+        swProInterface: state.swProInterface,
+        setSwProInterface: actions.setSwProInterface,
 
         isConnecting: state.isConnecting,
         isConnected: state.isConnected,
@@ -42,8 +45,6 @@ export function useWalletStore(): IUseWalletStore {
         setLucid: actions.setLucid,
         getLucidForUseAsUtils: actions.getLucidForUseAsUtils,
         setLucidForUseAsUtils: actions.setLucidForUseAsUtils,
-
-        _lucidForUseAsUtils: state._lucidForUseAsUtils,
 
         protocolParameters: state.protocolParameters,
 
@@ -75,7 +76,6 @@ export function useWalletStore(): IUseWalletStore {
 }
 
 export function useAppStore(): IUseAppStore {
-    
     const state = useStoreState((state) => state);
 
     const actions = useStoreActions((actions) => actions);

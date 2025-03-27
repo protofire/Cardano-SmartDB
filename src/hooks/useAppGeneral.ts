@@ -3,18 +3,32 @@
 import { useEffect, useState } from 'react';
 import { useAppStore, useTokensStore, useWalletStore } from '../store/useGlobalStore.js';
 import { SiteSettingsEntity } from '../Entities/SiteSettings.Entity.js';
-import { EmulatorDBFrontEndApiCalls, SiteSettingsFrontEndApiCalls } from '../FrontEnd/index.js';
+import { EmulatorDBFrontEndApiCalls, SiteSettingsFrontEndApiCalls, TransactionFrontEndApiCalls } from '../FrontEnd/index.js';
 import { EmulatorEntity } from '../Entities/Emulator.Entity.js';
 import { LucidToolsFrontEnd } from '../lib/Lucid/LucidTools.FrontEnd.js';
-import { isEmulator } from '../Commons/Constants/constants.js';
+import { isEmulator, PROYECT_NAME } from '../Commons/Constants/constants.js';
 import { pushWarningNotification } from '../Commons/pushNotification.js';
 import fetchWrapper from '../lib/FetchWrapper/FetchWrapper.FrontEnd.js';
 //--------------------------------------
-export const useAppGeneral = () => {
+interface AppGeneralProps {
+    onLoadComplete?: () => void;
+}
+export const useAppGeneral = (props: AppGeneralProps) => {
     //--------------------------------------
     const appStore = useAppStore();
     const walletStore = useWalletStore();
     const tokensStore = useTokensStore();
+    //--------------------------------------
+    const [isProcessingTask, setIsProcessingTask] = useState(false);
+    const [isFaildedTask, setIsFaildedTask] = useState(false);
+    const [isConfirmedTask, setIsConfirmedTask] = useState(false);
+    const [processingTaskMessage, setProcessingTaskMessage] = useState('');
+    //--------------------------------------
+    useEffect(() => {
+        if (props.onLoadComplete !== undefined && appStore.swInitApiCompleted === true) {
+            props.onLoadComplete();
+        }
+    }, [appStore.swInitApiCompleted, props.onLoadComplete]);
     //--------------------------------------
     useEffect(() => {
         // MAIN USE EFFECTS TO EXECUTE JOBS OF GETTING TOKEN METADATA, VERY IMPORTANT!!!
@@ -25,8 +39,6 @@ export const useAppGeneral = () => {
     //--------------------------------------
     async function initApi() {
         try {
-            //--------------------
-            appStore.setSwInitApiCompleted(false);
             //--------------------
             const response = await fetchWrapper(`${process.env.NEXT_PUBLIC_REACT_SERVER_API_URL}/init`, {
                 method: 'GET',
@@ -45,8 +57,6 @@ export const useAppGeneral = () => {
                 localStorage.setItem('challengueToken', datas.token);
                 localStorage.setItem('x-csrf-token', datas.csrfToken);
                 console.log(`[App] - initApi - response OK - ${datas.status}`);
-                //--------------------
-                appStore.setSwInitApiCompleted(true);
                 //--------------------
             } else {
                 const errorData = await response.json();
@@ -68,29 +78,10 @@ export const useAppGeneral = () => {
                 //---------------
                 let siteSettings: SiteSettingsEntity | undefined = undefined;
                 //---------------
-                let sitesSettings = await SiteSettingsFrontEndApiCalls.getByParamsApi_<SiteSettingsEntity>({ name: 'Init' });
-                //---------------
-                if (sitesSettings.length >= 1) {
-                    //---------------
-                    siteSettings = sitesSettings[0];
-                    //---------------
-                    if (sitesSettings.length > 1) {
-                        //---------------
-                        console.log(`[App] - More than one Site Settings Init found`);
-                        //---------------
-                        for (let i = 1; i < sitesSettings.length; i++) {
-                            await SiteSettingsFrontEndApiCalls.deleteByIdApi_<SiteSettingsEntity>(sitesSettings[i]._DB_id);
-                        }
-                    } else {
-                        console.log(`[App] - Site Settings Init found`);
-                    }
-                }
+                siteSettings = await SiteSettingsFrontEndApiCalls.getOneByParamsApi_<SiteSettingsEntity>({ name: 'Init' });
                 //---------------
                 if (siteSettings === undefined) {
                     throw `Site Settings Init does not exists`;
-                    // console.log(`[App] - Site Settings Init does not exists, creating it...`);
-                    // let siteSettings = await SiteSettingsApi.createInitSiteSettingsApi('Init');
-                    // appStore.setSiteSettings(siteSettings);
                 }
                 //---------------
                 appStore.setSiteSettings(siteSettings);
@@ -110,56 +101,10 @@ export const useAppGeneral = () => {
             //---------------
             let emulatorDB: EmulatorEntity | undefined = undefined;
             //---------------
-            let emulatorsDB = await EmulatorDBFrontEndApiCalls.getByParamsApi_<EmulatorEntity>({ current: true });
-            //---------------
-            if (emulatorsDB.length >= 1) {
-                //---------------
-                emulatorDB = emulatorsDB[0];
-                //---------------
-                if (emulatorsDB.length > 1) {
-                    //---------------
-                    console.log(`[App] - More than one Emulator current found`);
-                    //---------------
-                    for (let i = 1; i < emulatorsDB.length; i++) {
-                        await EmulatorDBFrontEndApiCalls.deleteByIdApi_<SiteSettingsEntity>(emulatorsDB[i]._DB_id);
-                    }
-                } else {
-                    console.log(`[App] - Emulator current found`);
-                }
-            }
+            emulatorDB = await EmulatorDBFrontEndApiCalls.getOneByParamsApi_<EmulatorEntity>({ current: true });
             //---------------
             if (emulatorDB === undefined) {
-                //---------------
-                console.log(`[App] - Emulator current does not exists, searching Init one...`);
-                //---------------
-                emulatorsDB = await EmulatorDBFrontEndApiCalls.getByParamsApi_<EmulatorEntity>({ name: 'Init' });
-                //---------------
-                if (emulatorsDB.length >= 1) {
-                    //---------------
-                    emulatorDB = emulatorsDB[0];
-                    //---------------
-                    if (emulatorsDB.length > 1) {
-                        //---------------
-                        console.log(`[App] - More than one Emulator Init found`);
-                        //---------------
-                        for (let i = 1; i < emulatorsDB.length; i++) {
-                            await EmulatorDBFrontEndApiCalls.deleteByIdApi_<SiteSettingsEntity>(emulatorsDB[i]._DB_id);
-                        }
-                    } else {
-                        console.log(`[App] - Emulator Init found`);
-                    }
-                }
-                //---------------
-                if (emulatorDB === undefined) {
-                    //---------------
-                    // throw `Emulator Init does not exists`;
-                    //---------------
-                    console.log(`[App] - Emulator Init does not exists, creating Init one...`);
-                    emulatorDB = await EmulatorDBFrontEndApiCalls.createInitEmulatorApi('Init', true);
-                } else {
-                    console.log(`[App] - Emulator Init found, setting as current...`);
-                    await EmulatorDBFrontEndApiCalls.updateMeWithParamsApi(emulatorDB, { current: true });
-                }
+                throw `Emulator current not found`;
             }
             //---------------
             walletStore.setEmulatorDB(emulatorDB);
@@ -171,7 +116,7 @@ export const useAppGeneral = () => {
             throw error;
         }
     }
-    //--------------------------------------
+
     async function initLucidForUseAsUtils(emulatorDB?: EmulatorEntity) {
         try {
             console.log(`[App] - initLucidForUseAsUtils - Preparing Lucid for use as Utils...`);
@@ -183,49 +128,67 @@ export const useAppGeneral = () => {
         }
     }
     //--------------------------------------
+
     useEffect(() => {
-        const init = async () => {
+        const initGeneral = async () => {
             try {
+                //--------------------
+                appStore.setSwInitApiCompleted(false);
+                //--------------------
                 await initApi();
-
+                //--------------------
                 await loadSiteSettings();
-
+                //--------------------
                 let emulatorDB: EmulatorEntity | undefined = undefined;
                 if (isEmulator) {
                     emulatorDB = await loadEmulatorCurrent();
                 }
-
-                initLucidForUseAsUtils(emulatorDB);
-
+                //--------------------
+                await initLucidForUseAsUtils(emulatorDB);
+                //--------------------
                 walletStore.getCardanoWallets();
-
+                //--------------------
+                const existAnyWallet = await appStore.checkIfExistAnyWallet();
+                //--------------------
                 appStore.checkIfExistAnyWallet();
-
-                // add_AppTokensMetadata();
+                //--------------------
+                appStore.setSwInitApiCompleted(true);
+                //--------------------
+                try {
+                    const swCheckAgainTxTimeOut = false;
+                    const swCheckAgainTxPendingTimeOut = false;
+                    const swCheckAgainTxFailed = false;
+                    TransactionFrontEndApiCalls.beginStatusUpdaterJobApi(swCheckAgainTxTimeOut, swCheckAgainTxPendingTimeOut, swCheckAgainTxFailed);
+                } catch (error) {
+                    console.log(`Error starting Tx Updater Job: ${error}`);
+                }
             } catch (error) {
                 console.log(`[App] - init - Error: ${error}`);
                 pushWarningNotification(`SmartDB`, `Error initializing: ${error}`);
             }
         };
-        init();
+        initGeneral();
     }, []);
     //--------------------------------------
     useEffect(() => {
-        // if (appStore.swExistAnyWallet === false && appStore.swExistAnyProtocol !== undefined) {
+        // if (appStore.swExistAnyWsallet === false ) {
         //     router.push({
         //         pathname: ROUTES.AdminDashboard,
         //         query: { [TASK_QUERY_NAME.TASK]: TASK.WALLETS },
         //     });
-        // } else {
-        //     if (appStore.swExistAnyWallet === true && appStore.swExistAnyProtocol === false) {
-        //         router.push({
-        //             pathname: ROUTES.AdminDashboard,
-        //             query: { [TASK_QUERY_NAME.TASK]: TASK.PROTOCOLS, [TASK_QUERY_NAME.PROTOCOLS]: TASK.CREATE },
-        //         });
-        //     }
         // }
     }, [appStore.swExistAnyWallet]);
     //--------------------------------------
-    return { swInitApiCompleted: appStore.swInitApiCompleted };
-    //--------------------------------------
+    return {
+        appStore,
+        tokensStore,
+        isProcessingTask,
+        setIsProcessingTask,
+        isFaildedTask,
+        setIsFaildedTask,
+        isConfirmedTask,
+        setIsConfirmedTask,
+        processingTaskMessage,
+        setProcessingTaskMessage,
+    };
 };

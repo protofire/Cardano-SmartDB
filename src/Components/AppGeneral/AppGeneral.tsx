@@ -3,6 +3,7 @@
 import { ReactNode, useEffect } from 'react';
 import { useAppGeneral } from '../../hooks/useAppGeneral.js';
 import { LoadingSpinner } from '../LoadingSpinner/LoadingSpinner.js';
+
 interface AppGeneralProps {
     children: ReactNode;
     loader?: ReactNode;
@@ -18,11 +19,9 @@ export function AppGeneral({
     ),
     onLoadComplete,
 }: AppGeneralProps) {
-    const { swInitApiCompleted } = useAppGeneral();
-    useEffect(() => {
-        if (onLoadComplete !== undefined && swInitApiCompleted === true) {
-            onLoadComplete();
-        }
-    }, [swInitApiCompleted, onLoadComplete]);
-    return <>{swInitApiCompleted ? children : loader}</>;
+    //--------------------------------------
+    const { appStore, tokensStore, setIsProcessingTask, isFaildedTask, setIsFaildedTask, isConfirmedTask, setIsConfirmedTask, processingTaskMessage, setProcessingTaskMessage } =
+        useAppGeneral({ onLoadComplete });
+    //--------------------------------------
+    return <>{appStore.swInitApiCompleted === true ? children : loader}</>;
 }

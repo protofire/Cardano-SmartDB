@@ -1,6 +1,6 @@
 {
     "name": "smart-db",
-    "version": "1.2.0",
+    "version": "1.2.13",
     "description": "Smart DB",
     "type": "module",
     "main": "index.js",
@@ -27,6 +27,7 @@
         "@lucid-evolution/lucid": "^0.4.24",
         "axios": "^1.6.8",
         "bignumber.js": "^9.1.1",
+        "classnames": "^2.5.1",
         "cls-hooked": "^4.2.2",
         "cors": "^2.8.5",
         "date-fns": "^2.30.0",
@@ -54,6 +55,7 @@
     },
     "devDependencies": {
         "@next/eslint-plugin-next": "^13.4.12",
+        "@types/classnames": "^2.3.0",
         "@types/cls-hooked": "^4.3.8",
         "@types/cors": "^2.8.13",
         "@types/formidable": "^3.4.5",

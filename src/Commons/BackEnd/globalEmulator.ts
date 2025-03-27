@@ -39,7 +39,7 @@ export async function getGlobalEmulator(refresh: boolean = false): Promise<Emula
             async () => {
                 //------------------
                 const EmulatorBackEndApplied = (await import('../../BackEnd/Emulator.BackEnd.All.js')).EmulatorBackEndApplied;
-                let emulatorDB: EmulatorEntity | undefined = await EmulatorBackEndApplied.getOneByParams_({ current: true });
+                emulatorDB = await EmulatorBackEndApplied.getOneByParams_({ current: true });
                 //------------------
                 if (emulatorDB === undefined) {
                     console_log(0, `Global Emulator`, `Emulator current does not exists, searching Init one...`);

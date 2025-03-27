@@ -58,7 +58,7 @@ export class SiteSettingsEntityPostgreSQL extends BaseEntityPostgreSQL {
     @Column({ type: 'varchar', length: 255, nullable: true })
     welcomeMessage!: string;
 
-    @Column({ type: 'number', nullable: true })
+    @Column({ type: 'integer', nullable: true })
     welcomeMessageIndex!: number;
 
     @Column({ type: 'varchar', length: 255, nullable: true })

@@ -1,5 +1,3 @@
-//----------------------------------------------------------------------
-
 import { Decimals } from "../Commons/types.js";
 import { IUseTokensStore } from "./types.js";
 

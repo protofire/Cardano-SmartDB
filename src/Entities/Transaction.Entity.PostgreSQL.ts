@@ -2,7 +2,7 @@ import type { OutRef, PaymentKeyHash, UTxO } from '@lucid-evolution/lucid';
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { PostgreSQLDatabaseService } from '../BackEnd/DatabaseService/PostgreSQL.Database.Service.js';
 import { PostgreSQLAppliedFor } from '../Commons/Decorators/Decorator.PostgreSQLAppliedFor.js';
-import { TransactionDatum, TransactionRedeemer } from '../Commons/index.js';
+import { TransactionDatum, TransactionRedeemer, UTxOTransformer } from '../Commons/index.js';
 import { BaseEntityPostgreSQL } from './Base/Base.Entity.PostgreSQL.js'; // Assuming you have a BaseEntityPostgreSQL class
 import { TransactionEntity } from './Transaction.Entity.js'; // Assuming TransactionEntity is implemented in TypeORM
 
@@ -83,6 +83,12 @@ export class TransactionEntityPostgreSQL extends BaseEntityPostgreSQL {
     @Column({ type: 'jsonb', nullable: true })
     datums!: Record<string, TransactionDatum>;
 
+    // @Column({ type: 'jsonb', nullable: true, transformer: UTxOTransformer })
+    // consuming_UTxOs!: UTxO[];
+
+    // @Column({ type: 'jsonb', nullable: true, transformer: UTxOTransformer })
+    // reading_UTxOs!: UTxO[];
+
     @Column({ type: 'jsonb', nullable: true })
     consuming_UTxOs!: UTxO[];
 
@@ -95,16 +101,16 @@ export class TransactionEntityPostgreSQL extends BaseEntityPostgreSQL {
     @Column({ type: 'bigint', nullable: true })
     valid_until?: bigint;
 
-    @Column({ type: 'bigint', nullable: true })
-    unit_mem?: bigint;
+    @Column({ type: 'double precision', nullable: true })
+    unit_mem?: number;
 
-    @Column({ type: 'bigint', nullable: true })
-    unit_steps?: bigint;
+    @Column({ type: 'double precision', nullable: true })
+    unit_steps?: number;
 
-    @Column({ type: 'bigint', nullable: true })
-    fee?: bigint;
+    @Column({ type: 'double precision', nullable: true })
+    fee?: number;
 
-    @Column({ type: 'int', nullable: true })
+    @Column({ type: 'double precision', nullable: true })
     size?: number;
 
     @Column({ type: 'varchar', nullable: true })

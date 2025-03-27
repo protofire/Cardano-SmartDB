@@ -16,7 +16,7 @@ export class WalletEntityPostgreSQL extends BaseEntityPostgreSQL {
     _id!: number; // Asume que cada registro tiene un ID autogenerado
 
     @Column({ type: 'varchar', nullable: true })
-    walletUsed?: string;
+    walletName?: string;
 
     @Column({ type: 'boolean', nullable: false, default: false })
     walletValidatedWithSignedToken!: boolean;

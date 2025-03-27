@@ -13,6 +13,7 @@ import { blockfrostProxyApiHandlerWithContext } from './blockFrostApiHandler.js'
 import { healthApiHandlerWithContext } from './healthApiHandler.js';
 import { initApiHandlerWithContext } from './initApiHandler.js';
 import { initApiRequestWithContext } from './initApiRequestWithContext.js';
+import { globalInitJobsExecuteOnlyOnce } from '../globalInitJobs.js';
 
 const CredentialsProvider = require('next-auth/providers/credentials').default;
 const NextAuth = require('next-auth').default;
@@ -88,6 +89,8 @@ async function smartDBMainApiHandlerWithContext(req: NextApiRequestAuthenticated
                     console_error(-1, `Api handler`, `Error: ${error}`);
                     return res.status(500).json({ error: `An error occurred while adding Cors Headers - Error: ${error}` });
                 }
+                //--------------------------------------
+                await globalInitJobsExecuteOnlyOnce();
                 //--------------------------------------
                 await initApiHandlerWithContext(req, res);
                 //--------------------------------------

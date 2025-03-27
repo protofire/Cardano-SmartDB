@@ -346,7 +346,7 @@ export const credentialProviderConfig = {
                         console_log(0, `NextAuth`, `Authorize - Updating Wallet...`);
                         //--------------------
                         wallet.lastConnection = new Date(serverTime);
-                        wallet.walletUsed = user.walletName;
+                        wallet.walletName = user.walletName;
                         wallet.walletValidatedWithSignedToken = user.isWalletValidatedWithSignedToken;
                         //--------------------
                         await WalletBackEndApplied.update(wallet);

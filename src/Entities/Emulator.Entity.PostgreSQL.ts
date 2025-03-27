@@ -53,8 +53,8 @@ export class EmulatorEntityPostgreSQL extends BaseEntityPostgreSQL {
     @Column({ type: 'jsonb', nullable: true }) // `jsonb` para almacenar objetos en PostgreSQL
     emulator!: object;
 
-    @Column({ type: 'number' })
-    zeroTime!: number;
+    @Column({ type: 'bigint' })
+    zeroTime!: bigint;
 
     @Column({ type: 'varchar', array: true, nullable: true })
     privateKeys!: PrivateKey[]; // Suponiendo que el array de claves privadas se maneja como texto

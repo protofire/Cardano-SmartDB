@@ -20,92 +20,92 @@ import { formatAmountWithUnit } from '../Commons/formatters.js';
 
 //------------------------------------
 
-export interface ITokensModel {
+export interface ITokensStoreModel {
     serverTime: number | undefined;
-    setServerTime: Action<ITokensModel, number | undefined>;
+    setServerTime: Action<ITokensStoreModel, number | undefined>;
 
     serverTimeLastFetch: number | undefined;
-    setServerTimeLastFetch: Action<ITokensModel, number | undefined>;
+    setServerTimeLastFetch: Action<ITokensStoreModel, number | undefined>;
 
     serverTimeDiffWithBrowser: number | undefined;
-    setServerTimeDiffWithBrowser: Action<ITokensModel, number | undefined>;
+    setServerTimeDiffWithBrowser: Action<ITokensStoreModel, number | undefined>;
 
     isServerTimeLoaded: boolean;
-    setIsServerTimeLoaded: Action<ITokensModel, boolean>;
+    setIsServerTimeLoaded: Action<ITokensStoreModel, boolean>;
 
-    getServerTime: Thunk<ITokensModel, { refresh?: boolean } | undefined, any, any, Promise<number | undefined>>;
+    getServerTime: Thunk<ITokensStoreModel, { refresh?: boolean } | undefined, any, any, Promise<number | undefined>>;
 
     jobTokensToAdd: JobTokensToAdd[];
-    setJobTokensToAdd: Action<ITokensModel, JobTokensToAdd[]>;
+    setJobTokensToAdd: Action<ITokensStoreModel, JobTokensToAdd[]>;
 
     jobTokensToAddFinished: JobTokensToAdd[];
-    setJobTokensToAddFinished: Action<ITokensModel, JobTokensToAdd[]>;
+    setJobTokensToAddFinished: Action<ITokensStoreModel, JobTokensToAdd[]>;
 
-    createJobTokensToAdd: Action<ITokensModel, JobTokensToAdd>;
+    createJobTokensToAdd: Action<ITokensStoreModel, JobTokensToAdd>;
 
-    getFinishedJobTokensToAdd: Computed<ITokensModel, (job: string) => Token_For_Store[] | undefined>;
+    getFinishedJobTokensToAdd: Computed<ITokensStoreModel, (job: string) => Token_For_Store[] | undefined>;
 
     isExecuting: boolean;
-    setIsExecuting: Action<ITokensModel, boolean>;
-    executeJobsTokensToAdd: Thunk<ITokensModel>;
+    setIsExecuting: Action<ITokensStoreModel, boolean>;
+    executeJobsTokensToAdd: Thunk<ITokensStoreModel>;
 
     tokensWithDetails: Token_For_Store[];
-    setTokensWithDetails_: Action<ITokensModel, Token_For_Store[]>;
-    setTokensWithDetails: Thunk<ITokensModel, Token_For_Store[]>;
+    setTokensWithDetails_: Action<ITokensStoreModel, Token_For_Store[]>;
+    setTokensWithDetails: Thunk<ITokensStoreModel, Token_For_Store[]>;
 
     tokensWithDetailsAndValidity: Token_For_Store_With_Validity[];
-    setTokensWithDetailsAndValidity: Action<ITokensModel, Token_For_Store_With_Validity[]>;
+    setTokensWithDetailsAndValidity: Action<ITokensStoreModel, Token_For_Store_With_Validity[]>;
 
     isAddingTokens: boolean;
-    setIsAddingTokens: Action<ITokensModel, boolean>;
+    setIsAddingTokens: Action<ITokensStoreModel, boolean>;
 
     intervalIdForUpdateLoop: NodeJS.Timeout | undefined;
-    setIntervalIdForUpdateLoop: Action<ITokensModel, NodeJS.Timeout | undefined>;
+    setIntervalIdForUpdateLoop: Action<ITokensStoreModel, NodeJS.Timeout | undefined>;
 
     doUpdatePricesAutomatically: boolean;
-    setDoUpdatePricesAutomatically: Action<ITokensModel, boolean>;
+    setDoUpdatePricesAutomatically: Action<ITokensStoreModel, boolean>;
 
-    beginUpdateLoop: Thunk<ITokensModel, { doUpdatePricesAutomatically?: boolean } | undefined, any, any, Promise<NodeJS.Timeout | undefined>>;
-    stopUpdateLoop: Thunk<ITokensModel, { cancelFollowUp?: boolean } | undefined>;
+    beginUpdateLoop: Thunk<ITokensStoreModel, { doUpdatePricesAutomatically?: boolean } | undefined, any, any, Promise<NodeJS.Timeout | undefined>>;
+    stopUpdateLoop: Thunk<ITokensStoreModel, { cancelFollowUp?: boolean } | undefined>;
 
-    cleanStore: Thunk<ITokensModel>;
+    cleanStore: Thunk<ITokensStoreModel>;
 
     addToken: Thunk<
-        ITokensModel,
+        ITokensStoreModel,
         { token: Partial<Token_For_Store>; swAddPrice?: boolean; swAddMetadata?: boolean; swCreateMetadataWhenNotFound?: boolean; followUp?: boolean; keepAlive?: boolean },
         Promise<Token_For_Store>
     >;
 
     addTokens: Thunk<
-        ITokensModel,
+        ITokensStoreModel,
         { tokens: Partial<Token_For_Store>[]; swAddPrice?: boolean; swAddMetadata?: boolean; swCreateMetadataWhenNotFound?: boolean; followUp?: boolean; keepAlive?: boolean },
         Promise<Token_For_Store[]>
     >;
 
-    removeToken: Thunk<ITokensModel, { CS: CS; TN_Hex: TN }>;
+    removeToken: Thunk<ITokensStoreModel, { CS: CS; TN_Hex: TN }>;
 
     // refreshPrices: Thunk<ITokensStoreModel, { forceRefreshFT?: boolean; forceRefreshSubTokensFT?: boolean; forceUseOracle?: boolean } | undefined>;
-    refreshPrices: Thunk<ITokensModel, { forceRefresh?: boolean; forceUseOracle?: boolean } | undefined>;
+    refreshPrices: Thunk<ITokensStoreModel, { forceRefresh?: boolean; forceUseOracle?: boolean } | undefined>;
 
-    isTokenPriceValid: Computed<ITokensModel, (CS: CS, TN_Hex: TN) => boolean>;
-    getTokenValidity: Computed<ITokensModel, (CS: CS, TN_Hex: TN) => bigint | undefined>;
-    getTokenPriceAndMetadata: Computed<ITokensModel, (CS: CS, TN_Hex: TN) => Token_For_Store | undefined>;
-    getTokensPriceAndMetadata: Computed<ITokensModel, (tokens: Partial<Token_For_Store>[]) => Token_For_Store[]>;
-    getTokenDecimals: Computed<ITokensModel, (CS: CS, TN_Hex: TN) => Decimals | undefined>;
+    isTokenPriceValid: Computed<ITokensStoreModel, (CS: CS, TN_Hex: TN) => boolean>;
+    getTokenValidity: Computed<ITokensStoreModel, (CS: CS, TN_Hex: TN) => bigint | undefined>;
+    getTokenPriceAndMetadata: Computed<ITokensStoreModel, (CS: CS, TN_Hex: TN) => Token_For_Store | undefined>;
+    getTokensPriceAndMetadata: Computed<ITokensStoreModel, (tokens: Partial<Token_For_Store>[]) => Token_For_Store[]>;
+    getTokenDecimals: Computed<ITokensStoreModel, (CS: CS, TN_Hex: TN) => Decimals | undefined>;
 
-    showTokenPriceAndValidity: Computed<ITokensModel, (CS: CS, TN_Hex: TN, swRounded?: boolean, showDecimals?: Decimals) => string>;
-    showTokenPrice: Computed<ITokensModel, (CS: CS, TN_Hex: TN, swRounded?: boolean, showDecimals?: Decimals) => string>;
-    showTokenValidity: Computed<ITokensModel, (CS: CS, TN_Hex: TN, swAddValidFor?: boolean) => string>;
+    showTokenPriceAndValidity: Computed<ITokensStoreModel, (CS: CS, TN_Hex: TN, swRounded?: boolean, showDecimals?: Decimals) => string>;
+    showTokenPrice: Computed<ITokensStoreModel, (CS: CS, TN_Hex: TN, swRounded?: boolean, showDecimals?: Decimals) => string>;
+    showTokenValidity: Computed<ITokensStoreModel, (CS: CS, TN_Hex: TN, swAddValidFor?: boolean) => string>;
 
-    showTokenWithAmount: Computed<ITokensModel, (amount: bigint | number | undefined, CS: CS, TN_Hex: TN, swRounded?: boolean, showDecimals?: Decimals) => string>;
+    showTokenWithAmount: Computed<ITokensStoreModel, (amount: bigint | number | undefined, CS: CS, TN_Hex: TN, swRounded?: boolean, showDecimals?: Decimals) => string>;
 
     showTokenPriceMultipliedByAmount: Computed<
-        ITokensModel,
+        ITokensStoreModel,
         (amount: bigint | number | undefined, CS: CS, TN_Hex: TN, swRounded?: boolean, showDecimals?: Decimals, decimalsInAmount?: Decimals) => string
     >;
 }
 
-export const TokensModel: ITokensModel = {
+export const TokenStoreModel: ITokensStoreModel = {
     //----------------------------
     serverTime: undefined,
     setServerTime: action((state, payload) => {

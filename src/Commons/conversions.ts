@@ -1,6 +1,7 @@
-import { Assets, Emulator } from '@lucid-evolution/lucid';
+import { Assets, Emulator, UTxO } from '@lucid-evolution/lucid';
 import { Token_With_Metadata_And_Amount, Token_With_Price_And_Date, Token_With_Price_And_Date_And_Signature_And_Amount_And_Metadata } from './types.js';
-import { concatUint8Arrays, intToUint8Array, stringHexToUint8Array } from "./utils.js";
+import { concatUint8Arrays, intToUint8Array, stringHexToUint8Array, toJson } from "./utils.js";
+import { ValueTransformer } from 'typeorm';
 
 //--------------------------------------------------------
 
@@ -19,6 +20,19 @@ export const deserealizeBigInt = (value: string | undefined): bigint | undefined
         return undefined;
     }
 };
+
+//--------------------------------------------------------  
+
+export const UTxOTransformer: ValueTransformer = {
+    to: (value: UTxO[]) => {
+      if (!value) return null;
+      return value.map(utxo => toJson(utxo));
+    },
+    from: (value: any) => {
+      if (!value) return null;
+      return value.map((v: any) => JSON.parse(v)); // asumimos que existe UTxO.fromJson
+    }
+  };
 
 //--------------------------------------------------------
 

@@ -46,7 +46,7 @@ export class WalletEntityMongo extends BaseEntityMongo {
 
     public static DBModel() {
         interface Interface {
-            walletUsed: string;
+            walletName: string;
             walletValidatedWithSignedToken: boolean;
             paymentPKH: PaymentKeyHash;
             stakePKH: StakeKeyHash;
@@ -63,7 +63,7 @@ export class WalletEntityMongo extends BaseEntityMongo {
 
         const schema = new Schema<Interface>(
             {
-                walletUsed: { type: String, required: false },
+                walletName: { type: String, required: false },
                 walletValidatedWithSignedToken: { type: Boolean, required: false },
                 paymentPKH: { type: String, required: true },
                 stakePKH: { type: String, required: false },

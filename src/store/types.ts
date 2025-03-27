@@ -141,6 +141,9 @@ export interface IUseWalletStore {
     swHideBalance: boolean;
     setSwHideBalance: (swHideBalance: boolean) => void;
 
+    swProInterface: boolean;
+    setSwProInterface: (swProInterface: boolean) => void;
+
     isConnecting: boolean;
     isConnected: boolean;
 
@@ -149,7 +152,6 @@ export interface IUseWalletStore {
 
     getLucidForUseAsUtils: () => Promise<LucidEvolution | undefined>;
     setLucidForUseAsUtils: (lucid: LucidEvolution) => void;
-    _lucidForUseAsUtils: LucidEvolution | undefined;
 
     protocolParameters: unknown;
 

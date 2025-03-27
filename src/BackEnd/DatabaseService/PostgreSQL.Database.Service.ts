@@ -299,7 +299,7 @@ export class PostgreSQLDatabaseService {
             //--------------------------
             await this.connectDB();
             //--------------------------
-            const postgreSQLEntity = await instance.getPostgreSQL().toDBInterface(instance);
+            const postgreSQLInterface = await instance.getPostgreSQL().toDBInterface(instance);
             const postgreSQLModel = await instance.getPostgreSQL().DBModel();
             //--------------------------
             const queryRunner = this.getActiveRunner(`[${instance.className()}] - update`, providedRunner);
@@ -309,7 +309,7 @@ export class PostgreSQLDatabaseService {
             // const metadata = repository.metadata;
             //--------------------------
             // Aquí usamos el ID del objeto `instance` para identificar el registro a actualizar
-            const id = postgreSQLEntity._id;
+            const id = postgreSQLInterface._id;
             if (!id) {
                 throw `Instance does not have an id`;
             }
@@ -349,8 +349,10 @@ export class PostgreSQLDatabaseService {
                 delete updateObject[field];
             }
             //--------------------------
+            const updateObjectInterface = await instance.getPostgreSQL().toDBInterface(updateObject as T);
+            //--------------------------
             // Realizamos la actualización en PostgreSQL
-            const result = await repository.update({ _id: id }, updateObject);
+            const result = await repository.update({ _id: id }, updateObjectInterface);
             //--------------------------
             return result;
         } catch (error) {

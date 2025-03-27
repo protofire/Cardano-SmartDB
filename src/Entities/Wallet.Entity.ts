@@ -11,7 +11,7 @@ export class WalletEntity extends BaseEntity {
     // #region fields
 
     @Convertible()
-    walletUsed!: string;
+    walletName!: string;
 
     @Convertible()
     walletValidatedWithSignedToken!: boolean;
