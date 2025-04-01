@@ -386,7 +386,6 @@ export class BaseBackEndMethods {
             }
             //----------------------------
             if (isFrontEndEnvironment()) {
-                //return await this.updateApi<T>(optionsUpdate);
                 throw `Can't run this method in the Browser`;
             }
             //----------------------------
@@ -450,7 +449,6 @@ export class BaseBackEndMethods {
             }
             //-----------------------
             if (isFrontEndEnvironment()) {
-                //return await this.updateMeWithParamsApi<T>(updateFields, optionsUpdate);
                 throw `Can't run this method in the Browser`;
             }
             //-----------------------
@@ -561,7 +559,6 @@ export class BaseBackEndMethods {
         //----------------------------
         try {
             if (isFrontEndEnvironment()) {
-                //return await this.updateWithParamsApi<T>(id, updateFields, optionsUpdate);
                 throw `Can't run this method in the Browser`;
             }
             //-----------------------
@@ -603,7 +600,6 @@ export class BaseBackEndMethods {
             }
             //----------------------------
             if (isFrontEndEnvironment()) {
-                //return await this.checkIfExistsApi<T>(paramsFilter);
                 throw `Can't run this method in the Browser`;
             }
             //----------------------------
@@ -627,7 +623,6 @@ export class BaseBackEndMethods {
             }
             //----------------------------
             if (isFrontEndEnvironment()) {
-                //return await this.getByIdApi<T>(id, optionsGet);
                 throw `Can't run this method in the Browser`;
             }
             //----------------------------
@@ -663,7 +658,6 @@ export class BaseBackEndMethods {
     ): Promise<T | undefined> {
         try {
             if (isFrontEndEnvironment()) {
-                //return await this.getOneByParamsApi<T>(paramsFilter, optionsGet);
                 throw `Can't run this method in the Browser`;
             }
             //----------------------------
@@ -702,7 +696,6 @@ export class BaseBackEndMethods {
         //----------------------------
         try {
             if (isFrontEndEnvironment()) {
-                //return await this.getByParamsApi<T>(paramsFilter, optionsGet);
                 throw `Can't run this method in the Browser`;
             }
             //----------------------------
@@ -945,7 +938,6 @@ export class BaseBackEndMethods {
     public static async getAll<T extends BaseEntity>(Entity: typeof BaseEntity, optionsGet?: OptionsGet, restricFilter?: Record<string, any>): Promise<T[]> {
         try {
             if (isFrontEndEnvironment()) {
-                //return await this.getAllApi<T>(optionsGet);
                 throw `Can't run this method in the Browser`;
             }
             //----------------------------
@@ -1036,7 +1028,6 @@ export class BaseBackEndMethods {
         try {
             //----------------------------
             if (isFrontEndEnvironment()) {
-                //return await this.deleteByIdApi(id, optionsDelete);
                 throw `Can't run this method in the Browser`;
             }
             //----------------------------
@@ -1109,7 +1100,6 @@ export class BaseBackEndMethods {
             }
             //----------------------------
             if (isFrontEndEnvironment()) {
-                //return await this.deleteApi(optionsDelete);
                 throw `Can't run this method in the Browser`;
             }
             //----------------------------
@@ -1161,7 +1151,6 @@ export class BaseBackEndMethods {
             }
             //--------------------------------------
             if (isFrontEndEnvironment()) {
-                //return await this.fillWithRelationApi<T, R>(relation, optionsGet);
                 throw `Can't run this method in the Browser`;
             }
             //-----------------------
@@ -1221,7 +1210,6 @@ export class BaseBackEndMethods {
             }
             //--------------------------------------
             if (isFrontEndEnvironment()) {
-                //return await this.loadRelationManyApi<T, R>(relation, optionsGet);
                 throw `Can't run this method in the Browser`;
             }
             //-----------------------
@@ -1331,7 +1319,6 @@ export class BaseBackEndMethods {
             }
             //--------------------------------------
             if (isFrontEndEnvironment()) {
-                //return await this.loadRelationOneApi<T, R>(relation, optionsGet);
                 throw `Can't run this method in the Browser`;
             }
             //-----------------------

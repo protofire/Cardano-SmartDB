@@ -11,7 +11,7 @@ export const fetchWrapperBackEnd = async (
 ): Promise<Response> => {
     //----------------------
     if (isFrontEndEnvironment()) {
-        throw `fetchWrapper - Only use BackEnd environment`;
+        throw `Can't run this method in the Browser`;
     }
     //----------------------
     const headers = new Headers(options.headers);

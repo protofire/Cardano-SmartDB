@@ -46,7 +46,6 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             }
             //----------------------------
             if (isFrontEndEnvironment()) {
-                //return await this.getOneByParamsApi<T>({ smartUTxO_id }, optionsGet);
                 throw `Can't run this method in the Browser`;
             }
             //----------------------------
@@ -63,7 +62,6 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
     public static async getDeployed<T extends BaseSmartDBEntity>(Entity: typeof BaseSmartDBEntity, optionsGet?: OptionsGet, restricFilter?: Record<string, any>): Promise<T[]> {
         try {
             if (isFrontEndEnvironment()) {
-                //return await this.getDeployedApi<T>(optionsGet);
                 throw `Can't run this method in the Browser`;
             }
             //----------------------------
@@ -338,7 +336,7 @@ export class BaseSmartDBBackEndMethods extends BaseBackEndMethods {
             }
             //----------------------------
             if (isFrontEndEnvironment()) {
-                throw 'This method is only for backend';
+                throw `Can't run this method in the Browser`;
             }
             //----------------------------
             console_logLv1(1, instance.className(), `updateSyncSmartUTxO  - Init`);
