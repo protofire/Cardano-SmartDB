@@ -78,7 +78,6 @@ export class TokenMetadataBackEndApplied extends BaseBackEndApplied {
         }
         //----------------------------
         if (isFrontEndEnvironment()) {
-            // return await this.get_Token_MetadataApi(CS, TN_Hex);
             throw `Can't run this method in the Browser`;
         }
         try {
@@ -186,7 +185,6 @@ export class TokenMetadataBackEndApplied extends BaseBackEndApplied {
         }
         //----------------------------
         if (isFrontEndEnvironment()) {
-            // return await this.get_Token_MetadataApi(CS, TN_Hex);
             throw `Can't run this method in the Browser`;
         }
         //----------------------------
