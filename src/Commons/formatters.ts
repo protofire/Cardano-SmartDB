@@ -83,7 +83,7 @@ export function formatAmountWithUnit(
             } else if (Math.round(amountInBaseUnit / 1e9) > 1) {
                 amountInBaseUnit /= 1e9;
                 unitModifier += 'B';
-            } else if (Math.round(amountInBaseUnit / 1e4) > 1) {
+            } else if (Math.round(amountInBaseUnit / 1e6) > 1) {
                 amountInBaseUnit /= 1e6;
                 unitModifier += 'M';
             } else if (Math.round(amountInBaseUnit / 1e3) > 1) {
