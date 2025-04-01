@@ -18,7 +18,6 @@ export class SmartUTxOBackEndApplied extends BaseBackEndApplied {
             throw `address not defined`;
         }
         if (isFrontEndEnvironment()) {
-            // return await this.getByAddressApi<T>(address, optionsGet);
             throw `Can't run this method in the Browser`;
         }
         //----------------------------
@@ -38,7 +37,6 @@ export class SmartUTxOBackEndApplied extends BaseBackEndApplied {
             throw `txHash or outputIndex not defined`;
         }
         if (isFrontEndEnvironment()) {
-            //return await this.getByTxHashAndOutputIndexApi<T>(txHash, outputIndex, optionsGet);
             throw `Can't run this method in the Browser`;
         }
         //----------------------------
@@ -54,7 +52,6 @@ export class SmartUTxOBackEndApplied extends BaseBackEndApplied {
             throw `txHash or outputIndex not defined`;
         }
         if (isFrontEndEnvironment()) {
-            //return await this.releaseUTxOsApi(txHash, outputIndex);
             throw `Can't run this method in the Browser`;
         }
         //----------------------------
@@ -105,7 +102,6 @@ export class SmartUTxOBackEndApplied extends BaseBackEndApplied {
             throw `swReserveForReading and swReserveForConsuming can't be false at the same time`;
         }
         if (isFrontEndEnvironment()) {
-            //return await this.releaseUTxOsApi(txHash, outputIndex);
             throw `Can't run this method in the Browser`;
         }
         //----------------------------

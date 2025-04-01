@@ -22,7 +22,6 @@ export class AddressToFollowBackEndApplied extends BaseBackEndApplied {
             throw `Currency Symbol not defined`;
         }
         if (isFrontEndEnvironment()) {
-            //return await this.getByAddressApi(address, optionsGet);
             throw `Can't run this method in the Browser`;
         }
         //----------------------------

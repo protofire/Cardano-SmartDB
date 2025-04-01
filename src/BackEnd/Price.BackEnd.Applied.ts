@@ -1130,7 +1130,6 @@ export class PriceBackEndApplied extends BaseBackEndApplied {
         }
         //----------------------------
         if (isFrontEndEnvironment()) {
-            //return await this.set_Token_PriceADAx1e6_Api(CS, TN_Hex);
             throw `Can't run this method in the Browser`;
         }
         //----------------------------
