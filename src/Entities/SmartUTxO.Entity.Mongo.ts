@@ -1,12 +1,11 @@
+import { Address, Datum, Script } from '@lucid-evolution/lucid';
 import { Schema, model, models } from 'mongoose';
 import 'reflect-metadata';
 import { MongoAppliedFor } from '../Commons/Decorators/Decorator.MongoAppliedFor.js';
-import { SmartUTxOEntity } from './SmartUTxO.Entity.js';
-import { Address, Datum, Script } from '@lucid-evolution/lucid';
 import { BaseEntityMongo } from './Base/Base.Entity.Mongo.js';
-import { SmartUTxOWithDetailsEntity } from './SmartUTxO.WithDetails.Entity.js';
+import { SmartUTxOEntity } from './SmartUTxO.Entity.js';
 
-@MongoAppliedFor([SmartUTxOEntity, SmartUTxOWithDetailsEntity])
+@MongoAppliedFor([SmartUTxOEntity])
 export class SmartUTxOEntityMongo extends BaseEntityMongo {
     protected static Entity = SmartUTxOEntity;
     protected static _mongoTableName: string = SmartUTxOEntity.className();

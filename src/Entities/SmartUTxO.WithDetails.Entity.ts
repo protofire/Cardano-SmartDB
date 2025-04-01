@@ -1,8 +1,9 @@
 import 'reflect-metadata';
-import { Convertible, type TokensWithMetadataAndAmount } from '../Commons/index.js';
+import { asEntity, Convertible, type TokensWithMetadataAndAmount } from '../Commons/index.js';
 import { deserealizeTokenWithMetadataAndAmount } from '../Commons/conversions.js';
 import { SmartUTxOEntity } from './SmartUTxO.Entity.js';
 
+@asEntity()
 export class SmartUTxOWithDetailsEntity extends SmartUTxOEntity {
     protected static _apiRoute: string = 'smartutxos-with-details';
     protected static _className: string = 'SmartUTxO With Details';
