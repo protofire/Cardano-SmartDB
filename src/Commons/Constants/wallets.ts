@@ -40,13 +40,13 @@ export const CARDANO_WALLETS: CardanoWallet[] = [
         link: 'https://chrome.google.com/webstore/detail/nami/lpfcbjknijpeeillifnkikgncikgfhdo',
         isInstalled: false,
     },
-    {
-        wallet: 'flint',
-        name: 'Flint',
-        icon: WALLET_FLINT_ICON,
-        link: 'https://chrome.google.com/webstore/detail/flint-wallet/hnhobjmcibchnmglfbldbfabcgaknlkj',
-        isInstalled: false,
-    },
+    // {
+    //     wallet: 'flint',
+    //     name: 'Flint',
+    //     icon: WALLET_FLINT_ICON,
+    //     link: 'https://chrome.google.com/webstore/detail/flint-wallet/hnhobjmcibchnmglfbldbfabcgaknlkj',
+    //     isInstalled: false,
+    // },
     {
         wallet: 'typhon',
         name: 'Typhon',
